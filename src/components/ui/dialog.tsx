@@ -39,9 +39,10 @@ export function DialogTrigger({ children, asChild }: { children: React.ReactNode
   if (!context) throw new Error("DialogTrigger must be used within a Dialog")
 
   if (React.isValidElement(children) && asChild) {
-    return React.cloneElement(children as React.ReactElement<{ onClick?: React.MouseEventHandler }>, {
+    const childElement = children as React.ReactElement<any>
+    return React.cloneElement(childElement, {
       onClick: (e: React.MouseEvent) => {
-        children.props.onClick?.(e)
+        childElement.props?.onClick?.(e)
         context.setOpen(true)
       },
     })
@@ -168,9 +169,10 @@ export function DialogClose({ children, asChild }: { children: React.ReactNode; 
   const context = useContext(DialogContext)
 
   if (React.isValidElement(children) && asChild) {
-    return React.cloneElement(children as React.ReactElement<{ onClick?: React.MouseEventHandler }>, {
+    const childElement = children as React.ReactElement<any>
+    return React.cloneElement(childElement, {
       onClick: (e: React.MouseEvent) => {
-        children.props.onClick?.(e)
+        childElement.props?.onClick?.(e)
         context?.setOpen(false)
       },
     })

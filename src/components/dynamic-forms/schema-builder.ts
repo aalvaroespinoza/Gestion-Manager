@@ -51,9 +51,7 @@ export function buildZodSchema(fields: DynamicFormFieldConfig[]) {
       }
 
       case "number": {
-        let numSchema = z.coerce.number({
-          invalid_type_error: `${label || name} debe ser un número`,
-        })
+        let numSchema = z.coerce.number()
 
         if (min !== undefined) {
           numSchema = numSchema.min(min, `${label || name} debe ser mayor o igual a ${min}`)
