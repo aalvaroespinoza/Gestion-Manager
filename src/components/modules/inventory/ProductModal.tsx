@@ -18,10 +18,11 @@ import {
   Boxes,
 } from "lucide-react"
 
-interface ProductModalProps {
+export interface ProductModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (productData: ProductFormData & { id?: string; status?: StockStatus }) => void | Promise<void>
+  productToEdit?: Product | null
   product?: Product | null
   categories: Category[]
 }
@@ -30,10 +31,12 @@ export function ProductModal({
   isOpen,
   onClose,
   onSave,
+  productToEdit,
   product,
   categories,
 }: ProductModalProps) {
-  const isEditing = Boolean(product)
+  const activeProduct = productToEdit !== undefined ? productToEdit : product
+  const isEditing = Boolean(activeProduct)
 
   // Standard fixed form state
   const [code, setCode] = useState("")
@@ -52,16 +55,16 @@ export function ProductModal({
 
   // Initialize or reset form values when opening modal or changing product
   useEffect(() => {
-    if (product) {
-      setCode(product.code)
-      setName(product.name)
-      setDescription(product.description || "")
-      setCategoryId(product.categoryId)
-      setCostPrice(product.costPrice)
-      setSalePrice(product.salePrice)
-      setStock(product.stock)
-      setMinStock(product.minStock)
-      setCustomAttributes(product.customAttributes || {})
+    if (activeProduct) {
+      setCode(activeProduct.code)
+      setName(activeProduct.name)
+      setDescription(activeProduct.description || "")
+      setCategoryId(activeProduct.categoryId)
+      setCostPrice(activeProduct.costPrice)
+      setSalePrice(activeProduct.salePrice)
+      setStock(activeProduct.stock)
+      setMinStock(activeProduct.minStock)
+      setCustomAttributes(activeProduct.customAttributes || {})
     } else {
       setCode(`SKU-${Math.floor(1000 + Math.random() * 9000)}`)
       setName("")
@@ -74,7 +77,7 @@ export function ProductModal({
       setCustomAttributes({})
     }
     setErrors({})
-  }, [product, isOpen, categories])
+  }, [activeProduct, isOpen, categories])
 
   // Get active category object
   const activeCategory = useMemo(() => {
@@ -139,7 +142,7 @@ export function ProductModal({
     try {
       setIsSubmitting(true)
       await onSave({
-        ...(product ? { id: product.id } : {}),
+        ...(activeProduct ? { id: activeProduct.id } : {}),
         code,
         name,
         description,
@@ -172,7 +175,7 @@ export function ProductModal({
       }
       description={
         isEditing
-          ? `Modificando características y existencias para: ${product?.name}`
+          ? `Modificando características y existencias para: ${activeProduct?.name}`
           : "Completa la información base y los atributos específicos del rubro."
       }
     >
@@ -215,8 +218,10 @@ export function ProductModal({
                 value={categoryId}
                 onChange={(e) => {
                   setCategoryId(e.target.value)
-                  // Reset custom attributes when changing category
-                  setCustomAttributes({})
+                  // Reset custom attributes when changing category if creating new
+                  if (!isEditing) {
+                    setCustomAttributes({})
+                  }
                 }}
                 error={errors.categoryId}
                 required

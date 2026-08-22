@@ -15,8 +15,11 @@ import {
   TableCell,
   TableEmpty,
 } from "@/components/ui/table"
-import { Modal } from "@/components/ui/modal"
-import { ProductModal, StockAdjustmentModal } from "@/components/modules/inventory"
+import {
+  ProductModal,
+  StockAdjustmentModal,
+  DeleteProductDialog,
+} from "@/components/modules/inventory"
 import { mockCategories, mockProducts } from "@/mocks/inventoryData"
 import {
   Category,
@@ -43,9 +46,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  FileSpreadsheet,
 } from "lucide-react"
 
 export default function StockPage() {
@@ -94,7 +94,7 @@ export default function StockPage() {
     const now = new Date().toISOString()
 
     if (productData.id) {
-      // Update existing product
+      // Update existing product without duplicating
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productData.id
@@ -107,7 +107,7 @@ export default function StockPage() {
             : p
         )
       )
-      showToast(`Producto "${productData.name}" actualizado exitosamente.`, "success")
+      showToast(`Producto "${productData.name}" modificado exitosamente.`, "success")
     } else {
       // Create new product
       const newProd: Product = {
@@ -123,7 +123,7 @@ export default function StockPage() {
     }
   }
 
-  // 2. Fast Stock Adjustment (Re-stock / Egreso / Conteo)
+  // 2. Fast Stock Adjustment (Re-stock / Egreso / Conteo con motivo)
   const handleConfirmStockAdjustment = (
     productId: string,
     newStock: number,
@@ -162,17 +162,17 @@ export default function StockPage() {
         : `Stock fijado en ${newStock} un.`
 
     showToast(
-      `Ajuste de stock realizado (${opLabel}). Nuevo total: ${newStock} un.`,
+      `Re-Stock aplicado (${opLabel}). Motivo: "${movement.reason}". Nuevo total: ${newStock} un.`,
       movement.type === "IN" ? "success" : "info"
     )
   }
 
-  // 3. Delete Product
+  // 3. Delete Product with safety removal
   const handleDeleteProduct = (productId: string) => {
     const prod = products.find((p) => p.id === productId)
     setProducts((prev) => prev.filter((p) => p.id !== productId))
     setDeletingProduct(null)
-    showToast(`Producto "${prod?.name || productId}" eliminado del inventario.`, "danger")
+    showToast(`Producto "${prod?.name || productId}" eliminado del catálogo.`, "danger")
   }
 
   // --- Filtered & Sorted Products ---
@@ -226,7 +226,6 @@ export default function StockPage() {
   const totalSaleValuation = products.reduce((sum, p) => sum + p.stock * p.salePrice, 0)
   const lowStockCount = products.filter((p) => p.status === "LOW_STOCK").length
   const outOfStockCount = products.filter((p) => p.status === "OUT_OF_STOCK").length
-  const normalStockCount = products.filter((p) => p.status === "IN_STOCK").length
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -254,7 +253,7 @@ export default function StockPage() {
             Control de Stock & Inventario
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gestión en tiempo real de existencias, atributos técnicos por rubro y ajustes de stock.
+            Gestión completa de existencias, atributos técnicos, re-stock rápido y edición en vivo.
           </p>
         </div>
 
@@ -541,14 +540,14 @@ export default function StockPage() {
                         </Badge>
                       </TableCell>
 
-                      {/* Acciones: Re-stock, Editar, Eliminar */}
+                      {/* Acciones: 3 Botones Clave (Re-stock, Editar, Eliminar) */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Botón Re-stock / Ajustar */}
+                          {/* Botón 1: Re-stock / Ajustar Stock */}
                           <Button
                             variant="secondary"
                             size="sm"
-                            title="Re-stock / Ajustar Stock"
+                            title="Re-stock / Ajuste de Cantidad"
                             className="h-8 px-2.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 font-medium"
                             onClick={() => {
                               setAdjustingProduct(product)
@@ -559,7 +558,7 @@ export default function StockPage() {
                             <span>Re-stock</span>
                           </Button>
 
-                          {/* Botón Editar */}
+                          {/* Botón 2: Editar */}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -573,7 +572,7 @@ export default function StockPage() {
                             <Edit2 className="h-3.5 w-3.5" />
                           </Button>
 
-                          {/* Botón Eliminar */}
+                          {/* Botón 3: Eliminar */}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -647,7 +646,7 @@ export default function StockPage() {
           setEditingProduct(null)
         }}
         onSave={handleSaveProduct}
-        product={editingProduct}
+        productToEdit={editingProduct}
         categories={categories}
       />
 
@@ -663,47 +662,12 @@ export default function StockPage() {
       />
 
       {/* Delete Confirmation Modal */}
-      {deletingProduct && (
-        <Modal
-          isOpen={Boolean(deletingProduct)}
-          onClose={() => setDeletingProduct(null)}
-          size="sm"
-          title={
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-              <AlertTriangle className="h-5 w-5" />
-              <span>Eliminar Producto</span>
-            </div>
-          }
-          description="Esta acción eliminará el producto del inventario de forma permanente."
-        >
-          <div className="space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              ¿Estás seguro de que deseas eliminar{" "}
-              <strong className="text-slate-900 dark:text-slate-100">
-                {deletingProduct.name}
-              </strong>{" "}
-              (Código:{" "}
-              <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
-                {deletingProduct.code}
-              </code>
-              )?
-            </p>
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-              <Button variant="outline" onClick={() => setDeletingProduct(null)}>
-                Cancelar
-              </Button>
-              <Button
-                variant="destructive"
-                leftIcon={<Trash2 className="h-4 w-4" />}
-                onClick={() => handleDeleteProduct(deletingProduct.id)}
-              >
-                Eliminar
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <DeleteProductDialog
+        isOpen={Boolean(deletingProduct)}
+        onClose={() => setDeletingProduct(null)}
+        product={deletingProduct}
+        onConfirm={handleDeleteProduct}
+      />
     </div>
   )
 }
