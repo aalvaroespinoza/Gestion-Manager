@@ -1,5 +1,6 @@
 // Global and shared TypeScript definitions
 export * from '@/modules/auth/types'
+export * from '@/modules/cash-register/types'
 export * from './database'
 
 export type ApiResponse<T = unknown> = {

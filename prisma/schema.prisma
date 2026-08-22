@@ -51,42 +51,56 @@ enum PaymentMethod {
   CURRENT_ACCOUNT
 }
 
+enum CashMovementType {
+  INCOME
+  EXPENSE
+}
+
+enum CashShiftStatus {
+  OPEN
+  CLOSED
+}
+
 model Tenant {
-  id         String       @id @default(cuid())
-  name       String
-  slug       String       @unique
-  domain     String?      @unique
-  plan       TenantPlan   @default(FREE)
-  status     TenantStatus @default(ACTIVE)
-  settings   Json?        // Stores TenantSettings (theme, currency, taxRate, address, etc.)
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  domain        String?        @unique
+  plan          TenantPlan     @default(FREE)
+  status        TenantStatus   @default(ACTIVE)
+  settings      Json?          // Stores TenantSettings (theme, currency, taxRate, address, etc.)
 
-  users      User[]
-  categories Category[]
-  products   Product[]
-  clients    Client[]
-  sales      Sale[]
+  users         User[]
+  categories    Category[]
+  products      Product[]
+  clients       Client[]
+  sales         Sale[]
+  cashShifts    CashShift[]
+  cashMovements CashMovement[]
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([slug])
   @@index([domain])
 }
 
 model User {
-  id           String     @id @default(cuid())
-  tenantId     String
-  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  email        String
-  passwordHash String?
-  name         String?
-  role         UserRole   @default(SELLER)
-  status       UserStatus @default(ACTIVE)
+  id            String         @id @default(cuid())
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email         String
+  passwordHash  String?
+  name          String?
+  role          UserRole       @default(SELLER)
+  status        UserStatus     @default(ACTIVE)
 
-  sales        Sale[]
+  sales         Sale[]
+  cashShifts    CashShift[]
+  cashMovements CashMovement[]
 
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -171,6 +185,9 @@ model Sale {
   clientId      String?
   client        Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
+  cashShiftId   String?
+  cashShift     CashShift?    @relation(fields: [cashShiftId], references: [id], onDelete: SetNull)
+
   invoiceNumber String        // Sequential receipt/invoice folio
   subtotal      Decimal       @db.Decimal(12, 2)
   tax           Decimal       @default(0) @db.Decimal(12, 2)
@@ -189,6 +206,7 @@ model Sale {
   @@index([tenantId])
   @@index([tenantId, userId])
   @@index([tenantId, clientId])
+  @@index([tenantId, cashShiftId])
   @@index([tenantId, createdAt])
 }
 
@@ -210,4 +228,47 @@ model SaleItem {
 
   @@index([saleId])
   @@index([productId])
+}
+
+model CashShift {
+  id             String          @id @default(cuid())
+  tenantId       String
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status         CashShiftStatus @default(OPEN)
+  initialAmount  Decimal         @db.Decimal(12, 2)
+  expectedAmount Decimal?        @db.Decimal(12, 2)
+  actualAmount   Decimal?        @db.Decimal(12, 2)
+  difference     Decimal?        @db.Decimal(12, 2)
+  openedAt       DateTime        @default(now())
+  closedAt       DateTime?
+  notes          String?
+
+  movements      CashMovement[]
+  sales          Sale[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+}
+
+model CashMovement {
+  id          String           @id @default(cuid())
+  tenantId    String
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cashShiftId String
+  cashShift   CashShift        @relation(fields: [cashShiftId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  type        CashMovementType
+  amount      Decimal          @db.Decimal(12, 2)
+  reason      String
+  createdAt   DateTime         @default(now())
+
+  @@index([tenantId])
+  @@index([cashShiftId])
 }

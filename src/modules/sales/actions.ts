@@ -135,12 +135,23 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
       const tax = validated.tax || 0
       const total = Math.max(0, subtotalSum - discount + tax)
 
+      // Look up active open cash shift for this user and tenant
+      const activeCashShift = await tx.cashShift.findFirst({
+        where: {
+          tenantId,
+          userId,
+          status: 'OPEN',
+        },
+        select: { id: true },
+      })
+
       // Registrar la cabecera Sale y los ítems SaleItem
       const sale = await tx.sale.create({
         data: {
           tenantId,
           userId,
           clientId: validated.clientId || null,
+          cashShiftId: activeCashShift?.id || null,
           invoiceNumber,
           subtotal: new Prisma.Decimal(subtotalSum),
           discount: new Prisma.Decimal(discount),
@@ -183,6 +194,7 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
     revalidatePath('/dashboard/sales')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
+    revalidatePath('/dashboard/cash-register')
 
     return {
       success: true,
