@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import Link from "next/link"
 import {
   Card,
   CardHeader,
@@ -17,110 +18,143 @@ import {
   TableHead,
   TableRow,
   TableCell,
+  TableEmpty,
 } from "@/components/ui/table"
-import { Modal } from "@/components/ui/modal"
-import { DynamicFormRenderer, DynamicFormSchemaConfig } from "@/components/dynamic-forms"
 import {
-  TrendingUp,
+  DollarSign,
+  ShoppingCart,
   Package,
   Users,
-  DollarSign,
-  Plus,
-  Sparkles,
+  TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
+  PlusCircle,
+  Boxes,
+  UserPlus,
+  ArrowRight,
+  Calendar,
+  CreditCard,
+  AlertTriangle,
   CheckCircle2,
+  RefreshCw,
+  Clock,
+  Sparkles,
+  ChevronRight,
+  ShieldCheck,
+  Building2,
+  Layers,
 } from "lucide-react"
 
-const sampleFormSchema: DynamicFormSchemaConfig = {
-  id: "quick-product-form",
-  title: "Nuevo Registro Dinámico (Demo JSON Schema)",
-  description: "Formulario generado 100% dinámicamente con validaciones Zod y React Hook Form.",
-  columns: 2,
-  submitText: "Crear Registro",
-  resetText: "Limpiar Campos",
-  showReset: true,
-  fields: [
-    {
-      name: "name",
-      label: "Nombre del Producto / Ítem",
-      type: "text",
-      placeholder: "Ej: Monitor Curvo 27' 144Hz",
-      required: true,
-      minLength: 3,
-      colSpan: "full",
-      description: "Nombre descriptivo para inventario y facturación.",
-    },
-    {
-      name: "category",
-      label: "Categoría",
-      type: "select",
-      required: true,
-      placeholder: "Selecciona una categoría",
-      options: [
-        { label: "Hardware & Computación", value: "hardware" },
-        { label: "Accesorios & Periféricos", value: "accessories" },
-        { label: "Redes & Comunicaciones", value: "networking" },
-        { label: "Servicios Digitales", value: "services" },
-      ],
-    },
-    {
-      name: "price",
-      label: "Precio Unitario (CLP)",
-      type: "number",
-      placeholder: "159990",
-      required: true,
-      min: 1,
-      description: "Valor neto antes de impuestos.",
-    },
-    {
-      name: "initialStock",
-      label: "Stock Inicial",
-      type: "number",
-      placeholder: "25",
-      required: true,
-      min: 0,
-    },
-    {
-      name: "sku",
-      label: "Código SKU / Barra",
-      type: "text",
-      placeholder: "HW-MON-27-01",
-      required: true,
-    },
-    {
-      name: "isFeatured",
-      label: "Producto Destacado en Catálogo",
-      type: "boolean",
-      description: "Mostrar este producto en la pantalla principal de ventas rápidas.",
-      defaultValue: true,
-    },
-    {
-      name: "requiresTaxExemption",
-      label: "Aplica Exención Tributaria",
-      type: "boolean",
-      description: "Marcar si el producto está afecto a exenciones legales.",
-      defaultValue: false,
-    },
-  ],
-}
+// Mock summary data for dashboard KPIs and charts
+const weeklySalesData = [
+  { day: "Lun", total: 420000, percentage: 65, orders: 18 },
+  { day: "Mar", total: 680000, percentage: 88, orders: 27 },
+  { day: "Mié", total: 540000, percentage: 72, orders: 22 },
+  { day: "Jue", total: 890000, percentage: 100, orders: 34 },
+  { day: "Vie", total: 760000, percentage: 92, orders: 31 },
+  { day: "Sáb", total: 950000, percentage: 105, orders: 42 },
+  { day: "Dom", total: 310000, percentage: 45, orders: 12 },
+]
+
+const recentTransactions = [
+  {
+    id: "tx-1",
+    ticket: "TK-2026-0004521",
+    customer: "Constructora Andina S.A.",
+    customerDoc: "CUIT: 30-71234567-8",
+    paymentMethod: "TRANSFERENCIA",
+    amount: 229670,
+    status: "COMPLETADA",
+    time: "Hace 12 min",
+  },
+  {
+    id: "tx-2",
+    ticket: "TK-2026-0004520",
+    customer: "Consumidor Final",
+    customerDoc: "DNI: 00000000",
+    paymentMethod: "EFECTIVO",
+    amount: 181488,
+    status: "COMPLETADA",
+    time: "Hace 45 min",
+  },
+  {
+    id: "tx-3",
+    ticket: "TK-2026-0004519",
+    customer: "Ferretería Central SpA",
+    customerDoc: "CUIT: 30-68991234-2",
+    paymentMethod: "CUENTA_CORRIENTE",
+    amount: 450000,
+    status: "COMPLETADA",
+    time: "Hace 2 horas",
+  },
+  {
+    id: "tx-4",
+    ticket: "TK-2026-0004518",
+    customer: "Juan Ignacio Pérez",
+    customerDoc: "DNI: 34.892.110",
+    paymentMethod: "TARJETA_DEBITO",
+    amount: 67990,
+    status: "COMPLETADA",
+    time: "Hace 3 horas",
+  },
+  {
+    id: "tx-5",
+    ticket: "TK-2026-0004517",
+    customer: "Distribuidora del Valle SRL",
+    customerDoc: "CUIT: 33-54992110-9",
+    paymentMethod: "TRANSFERENCIA",
+    amount: 890000,
+    status: "COMPLETADA",
+    time: "Hace 5 horas",
+  },
+]
+
+const recentInventoryMovements = [
+  {
+    id: "mov-1",
+    product: "Perfil Metalcon C Estructural",
+    sku: "CST-PER-GALV",
+    type: "IN",
+    quantity: 40,
+    reason: "Recepción de mercadería / Compra de stock",
+    time: "Hace 30 min",
+  },
+  {
+    id: "mov-2",
+    product: "Plancha Tablero OSB Estructural",
+    sku: "CST-OSB-15MM",
+    type: "OUT",
+    quantity: 4,
+    reason: "Merma por daño de embalaje",
+    time: "Hace 1 hora",
+  },
+  {
+    id: "mov-3",
+    product: "Taladro Percutor Brushless 20V",
+    sku: "FER-TAL-20V-BL",
+    type: "SET",
+    quantity: 16,
+    reason: "Ajuste por inventario físico en bodega",
+    time: "Hace 4 horas",
+  },
+]
 
 export default function DashboardOverviewPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [lastSubmittedData, setLastSubmittedData] = useState<any>(null)
+  const [isClientMounted, setIsClientMounted] = useState(false)
+  const [activeActivityTab, setActiveActivityTab] = useState<"SALES" | "STOCK">("SALES")
 
-  const handleFormSubmit = async (data: Record<string, any>) => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    setLastSubmittedData(data)
-  }
+  // Ensure hydration safety
+  useEffect(() => {
+    setIsClientMounted(true)
+  }, [])
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Page Title Header */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <TrendingUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             Panel de Control
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -128,30 +162,34 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
+        {/* Quick Branch & Status Badge */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="default"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setIsModalOpen(true)}
-          >
-            Nuevo Producto Rápido
-          </Button>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300">
+            <Building2 className="h-4 w-4 text-blue-500" />
+            <span>Sucursal: <strong>Casa Matriz (Santiago)</strong></span>
+          </div>
+          <Badge variant="success" size="sm" dot>
+            Caja Abierta
+          </Badge>
         </div>
       </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card className="hover:shadow-md transition-shadow">
+        {/* Card 1: Ventas del Mes */}
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Ventas del Mes
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <DollarSign className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">$18.450.000</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              $18.450.000
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-4 w-4" />
               <span>+14.2% vs mes anterior</span>
@@ -159,194 +197,364 @@ export default function DashboardOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        {/* Card 2: Órdenes / Transacciones */}
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Órdenes Procesadas
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <TrendingUp className="h-5 w-5" />
+            <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <ShoppingCart className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">1.284</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              1.284
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-4 w-4" />
-              <span>+8.1% nuevas órdenes</span>
+              <span>+8.1% transacciones hoy</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        {/* Card 3: Stock Crítico / Alertas */}
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              Ítems en Stock
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Stock Crítico / Alertas
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
-              <Package className="h-5 w-5" />
+            <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">4.512</div>
-            <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-              <Badge variant="warning" size="sm" dot>12 en stock crítico</Badge>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              4 productos
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+              <Badge variant="warning" size="sm" dot>
+                2 bajo mínimo • 2 agotados
+              </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        {/* Card 4: Clientes Activos */}
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Clientes Activos
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+            <div className="h-9 w-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400">
               <Users className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">892</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              892
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-4 w-4" />
-              <span>+24 esta semana</span>
+              <span>+24 registrados este mes</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Section: Dynamic Form Showcase & Live Table */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Interactive Dynamic Form Renderer */}
-        <div className="lg:col-span-7 space-y-6">
-          <Card className="border-blue-200/80 dark:border-blue-900/60 shadow-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base sm:text-lg">
-                    Generador de Formularios Dinámicos
-                  </CardTitle>
-                </div>
-                <Badge variant="info" size="sm">JSON Schema + Zod</Badge>
-              </div>
-              <CardDescription>
-                Componente reutilizable que construye y valida formularios dinámicos a partir de un esquema JSON.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DynamicFormRenderer
-                schema={sampleFormSchema}
-                onSubmit={handleFormSubmit}
-              />
+      {/* Central Quick Actions Grid (Accesos Rápidos) */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Accesos Rápidos & Operaciones Frecuentes
+        </h3>
 
-              {lastSubmittedData && (
-                <div className="mt-6 p-4 rounded-xl bg-slate-900 text-slate-100 text-xs font-mono overflow-x-auto space-y-2 border border-slate-800 animate-in fade-in">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Payload Recibido y Validado con Éxito:</span>
-                  </div>
-                  <pre>{JSON.stringify(lastSubmittedData, null, 2)}</pre>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Quick Action 1: POS Sales */}
+          <Link
+            href="/ventas"
+            className="group relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-blue-50/40 dark:from-slate-900 dark:to-blue-950/20 hover:border-blue-500 hover:shadow-md transition-all flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-blue-600 text-white shadow-sm group-hover:scale-105 transition-transform">
+                <ShoppingCart className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                  Nueva Venta (POS)
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Terminal de mostrador y cobro con tickets
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+          </Link>
+
+          {/* Quick Action 2: Stock & Inventory */}
+          <Link
+            href="/stock"
+            className="group relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-amber-50/40 dark:from-slate-900 dark:to-amber-950/20 hover:border-amber-500 hover:shadow-md transition-all flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-sm group-hover:scale-105 transition-transform">
+                <Boxes className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 transition-colors">
+                  Catálogo & Re-Stock
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Control de stock, alertas y atributos por rubro
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
+          </Link>
+
+          {/* Quick Action 3: Clients */}
+          <Link
+            href="/clientes"
+            className="group relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-purple-50/40 dark:from-slate-900 dark:to-purple-950/20 hover:border-purple-500 hover:shadow-md transition-all flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-purple-600 text-white shadow-sm group-hover:scale-105 transition-transform">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 transition-colors">
+                  Directorio de Clientes
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Cuentas corrientes, CUIT/DNI y contactos
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Main Section: Weekly Sales Chart & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Weekly Sales Trends (Tailwind Pure CSS Bars) */}
+        <div className="lg:col-span-7 space-y-6">
+          <Card className="shadow-xs">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base sm:text-lg">
+                    Rendimiento de Ventas Semanal
+                  </CardTitle>
+                  <CardDescription>
+                    Ingresos diarios y cumplimiento de meta proyectada de la semana.
+                  </CardDescription>
                 </div>
-              )}
+                <Badge variant="secondary" size="sm">
+                  Esta Semana
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Daily Bar Chart */}
+              <div className="space-y-3.5 pt-2">
+                {weeklySalesData.map((item) => (
+                  <div key={item.day} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 font-bold text-slate-700 dark:text-slate-300">
+                          {item.day}
+                        </span>
+                        <span className="text-slate-400 text-[11px]">
+                          ({item.orders} tickets)
+                        </span>
+                      </div>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">
+                        ${item.total.toLocaleString("es-CL")}
+                      </span>
+                    </div>
+
+                    <div className="h-3 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          item.percentage >= 100
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                            : item.percentage >= 70
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                            : "bg-gradient-to-r from-slate-400 to-blue-400"
+                        }`}
+                        style={{ width: `${Math.min(100, item.percentage)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Weekly Summary Footer */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500">Total Facturado Semana</span>
+                  <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    $4.570.000
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-slate-500">Meta Semanal</span>
+                  <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                    94.2% Cumplido
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Column: Recent Activity Table */}
+        {/* Right Column: Recent Activity Feed (Sales & Stock) */}
         <div className="lg:col-span-5 space-y-6">
-          <Card>
-            <CardHeader>
+          <Card className="shadow-xs">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Últimas Transacciones</CardTitle>
-                <Badge variant="secondary" size="sm">En Vivo</Badge>
+                <div>
+                  <CardTitle className="text-base">Actividad Reciente</CardTitle>
+                  <CardDescription>
+                    Transacciones y movimientos en tiempo real.
+                  </CardDescription>
+                </div>
+
+                {/* Activity Mode Switch */}
+                <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setActiveActivityTab("SALES")}
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      activeActivityTab === "SALES"
+                        ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    Ventas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveActivityTab("STOCK")}
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      activeActivityTab === "STOCK"
+                        ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    Stock
+                  </button>
+                </div>
               </div>
-              <CardDescription>Movimientos recientes registrados en la sucursal actual.</CardDescription>
             </CardHeader>
+
             <CardContent className="p-0">
-              <Table className="border-0 rounded-none">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Folio</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Monto</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-semibold">#V-1094</TableCell>
-                    <TableCell>
-                      <div className="font-medium text-xs">Constructora Andina</div>
-                      <div className="text-[10px] text-slate-400">RUT: 76.840.120-4</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="success" size="sm" dot>Pagado</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-xs">$320.000</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">#V-1093</TableCell>
-                    <TableCell>
-                      <div className="font-medium text-xs">Agrícola del Valle</div>
-                      <div className="text-[10px] text-slate-400">RUT: 81.230.990-1</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="warning" size="sm" dot>Pendiente</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-xs">$89.500</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">#V-1092</TableCell>
-                    <TableCell>
-                      <div className="font-medium text-xs">Comercial Pacífico</div>
-                      <div className="text-[10px] text-slate-400">RUT: 96.112.450-K</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="success" size="sm" dot>Pagado</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-xs">$1.450.000</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">#V-1091</TableCell>
-                    <TableCell>
-                      <div className="font-medium text-xs">Tecnología Global SpA</div>
-                      <div className="text-[10px] text-slate-400">RUT: 77.540.900-2</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="destructive" size="sm" dot>Anulado</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-xs">$42.000</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              {activeActivityTab === "SALES" ? (
+                /* Recent Sales Table */
+                <Table className="border-0 rounded-none">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ticket</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="text-right">Monto</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentTransactions.map((tx) => (
+                      <TableRow key={tx.id}>
+                        <TableCell>
+                          <div className="font-mono text-xs font-semibold text-slate-900 dark:text-slate-100">
+                            {tx.ticket}
+                          </div>
+                          <span className="text-[10px] text-slate-400">{tx.time}</span>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="font-medium text-xs text-slate-800 dark:text-slate-200 line-clamp-1">
+                            {tx.customer}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Badge variant="secondary" size="sm" className="text-[9px] px-1 py-0">
+                              {tx.paymentMethod}
+                            </Badge>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 font-mono">
+                            ${tx.amount.toLocaleString("es-CL")}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                /* Recent Stock Adjustments Table */
+                <Table className="border-0 rounded-none">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead className="text-center">Ajuste</TableHead>
+                      <TableHead className="text-right">Motivo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentInventoryMovements.map((mov) => (
+                      <TableRow key={mov.id}>
+                        <TableCell>
+                          <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 line-clamp-1">
+                            {mov.product}
+                          </div>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            {mov.sku} • {mov.time}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-center">
+                          <Badge
+                            variant={
+                              mov.type === "IN"
+                                ? "success"
+                                : mov.type === "OUT"
+                                ? "destructive"
+                                : "info"
+                            }
+                            size="sm"
+                          >
+                            {mov.type === "IN"
+                              ? `+${mov.quantity}`
+                              : mov.type === "OUT"
+                              ? `-${mov.quantity}`
+                              : `=${mov.quantity}`}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <span className="text-[11px] text-slate-500 line-clamp-1">
+                            {mov.reason}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+
+              {/* View All Module Link */}
+              <div className="p-3 border-t border-slate-100 dark:border-slate-800 text-center">
+                <Link
+                  href={activeActivityTab === "SALES" ? "/ventas" : "/stock"}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  <span>Ver todas las operaciones en {activeActivityTab === "SALES" ? "Ventas" : "Stock"}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Modal Demonstration */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Crear Nuevo Ítem en Catálogo"
-        description="Ingresa los datos requeridos para registrar el nuevo producto en la sucursal actual."
-        size="lg"
-      >
-        <div className="py-2">
-          <DynamicFormRenderer
-            schema={{
-              ...sampleFormSchema,
-              title: undefined,
-              description: undefined,
-            }}
-            onSubmit={async (data) => {
-              await handleFormSubmit(data)
-              setIsModalOpen(false)
-            }}
-          />
-        </div>
-      </Modal>
     </div>
   )
 }
