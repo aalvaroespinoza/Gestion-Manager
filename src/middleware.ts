@@ -48,6 +48,10 @@ export async function middleware(request: NextRequest) {
   const isProtectedPath =
     pathname === '/' ||
     pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/stock') ||
+    pathname.startsWith('/ventas') ||
+    pathname.startsWith('/clientes') ||
+    pathname.startsWith('/configuracion') ||
     pathname.startsWith('/inventory') ||
     pathname.startsWith('/sales') ||
     pathname.startsWith('/clients') ||
@@ -61,14 +65,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 3. If unauthenticated on protected route -> redirect to /login
+  // 3. If unauthenticated on protected route:
   if (!session || !session.userId || !session.tenantId) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized: Missing or invalid session' }, { status: 401 })
     }
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
+    // In frontend-first mode without active login UI, allow navigation downstream
+    return NextResponse.next()
   }
 
   // 4. If authenticated -> inject tenant and user context headers downstream
