@@ -1,27 +1,55 @@
+import { headers } from 'next/headers'
 import { getSession } from '@/lib/session'
-import { AuthUser, AuthTenant, SessionPayload } from './types'
+import { AuthUser, SessionPayload, UserRole } from './types'
 
 /**
- * Returns the current authenticated session payload or null
+ * Returns the current authenticated session payload (from headers or session cookie)
  */
 export async function getCurrentSession(): Promise<SessionPayload | null> {
+  try {
+    const headerList = await headers()
+    const tenantId = headerList.get('x-tenant-id')
+    const userId = headerList.get('x-user-id')
+    const role = headerList.get('x-user-role') as UserRole | null
+    const email = headerList.get('x-user-email')
+
+    if (tenantId && userId && role && email) {
+      return {
+        userId,
+        tenantId,
+        role,
+        email,
+      }
+    }
+  } catch {
+    // headers() might not be available in all contexts, fallback to cookie
+  }
+
   return await getSession()
 }
 
 /**
- * Returns the currently authenticated user or null
+ * Returns the authenticated user from the request context / cookies
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const session = await getSession()
-  return session?.user ?? null
+  const session = await getCurrentSession()
+  if (!session) return null
+
+  return {
+    id: session.userId,
+    tenantId: session.tenantId,
+    email: session.email,
+    role: session.role,
+    name: session.name,
+  }
 }
 
 /**
- * Returns the current tenant context or null
+ * Returns the validated tenantId for the current session to inject into database queries
  */
-export async function getCurrentTenant(): Promise<AuthTenant | null> {
-  const session = await getSession()
-  return session?.tenant ?? null
+export async function getCurrentTenant(): Promise<string | null> {
+  const session = await getCurrentSession()
+  return session?.tenantId ?? null
 }
 
 /**
@@ -36,23 +64,12 @@ export async function requireUser(): Promise<AuthUser> {
 }
 
 /**
- * Ensures tenant context is present; throws an error if missing
+ * Ensures valid tenantId exists; throws an error if missing
  */
-export async function requireTenant(): Promise<AuthTenant> {
-  const tenant = await getCurrentTenant()
-  if (!tenant) {
+export async function requireTenant(): Promise<string> {
+  const tenantId = await getCurrentTenant()
+  if (!tenantId) {
     throw new Error('Unauthorized: Tenant context required')
   }
-  return tenant
-}
-
-/**
- * Ensures a valid session exists with both user and tenant
- */
-export async function requireSession(): Promise<SessionPayload> {
-  const session = await getCurrentSession()
-  if (!session || !session.user || !session.tenant) {
-    throw new Error('Unauthorized: Valid session required')
-  }
-  return session
+  return tenantId
 }

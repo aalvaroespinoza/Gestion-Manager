@@ -1,15 +1,18 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
-import { SessionPayload, AuthUser, AuthTenant } from '@/modules/auth/types'
+import { SessionPayload, UserRole } from '@/modules/auth/types'
 
 const SECRET_KEY = process.env.NEXTAUTH_SECRET || 'super-secret-default-key-change-in-production-min32chars'
 const encodedKey = new TextEncoder().encode(SECRET_KEY)
 export const SESSION_COOKIE_NAME = 'gestion_session'
 
 /**
- * Signs a session payload into a JWT token
+ * Signs a session payload containing userId, tenantId, role, and email into a JWT token
  */
-export async function signSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'>, expiresIn = '7d'): Promise<string> {
+export async function signSessionToken(
+  payload: Omit<SessionPayload, 'iat' | 'exp'>,
+  expiresIn = '7d'
+): Promise<string> {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -32,7 +35,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
 }
 
 /**
- * Retrieves the current session from incoming request cookies (Server Components / Server Actions / Route Handlers)
+ * Retrieves the current session payload from incoming request cookies
  */
 export async function getSession(): Promise<SessionPayload | null> {
   try {
@@ -50,10 +53,16 @@ export async function getSession(): Promise<SessionPayload | null> {
 }
 
 /**
- * Sets session cookie on the response
+ * Sets session cookie with userId, tenantId, role, and email
  */
-export async function createSession(user: AuthUser, tenant: AuthTenant): Promise<string> {
-  const token = await signSessionToken({ user, tenant })
+export async function createSession(data: {
+  userId: string
+  tenantId: string
+  role: UserRole
+  email: string
+  name?: string | null
+}): Promise<string> {
+  const token = await signSessionToken(data)
   const cookieStore = await cookies()
 
   cookieStore.set(SESSION_COOKIE_NAME, token, {
