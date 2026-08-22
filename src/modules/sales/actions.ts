@@ -4,12 +4,16 @@ import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/modules/auth/session-utils'
+import { assertRole } from '@/modules/auth/permissions'
+import { logAuditTx } from '@/modules/audit/actions'
 import { ApiResponse } from '@/types'
 import { TenantSettings } from '@/types/database'
 import {
   createSaleSchema,
+  cancelSaleSchema,
   saleFilterSchema,
   CreateSaleInput,
+  CancelSaleInput,
   SaleFilterInput,
 } from './validation'
 
@@ -359,3 +363,159 @@ export async function getSaleById(id: string): Promise<ApiResponse<any>> {
     }
   }
 }
+
+/**
+ * Cancels a completed sale, restores product stock, adjusts cash register if shift is open, and logs audit
+ * Protected: Requires ADMIN or MANAGER role
+ */
+export async function cancelSale(data: CancelSaleInput): Promise<ApiResponse<any>> {
+  try {
+    // RBAC: Restricted exclusively to ADMIN and MANAGER
+    const user = await assertRole(['ADMIN', 'MANAGER'])
+    const { tenantId, id: userId } = user
+    const validated = cancelSaleSchema.parse(data)
+
+    // Paso A: Verificar que la venta exista, pertenezca al tenantId actual y su estado sea COMPLETED
+    const sale = await prisma.sale.findFirst({
+      where: {
+        id: validated.saleId,
+        tenantId,
+      },
+      include: {
+        items: true,
+      },
+    })
+
+    if (!sale) {
+      return {
+        success: false,
+        error: 'Venta no encontrada en tu organización',
+      }
+    }
+
+    if (sale.status === 'CANCELLED') {
+      return {
+        success: false,
+        error: `La venta ${sale.invoiceNumber} ya se encuentra anulada`,
+      }
+    }
+
+    if (sale.status !== 'COMPLETED') {
+      return {
+        success: false,
+        error: `Solo se pueden anular ventas en estado COMPLETADA. Estado actual: ${sale.status}`,
+      }
+    }
+
+    // Paso B: Iniciar transacción atómica
+    const cancelledSale = await prisma.$transaction(async (tx) => {
+      // 1. Reintegrar el stock de cada producto involucrado
+      for (const item of sale.items) {
+        if (item.productId) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              currentStock: {
+                increment: item.quantity,
+              },
+            },
+          })
+        }
+      }
+
+      // 2. Si la venta estuvo asociada a un turno de caja que aún está OPEN, registrar egreso manual
+      if (sale.cashShiftId && sale.paymentMethod === 'CASH') {
+        const openShift = await tx.cashShift.findFirst({
+          where: {
+            id: sale.cashShiftId,
+            tenantId,
+            status: 'OPEN',
+          },
+        })
+
+        if (openShift) {
+          await tx.cashMovement.create({
+            data: {
+              tenantId,
+              userId,
+              cashShiftId: openShift.id,
+              type: 'EXPENSE',
+              amount: sale.total,
+              reason: `Reintegro por anulación de comprobante ${sale.invoiceNumber}: ${validated.reason}`,
+            },
+          })
+        }
+      }
+
+      // 3. Actualizar estado de la venta a CANCELLED y registrar motivo
+      const cancelNote = `[ANULADA por ${user.name || user.email}]: ${validated.reason}`
+      const updated = await tx.sale.update({
+        where: { id: sale.id },
+        data: {
+          status: 'CANCELLED',
+          notes: sale.notes ? `${cancelNote} | ${sale.notes}` : cancelNote,
+        },
+        include: {
+          client: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  code: true,
+                },
+              },
+            },
+          },
+        },
+      })
+
+      // 4. Registrar auditoría de operación crítica
+      await logAuditTx(tx, {
+        tenantId,
+        userId,
+        action: 'CANCEL_SALE',
+        entity: 'Sale',
+        entityId: sale.id,
+        details: {
+          invoiceNumber: sale.invoiceNumber,
+          total: sale.total.toNumber(),
+          reason: validated.reason,
+          itemsCount: sale.items.length,
+          cancelledBy: user.name || user.email,
+          cancelledByRole: user.role,
+        },
+      })
+
+      return updated
+    })
+
+    // Paso C: Revalidar rutas
+    revalidatePath('/dashboard/sales')
+    revalidatePath('/dashboard/inventory')
+    revalidatePath('/dashboard/products')
+    revalidatePath('/dashboard/cash-register')
+    revalidatePath('/ventas')
+    revalidatePath('/stock')
+
+    return {
+      success: true,
+      data: cancelledSale,
+      message: `Venta ${sale.invoiceNumber} anulada exitosamente y stock restituido`,
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Error al anular la venta',
+    }
+  }
+}
+

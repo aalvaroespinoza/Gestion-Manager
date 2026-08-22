@@ -37,9 +37,16 @@ export const saleFilterSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 })
 
+export const cancelSaleSchema = z.object({
+  saleId: z.string().min(1, 'El ID de la venta es obligatorio'),
+  reason: z.string().min(5, 'El motivo de anulación debe tener al menos 5 caracteres'),
+})
+
 // ==========================================
 // Inferred TypeScript Types
 // ==========================================
 export type SaleItemInput = z.infer<typeof saleItemSchema>
 export type CreateSaleInput = z.infer<typeof createSaleSchema>
+export type CancelSaleInput = z.infer<typeof cancelSaleSchema>
 export type SaleFilterInput = z.infer<typeof saleFilterSchema>
+
