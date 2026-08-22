@@ -16,9 +16,16 @@ import {
   TableEmpty,
 } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
-import { ProductModal } from "@/components/modules/inventory/ProductModal"
+import { ProductModal, StockAdjustmentModal } from "@/components/modules/inventory"
 import { mockCategories, mockProducts } from "@/mocks/inventoryData"
-import { Category, Product, ProductFormData, StockStatus } from "@/types/inventory"
+import {
+  Category,
+  Product,
+  ProductFormData,
+  StockAdjustmentType,
+  StockMovement,
+  StockStatus,
+} from "@/types/inventory"
 import {
   Boxes,
   Package,
@@ -31,10 +38,14 @@ import {
   CheckCircle2,
   DollarSign,
   TrendingUp,
+  RefreshCw,
   SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  FileSpreadsheet,
 } from "lucide-react"
 
 export default function StockPage() {
@@ -48,17 +59,24 @@ export default function StockPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL")
   const [sortBy, setSortBy] = useState<"name" | "stock" | "price-asc" | "price-desc">("name")
 
-  // Pagination
+  // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(8)
 
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+  const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
+  const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
+
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
 
-  // Toast feedback
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "info" | "danger" } | null>(null)
+  // Toast feedback notification
+  const [toastMessage, setToastMessage] = useState<{
+    text: string
+    type: "success" | "info" | "danger"
+  } | null>(null)
 
   const showToast = (text: string, type: "success" | "info" | "danger" = "success") => {
     setToastMessage({ text, type })
@@ -66,9 +84,14 @@ export default function StockPage() {
   }
 
   // --- CRUD Mutations in Local React State ---
-  const handleSaveProduct = (productData: ProductFormData & { id?: string; status?: StockStatus }) => {
+
+  // 1. Create or Edit Product
+  const handleSaveProduct = (
+    productData: ProductFormData & { id?: string; status?: StockStatus }
+  ) => {
     const category = categories.find((c) => c.id === productData.categoryId)
     const categoryName = category?.name || "General"
+    const now = new Date().toISOString()
 
     if (productData.id) {
       // Update existing product
@@ -79,7 +102,7 @@ export default function StockPage() {
                 ...p,
                 ...productData,
                 categoryName,
-                updatedAt: new Date().toISOString(),
+                updatedAt: now,
               }
             : p
         )
@@ -92,68 +115,118 @@ export default function StockPage() {
         ...productData,
         categoryName,
         status: productData.status || "IN_STOCK",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       }
       setProducts((prev) => [newProd, ...prev])
-      showToast(`Producto "${productData.name}" registrado en stock.`, "success")
+      showToast(`Producto "${productData.name}" registrado en el catálogo.`, "success")
     }
   }
 
+  // 2. Fast Stock Adjustment (Re-stock / Egreso / Conteo)
+  const handleConfirmStockAdjustment = (
+    productId: string,
+    newStock: number,
+    movement: {
+      type: StockAdjustmentType
+      quantity: number
+      previousStock: number
+      newStock: number
+      reason: string
+      documentRef?: string
+    }
+  ) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id === productId) {
+          let status: StockStatus = "IN_STOCK"
+          if (newStock === 0) status = "OUT_OF_STOCK"
+          else if (newStock <= p.minStock) status = "LOW_STOCK"
+
+          return {
+            ...p,
+            stock: newStock,
+            status,
+            updatedAt: new Date().toISOString(),
+          }
+        }
+        return p
+      })
+    )
+
+    const opLabel =
+      movement.type === "IN"
+        ? `+${movement.quantity} un. ingresadas`
+        : movement.type === "OUT"
+        ? `-${movement.quantity} un. descontadas`
+        : `Stock fijado en ${newStock} un.`
+
+    showToast(
+      `Ajuste de stock realizado (${opLabel}). Nuevo total: ${newStock} un.`,
+      movement.type === "IN" ? "success" : "info"
+    )
+  }
+
+  // 3. Delete Product
   const handleDeleteProduct = (productId: string) => {
     const prod = products.find((p) => p.id === productId)
     setProducts((prev) => prev.filter((p) => p.id !== productId))
     setDeletingProduct(null)
-    showToast(`Producto "${prod?.name || productId}" eliminado del catálogo.`, "danger")
+    showToast(`Producto "${prod?.name || productId}" eliminado del inventario.`, "danger")
   }
 
   // --- Filtered & Sorted Products ---
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      // Filter by category
-      if (selectedCategory !== "ALL" && product.categoryId !== selectedCategory) {
-        return false
-      }
+    return products
+      .filter((product) => {
+        // Filter by category
+        if (selectedCategory !== "ALL" && product.categoryId !== selectedCategory) {
+          return false
+        }
 
-      // Filter by stock status
-      if (selectedStatus !== "ALL" && product.status !== selectedStatus) {
-        return false
-      }
+        // Filter by stock status
+        if (selectedStatus !== "ALL" && product.status !== selectedStatus) {
+          return false
+        }
 
-      // Filter by search text (code, name, description, customAttributes)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase()
-        const matchCode = product.code.toLowerCase().includes(q)
-        const matchName = product.name.toLowerCase().includes(q)
-        const matchDesc = product.description?.toLowerCase().includes(q)
-        const matchAttrs = Object.values(product.customAttributes || {}).some(
-          (val) => String(val).toLowerCase().includes(q)
-        )
-        if (!matchCode && !matchName && !matchDesc && !matchAttrs) return false
-      }
+        // Filter by search text (code, name, description, customAttributes)
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase()
+          const matchCode = product.code.toLowerCase().includes(q)
+          const matchName = product.name.toLowerCase().includes(q)
+          const matchDesc = product.description?.toLowerCase().includes(q)
+          const matchAttrs = Object.values(product.customAttributes || {}).some(
+            (val) => String(val).toLowerCase().includes(q)
+          )
+          if (!matchCode && !matchName && !matchDesc && !matchAttrs) return false
+        }
 
-      return true
-    }).sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name)
-      if (sortBy === "stock") return b.stock - a.stock
-      if (sortBy === "price-asc") return a.salePrice - b.salePrice
-      if (sortBy === "price-desc") return b.salePrice - a.salePrice
-      return 0
-    })
+        return true
+      })
+      .sort((a, b) => {
+        if (sortBy === "name") return a.name.localeCompare(b.name)
+        if (sortBy === "stock") return b.stock - a.stock
+        if (sortBy === "price-asc") return a.salePrice - b.salePrice
+        if (sortBy === "price-desc") return b.salePrice - a.salePrice
+        return 0
+      })
   }, [products, searchQuery, selectedCategory, selectedStatus, sortBy])
 
-  // --- Pagination ---
+  // --- Pagination Slice ---
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredProducts.slice(start, start + itemsPerPage)
   }, [filteredProducts, currentPage, itemsPerPage])
 
-  // KPI Calculations
-  const totalStock = products.reduce((sum, p) => sum + p.stock, 0)
+  // --- KPI Stats Calculations ---
+  const totalItemsCount = products.length
+  const totalUnitsInStock = products.reduce((sum, p) => sum + p.stock, 0)
+  const totalValuationEstimated = products.reduce((sum, p) => sum + p.stock * p.costPrice, 0)
+  const totalSaleValuation = products.reduce((sum, p) => sum + p.stock * p.salePrice, 0)
   const lowStockCount = products.filter((p) => p.status === "LOW_STOCK").length
   const outOfStockCount = products.filter((p) => p.status === "OUT_OF_STOCK").length
-  const totalValuation = products.reduce((sum, p) => sum + p.stock * p.costPrice, 0)
+  const normalStockCount = products.filter((p) => p.status === "IN_STOCK").length
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -178,10 +251,10 @@ export default function StockPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Boxes className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            Módulo de Stock & Catálogo
+            Control de Stock & Inventario
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Control de existencias multi-rubro con atributos dinámicos personalizados.
+            Gestión en tiempo real de existencias, atributos técnicos por rubro y ajustes de stock.
           </p>
         </div>
 
@@ -200,59 +273,79 @@ export default function StockPage() {
 
       {/* KPI Cards Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Total Productos
+              Total de Productos
             </CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{products.length} ítems</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{totalStock} unidades en almacén</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Valorización Costo
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-500" />
+            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+              <Package className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              ${totalValuation.toLocaleString("es-CL")}
+              {totalItemsCount} <span className="text-sm font-normal text-slate-500">ítems</span>
             </div>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-              Capital inmovilizado
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {totalUnitsInStock} unidades físicas en bodega
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Stock Bajo / Crítico
+              Valor Total Estimado
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+              <DollarSign className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{lowStockCount}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Bajo el umbral de seguridad</p>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              ${totalValuationEstimated.toLocaleString("es-CL")}
+            </div>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+              Venta est.: ${totalSaleValuation.toLocaleString("es-CL")}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Stock Crítico / Bajo
+            </CardTitle>
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {lowStockCount} <span className="text-sm font-normal text-slate-500">ítems</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Bajo el umbral mínimo de seguridad
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Productos Agotados
             </CardTitle>
-            <Boxes className="h-4 w-4 text-red-500" />
+            <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400">
+              <Boxes className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{outOfStockCount}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Requiere orden de compra</p>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              {outOfStockCount} <span className="text-sm font-normal text-slate-500">ítems</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Existencias en 0 un. (Sin stock)
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -262,7 +355,7 @@ export default function StockPage() {
         <CardHeader className="space-y-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
             {/* Real-time Search */}
-            <div className="sm:col-span-5">
+            <div className="sm:col-span-4">
               <Input
                 placeholder="Buscar por código, nombre o atributos..."
                 leftIcon={<Search className="h-4 w-4" />}
@@ -289,8 +382,8 @@ export default function StockPage() {
               />
             </div>
 
-            {/* Status Filter */}
-            <div className="sm:col-span-2">
+            {/* Quick Stock Status Filter */}
+            <div className="sm:col-span-3">
               <Select
                 value={selectedStatus}
                 onChange={(e) => {
@@ -299,9 +392,9 @@ export default function StockPage() {
                 }}
                 options={[
                   { label: "Todos los Estados", value: "ALL" },
-                  { label: "En Stock (Normal)", value: "IN_STOCK" },
-                  { label: "Stock Bajo", value: "LOW_STOCK" },
-                  { label: "Agotado", value: "OUT_OF_STOCK" },
+                  { label: "🟢 Stock Normal (En Stock)", value: "IN_STOCK" },
+                  { label: "🟡 Stock Bajo (Crítico)", value: "LOW_STOCK" },
+                  { label: "🔴 Agotados (Sin Stock)", value: "OUT_OF_STOCK" },
                 ]}
               />
             </div>
@@ -340,7 +433,7 @@ export default function StockPage() {
               {paginatedProducts.length === 0 ? (
                 <TableEmpty
                   colSpan={8}
-                  message="No se encontraron productos que coincidan con la búsqueda o filtro seleccionado."
+                  message="No se encontraron productos que coincidan con la búsqueda o filtros aplicados."
                 />
               ) : (
                 paginatedProducts.map((product) => {
@@ -378,7 +471,12 @@ export default function StockPage() {
                       <TableCell className="max-w-xs">
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(product.customAttributes || {}).map(([key, val]) => {
-                            if (val === undefined || val === null || val === "" || typeof val === "boolean") {
+                            if (
+                              val === undefined ||
+                              val === null ||
+                              val === "" ||
+                              typeof val === "boolean"
+                            ) {
                               return null
                             }
                             return (
@@ -443,27 +541,43 @@ export default function StockPage() {
                         </Badge>
                       </TableCell>
 
-                      {/* Acciones */}
+                      {/* Acciones: Re-stock, Editar, Eliminar */}
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Botón Re-stock / Ajustar */}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            title="Re-stock / Ajustar Stock"
+                            className="h-8 px-2.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 font-medium"
+                            onClick={() => {
+                              setAdjustingProduct(product)
+                              setIsAdjustmentModalOpen(true)
+                            }}
+                            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                          >
+                            <span>Re-stock</span>
+                          </Button>
+
+                          {/* Botón Editar */}
                           <Button
                             variant="ghost"
                             size="sm"
-                            title="Editar Producto"
+                            title="Editar Producto Completo"
                             className="h-8 px-2 text-slate-600 dark:text-slate-300 hover:text-blue-600"
                             onClick={() => {
                               setEditingProduct(product)
                               setIsProductModalOpen(true)
                             }}
                           >
-                            <Edit2 className="h-3.5 w-3.5 mr-1" />
-                            <span className="text-xs">Editar</span>
+                            <Edit2 className="h-3.5 w-3.5" />
                           </Button>
 
+                          {/* Botón Eliminar */}
                           <Button
                             variant="ghost"
                             size="sm"
-                            title="Eliminar"
+                            title="Eliminar del Catálogo"
                             className="h-8 px-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
                             onClick={() => setDeletingProduct(product)}
                           >
@@ -537,6 +651,17 @@ export default function StockPage() {
         categories={categories}
       />
 
+      {/* Quick Stock Adjustment Modal */}
+      <StockAdjustmentModal
+        isOpen={isAdjustmentModalOpen}
+        onClose={() => {
+          setIsAdjustmentModalOpen(false)
+          setAdjustingProduct(null)
+        }}
+        product={adjustingProduct}
+        onConfirm={handleConfirmStockAdjustment}
+      />
+
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
         <Modal
@@ -549,7 +674,7 @@ export default function StockPage() {
               <span>Eliminar Producto</span>
             </div>
           }
-          description="Esta acción eliminará el producto del inventario."
+          description="Esta acción eliminará el producto del inventario de forma permanente."
         >
           <div className="space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-300">
@@ -557,7 +682,11 @@ export default function StockPage() {
               <strong className="text-slate-900 dark:text-slate-100">
                 {deletingProduct.name}
               </strong>{" "}
-              (Código: <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{deletingProduct.code}</code>)?
+              (Código:{" "}
+              <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
+                {deletingProduct.code}
+              </code>
+              )?
             </p>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">

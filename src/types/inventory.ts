@@ -2,6 +2,8 @@ import { DynamicFormFieldConfig } from "@/components/dynamic-forms/types"
 
 export type StockStatus = "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED"
 
+export type StockAdjustmentType = "IN" | "OUT" | "SET"
+
 export interface Category {
   id: string
   name: string
@@ -37,4 +39,18 @@ export interface ProductFormData {
   stock: number
   minStock: number
   customAttributes: Record<string, any>
+}
+
+export interface StockMovement {
+  id: string
+  productId: string
+  productName?: string
+  productCode?: string
+  type: StockAdjustmentType
+  quantity: number
+  previousStock: number
+  newStock: number
+  reason?: string
+  documentRef?: string
+  createdAt: string
 }
