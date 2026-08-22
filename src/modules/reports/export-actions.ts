@@ -9,7 +9,7 @@ import { format } from 'date-fns'
 export async function exportSalesToCsv(startDate?: Date, endDate?: Date) {
   try {
     const tenantId = await getCurrentTenant()
-    if (!tenantId) throw new Error('No autorizado')
+    if (!tenantId) throw new Error('No autorizado: sesión requerida')
 
     const sales = await prisma.sale.findMany({
       where: {
@@ -52,11 +52,18 @@ export async function exportSalesToCsv(startDate?: Date, endDate?: Date) {
       }))
     )
 
-    const csvString = Papa.unparse(flatData, {
+    const rawCsv = Papa.unparse(flatData, {
       delimiter: ';', // Formato compatible nativo con Excel en español
     })
 
-    return { success: true, csv: csvString, filename: `ventas_${format(new Date(), 'yyyyMMdd_HHmm')}.csv` }
+    // Prepend UTF-8 BOM (\ufeff) for native Excel UTF-8 recognition
+    const csvString = '\ufeff' + rawCsv
+
+    return {
+      success: true,
+      csv: csvString,
+      filename: `ventas_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`,
+    }
   } catch (error: any) {
     return { success: false, error: error.message || 'Error al exportar ventas' }
   }
@@ -66,7 +73,7 @@ export async function exportSalesToCsv(startDate?: Date, endDate?: Date) {
 export async function exportInventoryToCsv() {
   try {
     const tenantId = await getCurrentTenant()
-    if (!tenantId) throw new Error('No autorizado')
+    if (!tenantId) throw new Error('No autorizado: sesión requerida')
 
     const products = await prisma.product.findMany({
       where: { tenantId },
@@ -75,7 +82,7 @@ export async function exportInventoryToCsv() {
     })
 
     const data = products.map((prod) => ({
-      Codigo: prod.code || '',
+      Codigo: prod.code || 'S/C',
       Producto: prod.name,
       Categoria: prod.category?.name || 'Sin Categoría',
       StockActual: Number(prod.currentStock),
@@ -85,9 +92,16 @@ export async function exportInventoryToCsv() {
       AtributosExtra: prod.customAttributes ? JSON.stringify(prod.customAttributes) : '',
     }))
 
-    const csvString = Papa.unparse(data, { delimiter: ';' })
+    const rawCsv = Papa.unparse(data, { delimiter: ';' })
 
-    return { success: true, csv: csvString, filename: `inventario_${format(new Date(), 'yyyyMMdd_HHmm')}.csv` }
+    // Prepend UTF-8 BOM (\ufeff)
+    const csvString = '\ufeff' + rawCsv
+
+    return {
+      success: true,
+      csv: csvString,
+      filename: `inventario_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`,
+    }
   } catch (error: any) {
     return { success: false, error: error.message || 'Error al exportar inventario' }
   }
