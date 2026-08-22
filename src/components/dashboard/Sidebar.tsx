@@ -33,8 +33,8 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "Stock",
-    href: "/stock",
+    title: "Inventario",
+    href: "/inventory",
     icon: Boxes,
     badge: "12",
   },
@@ -72,6 +72,9 @@ export function Sidebar({
 
   const isLinkActive = (href: string) => {
     if (href === "/dashboard" && (pathname === "/" || pathname === "/dashboard")) {
+      return true
+    }
+    if (href === "/inventory" && (pathname.startsWith("/inventory") || pathname.startsWith("/stock"))) {
       return true
     }
     return pathname.startsWith(href) && href !== "/"
