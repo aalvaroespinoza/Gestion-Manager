@@ -8,3 +8,206 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum TenantPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum UserRole {
+  ADMIN
+  SELLER
+  MANAGER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  CURRENT_ACCOUNT
+}
+
+model Tenant {
+  id         String       @id @default(cuid())
+  name       String
+  slug       String       @unique
+  domain     String?      @unique
+  plan       TenantPlan   @default(FREE)
+  status     TenantStatus @default(ACTIVE)
+  settings   Json?        // Stores TenantSettings (theme, currency, taxRate, address, etc.)
+
+  users      User[]
+  categories Category[]
+  products   Product[]
+  clients    Client[]
+  sales      Sale[]
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([domain])
+}
+
+model User {
+  id           String     @id @default(cuid())
+  tenantId     String
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email        String
+  passwordHash String?
+  name         String?
+  role         UserRole   @default(SELLER)
+  status       UserStatus @default(ACTIVE)
+
+  sales        Sale[]
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
+}
+
+model Category {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name                String
+  description         String?
+  dynamicFieldsConfig Json?     // Stores CategoryDynamicFieldsConfig (attributes schema per commercial vertical)
+
+  products            Product[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoryId       String?
+  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  code             String?       // SKU / Internal code / Barcode
+  name             String
+  description      String?
+  costPrice        Decimal       @default(0) @db.Decimal(12, 2)
+  salePrice        Decimal       @db.Decimal(12, 2)
+  currentStock     Decimal       @default(0) @db.Decimal(12, 2)
+  minStock         Decimal       @default(0) @db.Decimal(12, 2)
+  customAttributes Json?         // Stores ProductCustomAttributes (size, color, measurements, expiration, etc.)
+  status           ProductStatus @default(ACTIVE)
+
+  saleItems        SaleItem[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, categoryId])
+  @@index([tenantId, code])
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  docType     String?  // DNI, RUT, RFC, PASSPORT, TAX_ID
+  docNumber   String?
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  creditLimit Decimal  @default(0) @db.Decimal(12, 2)
+  metadata    Json?    // Stores ClientMetadata
+
+  sales       Sale[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, docNumber])
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  tenantId      String
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  clientId      String?
+  client        Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  invoiceNumber String        // Sequential receipt/invoice folio
+  subtotal      Decimal       @db.Decimal(12, 2)
+  tax           Decimal       @default(0) @db.Decimal(12, 2)
+  discount      Decimal       @default(0) @db.Decimal(12, 2)
+  total         Decimal       @db.Decimal(12, 2)
+  status        SaleStatus    @default(COMPLETED)
+  paymentMethod PaymentMethod @default(CASH)
+  notes         String?
+
+  items         SaleItem[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@index([tenantId, clientId])
+  @@index([tenantId, createdAt])
+}
+
+model SaleItem {
+  id          String   @id @default(cuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  quantity    Decimal  @db.Decimal(12, 2)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  subtotal    Decimal  @db.Decimal(12, 2)
+  customSpecs Json?    // Snapshot of custom specs / dynamic attributes at time of sale
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([saleId])
+  @@index([productId])
+}
