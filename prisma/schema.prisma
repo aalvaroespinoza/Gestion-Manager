@@ -61,48 +61,58 @@ enum CashShiftStatus {
   CLOSED
 }
 
+enum PurchaseOrderStatus {
+  DRAFT
+  PENDING
+  RECEIVED
+  CANCELLED
+}
+
 model Tenant {
-  id            String         @id @default(cuid())
-  name          String
-  slug          String         @unique
-  domain        String?        @unique
-  plan          TenantPlan     @default(FREE)
-  status        TenantStatus   @default(ACTIVE)
-  settings      Json?          // Stores TenantSettings (theme, currency, taxRate, address, etc.)
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
+  domain         String?         @unique
+  plan           TenantPlan      @default(FREE)
+  status         TenantStatus    @default(ACTIVE)
+  settings       Json?           // Stores TenantSettings (theme, currency, taxRate, address, etc.)
 
-  users         User[]
-  categories    Category[]
-  products      Product[]
-  clients       Client[]
-  sales         Sale[]
-  cashShifts    CashShift[]
-  cashMovements CashMovement[]
-  auditLogs     AuditLog[]
+  users          User[]
+  categories     Category[]
+  products       Product[]
+  clients        Client[]
+  sales          Sale[]
+  cashShifts     CashShift[]
+  cashMovements  CashMovement[]
+  auditLogs      AuditLog[]
+  suppliers      Supplier[]
+  purchaseOrders PurchaseOrder[]
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([slug])
   @@index([domain])
 }
 
 model User {
-  id            String         @id @default(cuid())
-  tenantId      String
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  email         String
-  passwordHash  String?
-  name          String?
-  role          UserRole       @default(SELLER)
-  status        UserStatus     @default(ACTIVE)
+  id             String          @id @default(cuid())
+  tenantId       String
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email          String
+  passwordHash   String?
+  name           String?
+  role           UserRole        @default(SELLER)
+  status         UserStatus      @default(ACTIVE)
 
-  sales         Sale[]
-  cashShifts    CashShift[]
-  cashMovements CashMovement[]
-  auditLogs     AuditLog[]
+  sales          Sale[]
+  cashShifts     CashShift[]
+  cashMovements  CashMovement[]
+  auditLogs      AuditLog[]
+  purchaseOrders PurchaseOrder[]
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -127,26 +137,27 @@ model Category {
 }
 
 model Product {
-  id               String        @id @default(cuid())
-  tenantId         String
-  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  categoryId       String?
-  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  id                 String              @id @default(cuid())
+  tenantId           String
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoryId         String?
+  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  code             String?       // SKU / Internal code / Barcode
-  name             String
-  description      String?
-  costPrice        Decimal       @default(0) @db.Decimal(12, 2)
-  salePrice        Decimal       @db.Decimal(12, 2)
-  currentStock     Decimal       @default(0) @db.Decimal(12, 2)
-  minStock         Decimal       @default(0) @db.Decimal(12, 2)
-  customAttributes Json?         // Stores ProductCustomAttributes (size, color, measurements, expiration, etc.)
-  status           ProductStatus @default(ACTIVE)
+  code               String?             // SKU / Internal code / Barcode
+  name               String
+  description        String?
+  costPrice          Decimal             @default(0) @db.Decimal(12, 2)
+  salePrice          Decimal             @db.Decimal(12, 2)
+  currentStock       Decimal             @default(0) @db.Decimal(12, 2)
+  minStock           Decimal             @default(0) @db.Decimal(12, 2)
+  customAttributes   Json?               // Stores ProductCustomAttributes (size, color, measurements, expiration, etc.)
+  status             ProductStatus       @default(ACTIVE)
 
-  saleItems        SaleItem[]
+  saleItems          SaleItem[]
+  purchaseOrderItems PurchaseOrderItem[]
 
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   @@index([tenantId])
   @@index([tenantId, categoryId])
@@ -281,8 +292,8 @@ model AuditLog {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  action    String   // e.g. "CANCEL_SALE", "MANUAL_STOCK_ADJUSTMENT", "CLOSE_SHIFT", "OPEN_SHIFT"
-  entity    String   // e.g. "Sale", "Product", "CashShift", "Client"
+  action    String   // e.g. "CANCEL_SALE", "MANUAL_STOCK_ADJUSTMENT", "CLOSE_SHIFT", "OPEN_SHIFT", "RECEIVE_PURCHASE_ORDER"
+  entity    String   // e.g. "Sale", "Product", "CashShift", "PurchaseOrder", "Client"
   entityId  String
   details   Json
   createdAt DateTime @default(now())
@@ -293,3 +304,71 @@ model AuditLog {
   @@index([tenantId, action])
 }
 
+model Supplier {
+  id             String          @id @default(cuid())
+  tenantId       String
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name           String
+  docType        String?         // CUIT, RUT, RFC, TAX_ID
+  docNumber      String?
+  email          String?
+  phone          String?
+  address        String?
+  contactPerson  String?
+  metadata       Json?
+
+  purchaseOrders PurchaseOrder[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, docNumber])
+  @@index([docNumber])
+}
+
+model PurchaseOrder {
+  id           String              @id @default(cuid())
+  tenantId     String
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplierId   String
+  supplier     Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderNumber  String              // Sequential purchase order folio e.g. OC-00001
+  status       PurchaseOrderStatus @default(PENDING)
+  subtotal     Decimal             @db.Decimal(12, 2)
+  tax          Decimal             @default(0) @db.Decimal(12, 2)
+  total        Decimal             @db.Decimal(12, 2)
+  notes        String?
+  expectedDate DateTime?
+  receivedAt   DateTime?
+
+  items        PurchaseOrderItem[]
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([userId])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity        Decimal       @db.Decimal(12, 2)
+  unitCost        Decimal       @db.Decimal(12, 2)
+  subtotal        Decimal       @db.Decimal(12, 2)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
