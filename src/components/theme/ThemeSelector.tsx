@@ -30,7 +30,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
 
   if (variant === "inline") {
     return (
-      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3", className)}>
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3", className)}>
         {themeOptions.map((item) => {
           const isActive = theme === item.id
 
@@ -40,38 +40,42 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
               type="button"
               onClick={() => setTheme(item.id)}
               className={cn(
-                "flex items-start gap-3.5 p-3.5 rounded-2xl border text-left transition-all duration-200 select-none",
+                "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none",
                 isActive
                   ? "border-[var(--primary)] bg-[var(--primary-light)]/40 ring-2 ring-[var(--primary-ring)] shadow-xs"
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700"
+                  : "border-border bg-card hover:border-[var(--primary)]/50 hover:bg-muted/40"
               )}
             >
-              <div
-                className="h-9 w-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm transition-transform group-hover:scale-105"
-                style={{ backgroundColor: item.swatchColor }}
-              >
-                {isActive ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <div className="h-2.5 w-2.5 rounded-full bg-white/50" />
+              <div className="flex items-center justify-between w-full mb-3">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-7 w-7 rounded-xl flex items-center justify-center text-white shadow-xs"
+                    style={{ backgroundColor: item.swatchColor }}
+                  >
+                    {isActive && <Check className="h-4 w-4" />}
+                  </div>
+                  <div
+                    className="h-4 w-4 rounded-full border border-border"
+                    style={{ backgroundColor: item.sidebarColor }}
+                    title={`Sidebar: ${item.sidebarColor}`}
+                  />
+                </div>
+
+                {isActive && (
+                  <span className="text-[10px] font-bold text-[var(--primary-text)] uppercase tracking-wider bg-[var(--primary-light)] px-2 py-0.5 rounded-full">
+                    Activo
+                  </span>
                 )}
               </div>
 
-              <div className="flex-1 space-y-0.5 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
-                    {item.name}
-                  </span>
-                  {isActive && (
-                    <span className="text-[10px] font-bold text-[var(--primary-text)] uppercase tracking-wider">
-                      Activo
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <div className="space-y-1">
+                <h4 className="font-bold text-xs text-foreground">
+                  {item.name}
+                </h4>
+                <p className="text-[11px] text-foreground/70 font-medium">
                   {item.subtitle}
                 </p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2 pt-0.5">
+                <p className="text-[10px] text-foreground/50 leading-relaxed pt-1">
                   {item.description}
                 </p>
               </div>
@@ -89,8 +93,8 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Cambiar paleta de colores"
-        title="Personalizar paleta de colores"
-        className="flex items-center gap-1.5 rounded-xl p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 transition-colors"
+        title="Personalizar paleta de colores de toda la interfaz"
+        className="flex items-center gap-1.5 rounded-xl p-2 text-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
       >
         <Palette className="h-4 w-4 text-[var(--primary-text)]" />
         <div
@@ -102,15 +106,15 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
-          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-card p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
+          <div className="px-3 py-2 border-b border-border flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-[var(--primary-text)]" />
-                <span>Paleta de Colores</span>
+                <span>Paleta de Colores (4 Temas)</span>
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Personaliza la estética global del sistema
+              <p className="text-[10px] text-foreground/60">
+                Cambia Sidebar, Header, fondos y tarjetas
               </p>
             </div>
           </div>
@@ -130,18 +134,24 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                   className={cn(
                     "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-all",
                     isActive
-                      ? "bg-[var(--primary-light)]/60 text-[var(--primary-text)] font-semibold"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-[var(--primary-light)]/70 text-[var(--primary-text)] font-bold ring-1 ring-[var(--primary-ring)]"
+                      : "text-foreground hover:bg-muted"
                   )}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div
-                      className="h-5 w-5 rounded-full flex items-center justify-center text-white shrink-0 shadow-xs"
-                      style={{ backgroundColor: item.swatchColor }}
-                    />
+                    <div className="flex items-center -space-x-1.5">
+                      <div
+                        className="h-5 w-5 rounded-full flex items-center justify-center text-white shrink-0 shadow-xs z-10"
+                        style={{ backgroundColor: item.swatchColor }}
+                      />
+                      <div
+                        className="h-4 w-4 rounded-full border border-card shadow-xs"
+                        style={{ backgroundColor: item.sidebarColor }}
+                      />
+                    </div>
                     <div>
                       <p className="font-semibold leading-tight">{item.name}</p>
-                      <p className="text-[10px] text-slate-400 font-normal">{item.subtitle}</p>
+                      <p className="text-[10px] text-foreground/60 font-normal">{item.subtitle}</p>
                     </div>
                   </div>
 

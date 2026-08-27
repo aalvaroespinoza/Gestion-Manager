@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+    <div className="relative w-full overflow-x-auto rounded-2xl border border-border bg-card shadow-xs transition-all duration-200">
       <table
         ref={ref}
         className={cn("w-full caption-bottom text-sm text-left border-collapse", className)}
@@ -18,7 +18,7 @@ export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLA
   ({ className, ...props }, ref) => (
     <thead
       ref={ref}
-      className={cn("bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400", className)}
+      className={cn("bg-muted/50 border-b border-border text-xs uppercase tracking-wider font-semibold text-foreground/60", className)}
       {...props}
     />
   )
@@ -29,7 +29,7 @@ export const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAtt
   ({ className, ...props }, ref) => (
     <tbody
       ref={ref}
-      className={cn("divide-y divide-slate-200 dark:divide-slate-800", className)}
+      className={cn("divide-y divide-border", className)}
       {...props}
     />
   )
@@ -40,7 +40,7 @@ export const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLA
   ({ className, ...props }, ref) => (
     <tfoot
       ref={ref}
-      className={cn("bg-slate-50 dark:bg-slate-800/80 font-medium text-slate-900 dark:text-slate-100 border-t border-slate-200 dark:border-slate-800", className)}
+      className={cn("bg-muted/70 font-medium text-foreground border-t border-border", className)}
       {...props}
     />
   )
@@ -52,7 +52,7 @@ export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttribut
     <tr
       ref={ref}
       className={cn(
-        "transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/50 data-[state=selected]:bg-slate-100 dark:data-[state=selected]:bg-slate-800",
+        "transition-colors duration-150 hover:bg-muted/40 data-[state=selected]:bg-[var(--primary-light)]/40",
         className
       )}
       {...props}
@@ -66,7 +66,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
     <th
       ref={ref}
       className={cn(
-        "h-11 px-4 text-left align-middle font-semibold text-slate-600 dark:text-slate-300 [&:has([role=checkbox])]:pr-0",
+        "h-11 px-4 text-left align-middle font-semibold text-foreground/80 [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -79,7 +79,7 @@ export const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttr
   ({ className, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn("p-4 align-middle text-slate-700 dark:text-slate-300 [&:has([role=checkbox])]:pr-0", className)}
+      className={cn("p-4 align-middle text-foreground/90 [&:has([role=checkbox])]:pr-0", className)}
       {...props}
     />
   )
@@ -90,7 +90,7 @@ export const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTML
   ({ className, ...props }, ref) => (
     <caption
       ref={ref}
-      className={cn("mt-4 text-xs text-slate-500 dark:text-slate-400 italic text-center p-2", className)}
+      className={cn("mt-4 text-xs text-foreground/50 italic text-center p-2", className)}
       {...props}
     />
   )
@@ -100,7 +100,7 @@ TableCaption.displayName = "TableCaption"
 export function TableEmpty({ colSpan, message = "No se encontraron registros." }: { colSpan: number; message?: string }) {
   return (
     <TableRow>
-      <TableCell colSpan={colSpan} className="h-32 text-center text-slate-500 dark:text-slate-400">
+      <TableCell colSpan={colSpan} className="h-32 text-center text-foreground/60">
         <div className="flex flex-col items-center justify-center gap-2">
           <p className="text-sm">{message}</p>
         </div>

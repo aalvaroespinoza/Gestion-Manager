@@ -1,10 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* Default Theme: Blue (Azul Clásico) */
+  --background: #f8fafc;
   --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  /* Default Theme: Blue */
+  --sidebar: #0f172a;
+  --sidebar-border: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-muted: #94a3b8;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #2563eb;
+  --sidebar-active-text: #ffffff;
+
+  --header: #ffffff;
+  --header-border: #e2e8f0;
+
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
@@ -13,12 +29,29 @@
   --primary-foreground: #ffffff;
   --primary-ring: rgba(37, 99, 235, 0.35);
   --accent: #4f46e5;
-  --sidebar-active: #2563eb;
-  --sidebar-active-text: #ffffff;
 }
 
-/* 1. Theme: Blue (Azul Corporativo) */
+/* 1. Theme: Blue (Azul Clásico) */
 .theme-blue, [data-theme="blue"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --sidebar: #0f172a;
+  --sidebar-border: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-muted: #94a3b8;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #2563eb;
+  --sidebar-active-text: #ffffff;
+
+  --header: #ffffff;
+  --header-border: #e2e8f0;
+
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
@@ -27,26 +60,29 @@
   --primary-foreground: #ffffff;
   --primary-ring: rgba(37, 99, 235, 0.35);
   --accent: #4f46e5;
-  --sidebar-active: #2563eb;
-  --sidebar-active-text: #ffffff;
 }
 
-/* 2. Theme: Beige (Arena & Trigo Cálido) */
-.theme-beige, [data-theme="beige"] {
-  --primary: #b45309;
-  --primary-hover: #92400e;
-  --primary-light: #fef3c7;
-  --primary-light-border: #fde68a;
-  --primary-text: #b45309;
-  --primary-foreground: #ffffff;
-  --primary-ring: rgba(180, 83, 9, 0.35);
-  --accent: #78350f;
-  --sidebar-active: #b45309;
-  --sidebar-active-text: #ffffff;
-}
+/* 2. Theme: Green (Verde Agua / Mint) */
+.theme-green, [data-theme="green"] {
+  --background: #f0fdf4;
+  --foreground: #064e3b;
+  --card: #ffffff;
+  --card-foreground: #064e3b;
+  --border: #bbf7d0;
+  --muted: #dcfce7;
+  --muted-foreground: #047857;
 
-/* 3. Theme: Mint (Verde Agua & Esmeralda) */
-.theme-mint, [data-theme="mint"] {
+  --sidebar: #064e3b;
+  --sidebar-border: #047857;
+  --sidebar-foreground: #ecfdf5;
+  --sidebar-muted: #6ee7b7;
+  --sidebar-hover: #047857;
+  --sidebar-active: #059669;
+  --sidebar-active-text: #ffffff;
+
+  --header: #ffffff;
+  --header-border: #d1fae5;
+
   --primary: #059669;
   --primary-hover: #047857;
   --primary-light: #ecfdf5;
@@ -54,27 +90,61 @@
   --primary-text: #059669;
   --primary-foreground: #ffffff;
   --primary-ring: rgba(5, 150, 105, 0.35);
-  --accent: #0f766e;
-  --sidebar-active: #059669;
-  --sidebar-active-text: #ffffff;
+  --accent: #10b981;
 }
 
-/* 4. Theme: White (Monocromático Minimal) */
-.theme-white, [data-theme="white"] {
-  --primary: #18181b;
-  --primary-hover: #09090b;
-  --primary-light: #f4f4f5;
-  --primary-light-border: #e4e4e7;
-  --primary-text: #18181b;
+/* 3. Theme: Beige (Beige / Cálido Arena) */
+.theme-beige, [data-theme="beige"] {
+  --background: #faf8f5;
+  --foreground: #292524;
+  --card: #ffffff;
+  --card-foreground: #292524;
+  --border: #e7e0d3;
+  --muted: #f5f0e8;
+  --muted-foreground: #78716c;
+
+  --sidebar: #292524;
+  --sidebar-border: #44403c;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-muted: #a8a29e;
+  --sidebar-hover: #44403c;
+  --sidebar-active: #d97706;
+  --sidebar-active-text: #ffffff;
+
+  --header: #fdfbf7;
+  --header-border: #e7e0d3;
+
+  --primary: #d97706;
+  --primary-hover: #b45309;
+  --primary-light: #fef3c7;
+  --primary-light-border: #fde68a;
+  --primary-text: #d97706;
   --primary-foreground: #ffffff;
-  --primary-ring: rgba(24, 24, 27, 0.35);
-  --accent: #3f3f46;
-  --sidebar-active: #18181b;
-  --sidebar-active-text: #ffffff;
+  --primary-ring: rgba(217, 119, 6, 0.35);
+  --accent: #c2410c;
 }
 
-/* 5. Theme: Rose (Rose & Berry Pastel) */
+/* 4. Theme: Rose (Rosa / Rose) */
 .theme-rose, [data-theme="rose"] {
+  --background: #fff1f2;
+  --foreground: #4c0519;
+  --card: #ffffff;
+  --card-foreground: #4c0519;
+  --border: #fecdd3;
+  --muted: #ffe4e6;
+  --muted-foreground: #be123c;
+
+  --sidebar: #4c0519;
+  --sidebar-border: #881337;
+  --sidebar-foreground: #fff1f2;
+  --sidebar-muted: #fda4af;
+  --sidebar-hover: #881337;
+  --sidebar-active: #e11d48;
+  --sidebar-active-text: #ffffff;
+
+  --header: #ffffff;
+  --header-border: #ffe4e6;
+
   --primary: #e11d48;
   --primary-hover: #be123c;
   --primary-light: #fff1f2;
@@ -83,13 +153,25 @@
   --primary-foreground: #ffffff;
   --primary-ring: rgba(225, 29, 72, 0.35);
   --accent: #db2777;
-  --sidebar-active: #e11d48;
-  --sidebar-active-text: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-header: var(--header);
+  --color-header-border: var(--header-border);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
@@ -98,21 +180,54 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Global Dynamic Theme utility classes */
+/* Global utility classes mapped to CSS custom properties */
+.bg-background {
+  background-color: var(--background) !important;
+}
+
+.text-foreground {
+  color: var(--foreground) !important;
+}
+
+.bg-card {
+  background-color: var(--card) !important;
+}
+
+.text-card-foreground {
+  color: var(--card-foreground) !important;
+}
+
+.border-border {
+  border-color: var(--border) !important;
+}
+
+.bg-sidebar {
+  background-color: var(--sidebar) !important;
+}
+
+.text-sidebar-foreground {
+  color: var(--sidebar-foreground) !important;
+}
+
+.border-sidebar {
+  border-color: var(--sidebar-border) !important;
+}
+
+.bg-header {
+  background-color: var(--header) !important;
+}
+
+.border-header {
+  border-color: var(--header-border) !important;
+}
+
 .bg-primary {
   background-color: var(--primary) !important;
 }

@@ -116,7 +116,7 @@ export function DialogContent({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl transition-all duration-200 animate-in zoom-in-95",
+          "relative z-50 w-full rounded-2xl bg-card text-card-foreground border border-border p-6 shadow-2xl transition-all duration-200 animate-in zoom-in-95",
           sizeStyles[size],
           className
         )}
@@ -127,7 +127,7 @@ export function DialogContent({
             type="button"
             onClick={() => context.setOpen(false)}
             aria-label="Cerrar modal"
-            className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="absolute right-4 top-4 rounded-lg p-1.5 text-foreground/50 hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -146,20 +146,20 @@ export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLD
 export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn("text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100", className)}
+      className={cn("text-lg font-semibold leading-none tracking-tight text-card-foreground", className)}
       {...props}
     />
   )
 }
 
 export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-slate-500 dark:text-slate-400 mt-1", className)} {...props} />
+  return <p className={cn("text-sm text-foreground/60 mt-1", className)} {...props} />
 }
 
 export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800", className)}
+      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6 pt-4 border-t border-border", className)}
       {...props}
     />
   )

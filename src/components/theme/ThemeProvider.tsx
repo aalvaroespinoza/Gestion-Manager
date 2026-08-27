@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-export type ThemePalette = "blue" | "beige" | "mint" | "white" | "rose"
+export type ThemePalette = "blue" | "green" | "beige" | "rose"
 
 export interface ThemeConfig {
   id: ThemePalette
@@ -11,54 +11,50 @@ export interface ThemeConfig {
   swatchColor: string
   accentColor: string
   bgSoft: string
+  sidebarColor: string
   description: string
 }
 
 export const themeOptions: ThemeConfig[] = [
   {
     id: "blue",
-    name: "Azul Corporativo",
-    subtitle: "Default / Ejecutivo",
+    name: "Azul Clásico",
+    subtitle: "Corporativo / Ejecutivo",
     swatchColor: "#2563eb",
     accentColor: "#4f46e5",
-    bgSoft: "#eff6ff",
-    description: "Paleta clásica empresarial, confiable y de alto contraste.",
+    bgSoft: "#f8fafc",
+    sidebarColor: "#0f172a",
+    description: "Sidebar marino profundo (#0f172a), fondo gris azulado suave (#f8fafc) y acentos azul cobalto.",
+  },
+  {
+    id: "green",
+    name: "Verde Agua / Mint",
+    subtitle: "Fresco & Vital",
+    swatchColor: "#059669",
+    accentColor: "#10b981",
+    bgSoft: "#f0fdf4",
+    sidebarColor: "#064e3b",
+    description: "Sidebar verde bosque (#064e3b), fondo menta claro (#f0fdf4) y acentos esmeralda vibrantes.",
   },
   {
     id: "beige",
-    name: "Arena & Trigo Cálido",
-    subtitle: "Elegante / Minimal",
-    swatchColor: "#b45309",
-    accentColor: "#78350f",
-    bgSoft: "#fef3c7",
-    description: "Tonos tierra y ámbar cálido, sobrio y relajante para la vista.",
-  },
-  {
-    id: "mint",
-    name: "Verde Agua / Mint",
-    subtitle: "Fresco & Moderno",
-    swatchColor: "#059669",
-    accentColor: "#0f766e",
-    bgSoft: "#ecfdf5",
-    description: "Verde esmeralda y menta energizante, ideal para retail y salud.",
-  },
-  {
-    id: "white",
-    name: "Monocromático Minimal",
-    subtitle: "Clean / Slate Neutro",
-    swatchColor: "#18181b",
-    accentColor: "#52525b",
-    bgSoft: "#f4f4f5",
-    description: "Estética minimalista en blanco y negro puro estilo industrial.",
+    name: "Beige / Cálido Arena",
+    subtitle: "Minimal & Orgánico",
+    swatchColor: "#d97706",
+    accentColor: "#c2410c",
+    bgSoft: "#faf8f5",
+    sidebarColor: "#292524",
+    description: "Sidebar café espresso (#292524), fondo arena tostado (#faf8f5) y tarjetas marfil cálidas.",
   },
   {
     id: "rose",
-    name: "Rose & Berry Pastel",
+    name: "Rosa / Rose",
     subtitle: "Moderno & Suave",
     swatchColor: "#e11d48",
     accentColor: "#db2777",
     bgSoft: "#fff1f2",
-    description: "Rosa contemporáneo y fucsia apagado con estilo boutique.",
+    sidebarColor: "#4c0519",
+    description: "Sidebar borgoña vino (#4c0519), fondo rosa empolvado (#fff1f2) y acentos frambuesa suave.",
   },
 ]
 
@@ -100,6 +96,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       themeOptions.forEach((t) => {
         root.classList.remove(`theme-${t.id}`)
       })
+      // Also clean up any legacy classes if they exist
+      root.classList.remove("theme-mint", "theme-white")
+
       // Add new theme class & data-theme attribute
       root.classList.add(`theme-${newTheme}`)
       root.setAttribute("data-theme", newTheme)

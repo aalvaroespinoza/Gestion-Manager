@@ -14,7 +14,7 @@ export default function DashboardLayout({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-200">
       {/* Responsive Sidebar */}
       <Sidebar
         isMobileOpen={isMobileOpen}
