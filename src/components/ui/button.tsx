@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" | "success"
+  variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" | "success" | "accent"
   size?: "default" | "sm" | "lg" | "icon"
   isLoading?: boolean
   leftIcon?: React.ReactNode
@@ -12,26 +12,28 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 active:scale-[0.99] shadow-sm border border-transparent focus-visible:ring-[var(--primary-ring)]",
+    "bg-orange-600 hover:bg-orange-500 text-white font-semibold shadow-md shadow-orange-950/40 border border-orange-500/20 active:scale-[0.99] focus-visible:ring-orange-500",
   secondary:
-    "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 border border-transparent focus-visible:ring-slate-400",
+    "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 active:scale-[0.99] focus-visible:ring-zinc-600",
+  accent:
+    "bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 active:scale-[0.99] focus-visible:ring-orange-500/50 font-semibold",
   destructive:
-    "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm border border-transparent focus-visible:ring-red-500",
+    "bg-red-600 hover:bg-red-500 text-white font-semibold shadow-md shadow-red-950/40 border border-red-500/20 active:scale-[0.99] focus-visible:ring-red-500",
   outline:
-    "border border-slate-300 dark:border-slate-700 bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 focus-visible:ring-slate-400",
+    "border border-zinc-700 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white active:bg-zinc-800/80 focus-visible:ring-zinc-600",
   ghost:
-    "bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 focus-visible:ring-slate-400",
+    "bg-transparent text-zinc-400 hover:text-white hover:bg-zinc-800 active:bg-zinc-800/80 focus-visible:ring-zinc-600",
   link:
-    "bg-transparent text-[var(--primary-text)] hover:underline p-0 h-auto shadow-none focus-visible:ring-[var(--primary-ring)]",
+    "bg-transparent text-orange-400 hover:text-orange-300 hover:underline p-0 h-auto shadow-none focus-visible:ring-orange-500",
   success:
-    "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-sm border border-transparent focus-visible:ring-emerald-500",
+    "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-950/40 border border-emerald-500/20 active:scale-[0.99] focus-visible:ring-emerald-500",
 }
 
 const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-  default: "h-10 px-4 py-2 text-sm",
-  sm: "h-8 px-3 text-xs rounded-md",
-  lg: "h-11 px-6 text-base rounded-lg",
-  icon: "h-10 w-10 p-0 justify-center",
+  default: "h-10 px-4 py-2 text-sm rounded-xl",
+  sm: "h-8 px-3 text-xs rounded-lg",
+  lg: "h-11 px-6 text-base rounded-xl",
+  icon: "h-9 w-9 p-0 justify-center rounded-xl",
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -56,8 +58,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         disabled={disabled || isLoading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors duration-150 select-none",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 select-none cursor-pointer",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121214] disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed",
           variantStyles[variant],
           sizeStyles[size],
           className

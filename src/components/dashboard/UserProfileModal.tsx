@@ -74,7 +74,6 @@ export function UserProfileModal({
 
     try {
       setIsSubmitting(true)
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 600))
 
       if (onSave) {
@@ -100,10 +99,10 @@ export function UserProfileModal({
       size="lg"
       title={
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
             <User className="h-5 w-5" />
           </div>
-          <span>Mi Perfil de Usuario</span>
+          <span className="text-white font-bold">Mi Perfil de Usuario</span>
         </div>
       }
       description="Gestiona tu información personal, datos de contacto y credenciales de acceso."
@@ -111,7 +110,7 @@ export function UserProfileModal({
       <form onSubmit={handleSubmit} className="space-y-6 pt-1 max-h-[75vh] overflow-y-auto pr-1">
         {/* Success Alert */}
         {successMessage && (
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+          <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2.5 text-xs text-emerald-400 animate-in fade-in font-medium">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span>{successMessage}</span>
           </div>
@@ -119,15 +118,15 @@ export function UserProfileModal({
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in">
+          <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center gap-2.5 text-xs text-red-400 animate-in fade-in font-medium">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* User Avatar Card Header */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg font-bold shadow-md shadow-blue-500/20">
+        <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-orange-600 flex items-center justify-center text-white text-lg font-bold shadow-md shadow-orange-950/40">
             {formData.name
               .split(" ")
               .map((n) => n[0])
@@ -137,14 +136,14 @@ export function UserProfileModal({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+              <h4 className="font-bold text-white text-sm">
                 {formData.name}
               </h4>
               <Badge variant="success" size="sm" dot>
                 {formData.role}
               </Badge>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5 font-medium">
               {formData.email} • {formData.position}
             </p>
           </div>
@@ -152,8 +151,8 @@ export function UserProfileModal({
 
         {/* Personal Details Section */}
         <div className="space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-blue-500" />
+          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-orange-400" />
             Información Personal & Contacto
           </h4>
 
@@ -194,15 +193,15 @@ export function UserProfileModal({
 
         {/* Change Password Section */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <KeyRound className="h-4 w-4 text-amber-500" />
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <KeyRound className="h-4 w-4 text-orange-400" />
               Cambio de Contraseña (Opcional)
             </h4>
             <button
               type="button"
               onClick={() => setShowPasswords(!showPasswords)}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+              className="text-xs text-orange-400 hover:text-orange-300 inline-flex items-center gap-1 cursor-pointer font-medium"
             >
               {showPasswords ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               <span>{showPasswords ? "Ocultar" : "Mostrar"}</span>
@@ -240,8 +239,8 @@ export function UserProfileModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button

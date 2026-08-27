@@ -30,7 +30,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
 
   if (variant === "inline") {
     return (
-      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3", className)}>
+      <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-3", className)}>
         {themeOptions.map((item) => {
           const isActive = theme === item.id
 
@@ -42,7 +42,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
               className={cn(
                 "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none",
                 isActive
-                  ? "border-[var(--primary)] bg-[var(--primary-light)]/40 ring-2 ring-[var(--primary-ring)] shadow-xs"
+                  ? "border-[var(--primary)] bg-[var(--primary-light)] ring-2 ring-[var(--primary-ring)] shadow-xs"
                   : "border-border bg-card hover:border-[var(--primary)]/50 hover:bg-muted/40"
               )}
             >
@@ -62,7 +62,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 </div>
 
                 {isActive && (
-                  <span className="text-[10px] font-bold text-[var(--primary-text)] uppercase tracking-wider bg-[var(--primary-light)] px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-[var(--primary-text)] uppercase tracking-wider bg-[var(--primary-light)] px-2 py-0.5 rounded-full border border-[var(--primary-light-border)]">
                     Activo
                   </span>
                 )}
@@ -72,10 +72,10 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <h4 className="font-bold text-xs text-foreground">
                   {item.name}
                 </h4>
-                <p className="text-[11px] text-foreground/70 font-medium">
+                <p className="text-[11px] text-muted-foreground font-medium">
                   {item.subtitle}
                 </p>
-                <p className="text-[10px] text-foreground/50 leading-relaxed pt-1">
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-1">
                   {item.description}
                 </p>
               </div>
@@ -93,12 +93,12 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Cambiar paleta de colores"
-        title="Personalizar paleta de colores de toda la interfaz"
-        className="flex items-center gap-1.5 rounded-xl p-2 text-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
+        title="Personalizar acento de color"
+        className="flex items-center gap-1.5 rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
       >
         <Palette className="h-4 w-4 text-[var(--primary-text)]" />
         <div
-          className="h-3 w-3 rounded-full border border-white dark:border-slate-900 shadow-xs"
+          className="h-3 w-3 rounded-full border border-zinc-700 shadow-xs"
           style={{
             backgroundColor: themeOptions.find((t) => t.id === theme)?.swatchColor,
           }}
@@ -111,10 +111,10 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
             <div>
               <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-[var(--primary-text)]" />
-                <span>Paleta de Colores (4 Temas)</span>
+                <span>Paleta de Colores Dark</span>
               </p>
-              <p className="text-[10px] text-foreground/60">
-                Cambia Sidebar, Header, fondos y tarjetas
+              <p className="text-[10px] text-muted-foreground">
+                Personaliza los acentos de la interfaz
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                   className={cn(
                     "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-all",
                     isActive
-                      ? "bg-[var(--primary-light)]/70 text-[var(--primary-text)] font-bold ring-1 ring-[var(--primary-ring)]"
+                      ? "bg-[var(--primary-light)] text-[var(--primary-text)] font-bold ring-1 ring-[var(--primary-ring)]"
                       : "text-foreground hover:bg-muted"
                   )}
                 >
@@ -151,7 +151,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                     </div>
                     <div>
                       <p className="font-semibold leading-tight">{item.name}</p>
-                      <p className="text-[10px] text-foreground/60 font-normal">{item.subtitle}</p>
+                      <p className="text-[10px] text-muted-foreground font-normal">{item.subtitle}</p>
                     </div>
                   </div>
 

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-export type ThemePalette = "blue" | "green" | "beige" | "rose"
+export type ThemePalette = "orange" | "blue" | "rose"
 
 export interface ThemeConfig {
   id: ThemePalette
@@ -17,44 +17,34 @@ export interface ThemeConfig {
 
 export const themeOptions: ThemeConfig[] = [
   {
+    id: "orange",
+    name: "Dark Grafito & Naranja",
+    subtitle: "Moderno & Pro (Por Defecto)",
+    swatchColor: "#f97316",
+    accentColor: "#ea580c",
+    bgSoft: "#121214",
+    sidebarColor: "#09090b",
+    description: "Fondo grafito carbón (#121214), tarjetas zinc (#18181b) y acentos vibrantes naranja (#f97316).",
+  },
+  {
     id: "blue",
-    name: "Azul Clásico",
-    subtitle: "Corporativo / Ejecutivo",
-    swatchColor: "#2563eb",
-    accentColor: "#4f46e5",
-    bgSoft: "#f8fafc",
-    sidebarColor: "#0f172a",
-    description: "Sidebar marino profundo (#0f172a), fondo gris azulado suave (#f8fafc) y acentos azul cobalto.",
-  },
-  {
-    id: "green",
-    name: "Verde Agua / Mint",
-    subtitle: "Fresco & Vital",
-    swatchColor: "#059669",
-    accentColor: "#10b981",
-    bgSoft: "#f0fdf4",
-    sidebarColor: "#064e3b",
-    description: "Sidebar verde bosque (#064e3b), fondo menta claro (#f0fdf4) y acentos esmeralda vibrantes.",
-  },
-  {
-    id: "beige",
-    name: "Beige / Cálido Arena",
-    subtitle: "Minimal & Orgánico",
-    swatchColor: "#d97706",
-    accentColor: "#c2410c",
-    bgSoft: "#faf8f5",
-    sidebarColor: "#292524",
-    description: "Sidebar café espresso (#292524), fondo arena tostado (#faf8f5) y tarjetas marfil cálidas.",
+    name: "Dark Azul Cobalto",
+    subtitle: "Corporativo & Técnico",
+    swatchColor: "#3b82f6",
+    accentColor: "#2563eb",
+    bgSoft: "#0b0f19",
+    sidebarColor: "#070b14",
+    description: "Fondo oscuro profundo con tarjetas navy (#111827) y acentos azul cobalto eléctrico.",
   },
   {
     id: "rose",
-    name: "Rosa / Rose",
-    subtitle: "Moderno & Suave",
-    swatchColor: "#e11d48",
-    accentColor: "#db2777",
-    bgSoft: "#fff1f2",
-    sidebarColor: "#4c0519",
-    description: "Sidebar borgoña vino (#4c0519), fondo rosa empolvado (#fff1f2) y acentos frambuesa suave.",
+    name: "Dark Rosa Borgoña",
+    subtitle: "Elegante & Distintivo",
+    swatchColor: "#f43f5e",
+    accentColor: "#e11d48",
+    bgSoft: "#140b10",
+    sidebarColor: "#0f060c",
+    description: "Fondo grafito vino (#140b10), tarjetas borgoña (#1c1017) y acentos frambuesa/rose.",
   },
 ]
 
@@ -69,21 +59,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 const STORAGE_KEY = "gm_active_theme"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePalette>("blue")
+  const [theme, setThemeState] = useState<ThemePalette>("orange")
   const [isMounted, setIsMounted] = useState(false)
 
   // Load persisted theme on client mount
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem(STORAGE_KEY) as ThemePalette
+      // If user had "green" or "beige" from previous tests, reset cleanly to "orange"
       if (savedTheme && themeOptions.some((t) => t.id === savedTheme)) {
         setThemeState(savedTheme)
         applyThemeClass(savedTheme)
       } else {
-        applyThemeClass("blue")
+        setThemeState("orange")
+        applyThemeClass("orange")
+        window.localStorage.setItem(STORAGE_KEY, "orange")
       }
     } catch {
-      applyThemeClass("blue")
+      applyThemeClass("orange")
     } finally {
       setIsMounted(true)
     }
@@ -92,12 +85,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const applyThemeClass = (newTheme: ThemePalette) => {
     if (typeof document !== "undefined") {
       const root = document.documentElement
-      // Remove previous theme classes
-      themeOptions.forEach((t) => {
-        root.classList.remove(`theme-${t.id}`)
-      })
-      // Also clean up any legacy classes if they exist
-      root.classList.remove("theme-mint", "theme-white")
+      // Remove any previous theme classes
+      root.classList.remove("theme-orange", "theme-blue", "theme-rose", "theme-green", "theme-beige", "theme-mint", "theme-white")
 
       // Add new theme class & data-theme attribute
       root.classList.add(`theme-${newTheme}`)

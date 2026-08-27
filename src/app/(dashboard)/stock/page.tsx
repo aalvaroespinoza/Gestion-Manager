@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   TableCell,
-  TableEmpty,
 } from "@/components/ui/table"
 import { ToastContainer, ToastMessage } from "@/components/ui/toast"
 import {
@@ -29,7 +28,6 @@ import {
   Product,
   ProductFormData,
   StockAdjustmentType,
-  StockMovement,
   StockStatus,
 } from "@/types/inventory"
 import {
@@ -37,27 +35,19 @@ import {
   Package,
   Plus,
   Search,
-  Filter,
   Edit2,
   Trash2,
   AlertTriangle,
-  CheckCircle2,
   DollarSign,
-  TrendingUp,
   RefreshCw,
-  SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  Download,
   FileSpreadsheet,
   FileJson,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   RotateCcw,
-  Sliders,
-  Keyboard,
 } from "lucide-react"
 
 type SortField = "code" | "name" | "category" | "salePrice" | "stock"
@@ -65,7 +55,7 @@ type SortOrder = "asc" | "desc"
 
 export default function StockPage() {
   // Persistent Products in LocalStorage
-  const [products, setProducts, isHydrated] = useLocalStorage<Product[]>(
+  const [products, setProducts] = useLocalStorage<Product[]>(
     "gm_inventory_products",
     mockProducts
   )
@@ -157,7 +147,6 @@ export default function StockPage() {
     const now = new Date().toISOString()
 
     if (productData.id) {
-      // Update existing
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productData.id
@@ -176,7 +165,6 @@ export default function StockPage() {
         "success"
       )
     } else {
-      // Create new
       const newProd: Product = {
         id: `prod-${Date.now()}`,
         ...productData,
@@ -280,17 +268,14 @@ export default function StockPage() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((product) => {
-        // Filter by category
         if (selectedCategory !== "ALL" && product.categoryId !== selectedCategory) {
           return false
         }
 
-        // Filter by stock status
         if (selectedStatus !== "ALL" && product.status !== selectedStatus) {
           return false
         }
 
-        // Search Query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase()
           const matchCode = product.code.toLowerCase().includes(q)
@@ -364,24 +349,24 @@ export default function StockPage() {
       {/* Header & New Product Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
-            <Boxes className="h-8 w-8 text-[var(--primary-text)]" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <Boxes className="h-8 w-8 text-orange-500" />
             Control de Stock & Inventario
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-medium">
+          <p className="text-sm text-zinc-400 mt-1 font-medium">
             Gestión completa de existencias, atributos técnicos, re-stock rápido y ordenamiento interactivo.
           </p>
         </div>
 
         {/* Actions: Export & New Product */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-card border border-border rounded-xl p-1 shadow-xs">
+          <div className="flex items-center gap-1 bg-[#18181b] border border-zinc-800 rounded-xl p-1 shadow-xs">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleExportCSV}
-              leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />}
-              className="h-8 text-xs font-semibold"
+              leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />}
+              className="h-8 text-xs font-semibold text-zinc-300 hover:text-white"
               title="Descargar tabla en formato Excel CSV"
             >
               CSV
@@ -390,8 +375,8 @@ export default function StockPage() {
               variant="ghost"
               size="sm"
               onClick={handleExportJSON}
-              leftIcon={<FileJson className="h-3.5 w-3.5 text-[var(--primary-text)]" />}
-              className="h-8 text-xs font-semibold"
+              leftIcon={<FileJson className="h-3.5 w-3.5 text-orange-400" />}
+              className="h-8 text-xs font-semibold text-zinc-300 hover:text-white"
               title="Descargar catálogo en formato JSON"
             >
               JSON
@@ -405,10 +390,10 @@ export default function StockPage() {
               setEditingProduct(null)
               setIsProductModalOpen(true)
             }}
-            className="shadow-sm font-semibold"
+            className="shadow-md shadow-orange-950/40 font-bold"
           >
             <span>Nuevo Producto</span>
-            <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-black/20 text-[10px] rounded font-mono">
+            <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-black/25 text-[10px] rounded font-mono">
               N
             </kbd>
           </Button>
@@ -417,77 +402,77 @@ export default function StockPage() {
 
       {/* KPI Cards Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:border-[var(--primary)] transition-all shadow-xs">
+        <Card className="hover:border-zinc-700 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Total de Productos
             </CardTitle>
-            <div className="p-2 rounded-xl bg-[var(--primary-light)] text-[var(--primary-text)]">
+            <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
               <Package className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">
-              {totalItemsCount} <span className="text-sm font-medium text-muted-foreground">ítems</span>
+            <div className="text-2xl font-black text-white">
+              {totalItemsCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
             </div>
-            <p className="text-xs text-muted-foreground font-medium mt-1">
+            <p className="text-xs text-zinc-400 font-medium mt-1">
               {totalUnitsInStock} unidades físicas en bodega
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-[var(--primary)] transition-all shadow-xs">
+        <Card className="hover:border-zinc-700 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Valor Total Estimado
             </CardTitle>
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+            <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
               <DollarSign className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">
+            <div className="text-2xl font-black text-white">
               ${totalValuationEstimated.toLocaleString("es-CL")}
             </div>
-            <p className="text-xs text-emerald-700 font-bold mt-1">
+            <p className="text-xs text-emerald-400 font-bold mt-1">
               Venta est.: ${totalSaleValuation.toLocaleString("es-CL")}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-[var(--primary)] transition-all shadow-xs">
+        <Card className="hover:border-zinc-700 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Stock Crítico / Bajo
             </CardTitle>
-            <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
               <AlertTriangle className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-amber-700">
-              {lowStockCount} <span className="text-sm font-medium text-muted-foreground">ítems</span>
+            <div className="text-2xl font-black text-amber-400">
+              {lowStockCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
             </div>
-            <p className="text-xs text-muted-foreground font-medium mt-1">
+            <p className="text-xs text-zinc-400 font-medium mt-1">
               Bajo el umbral mínimo de seguridad
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-[var(--primary)] transition-all shadow-xs">
+        <Card className="hover:border-zinc-700 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Productos Agotados
             </CardTitle>
-            <div className="p-2 rounded-xl bg-red-100 text-red-700">
+            <div className="p-2 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30">
               <Boxes className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-red-700">
-              {outOfStockCount} <span className="text-sm font-medium text-muted-foreground">ítems</span>
+            <div className="text-2xl font-black text-red-400">
+              {outOfStockCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
             </div>
-            <p className="text-xs text-muted-foreground font-medium mt-1">
+            <p className="text-xs text-zinc-400 font-medium mt-1">
               Existencias en 0 un. (Sin stock)
             </p>
           </CardContent>
@@ -553,7 +538,7 @@ export default function StockPage() {
                   className="w-full h-10 px-2"
                   title="Limpiar todos los filtros"
                 >
-                  <RotateCcw className="h-4 w-4 text-muted-foreground" />
+                  <RotateCcw className="h-4 w-4 text-zinc-400" />
                 </Button>
               )}
             </div>
@@ -567,12 +552,12 @@ export default function StockPage() {
                 {/* Sortable Column: Código */}
                 <TableHead
                   onClick={() => handleSort("code")}
-                  className="cursor-pointer hover:text-[var(--primary-text)] transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Código</span>
                     {sortField === "code" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-[var(--primary-text)]" /> : <ArrowDown className="h-3 w-3 text-[var(--primary-text)]" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -582,12 +567,12 @@ export default function StockPage() {
                 {/* Sortable Column: Producto */}
                 <TableHead
                   onClick={() => handleSort("name")}
-                  className="cursor-pointer hover:text-[var(--primary-text)] transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Producto</span>
                     {sortField === "name" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-[var(--primary-text)]" /> : <ArrowDown className="h-3 w-3 text-[var(--primary-text)]" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -597,12 +582,12 @@ export default function StockPage() {
                 {/* Sortable Column: Categoría */}
                 <TableHead
                   onClick={() => handleSort("category")}
-                  className="cursor-pointer hover:text-[var(--primary-text)] transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Categoría</span>
                     {sortField === "category" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-[var(--primary-text)]" /> : <ArrowDown className="h-3 w-3 text-[var(--primary-text)]" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -614,12 +599,12 @@ export default function StockPage() {
                 {/* Sortable Column: Precio Venta */}
                 <TableHead
                   onClick={() => handleSort("salePrice")}
-                  className="text-right cursor-pointer hover:text-[var(--primary-text)] transition-colors select-none font-bold"
+                  className="text-right cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
                 >
                   <div className="flex items-center justify-end gap-1">
                     <span>Precio Venta</span>
                     {sortField === "salePrice" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-[var(--primary-text)]" /> : <ArrowDown className="h-3 w-3 text-[var(--primary-text)]" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -629,12 +614,12 @@ export default function StockPage() {
                 {/* Sortable Column: Stock */}
                 <TableHead
                   onClick={() => handleSort("stock")}
-                  className="text-center cursor-pointer hover:text-[var(--primary-text)] transition-colors select-none font-bold"
+                  className="text-center cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span>Stock</span>
                     {sortField === "stock" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-[var(--primary-text)]" /> : <ArrowDown className="h-3 w-3 text-[var(--primary-text)]" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -648,17 +633,16 @@ export default function StockPage() {
 
             <TableBody>
               {paginatedProducts.length === 0 ? (
-                /* Illustrated Empty State */
                 <TableRow>
                   <TableCell colSpan={8} className="py-16 text-center">
                     <div className="max-w-sm mx-auto space-y-3">
-                      <div className="h-12 w-12 rounded-2xl bg-muted text-muted-foreground mx-auto flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-2xl bg-zinc-900 text-zinc-400 mx-auto flex items-center justify-center border border-zinc-800">
                         <Search className="h-6 w-6" />
                       </div>
-                      <h4 className="font-bold text-foreground text-sm">
+                      <h4 className="font-bold text-white text-sm">
                         No se encontraron productos coincidentes
                       </h4>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-zinc-400">
                         No hay registros que cumplan con los criterios de búsqueda o filtros seleccionados.
                       </p>
                       <Button
@@ -679,19 +663,19 @@ export default function StockPage() {
                   const isOut = product.status === "OUT_OF_STOCK"
 
                   return (
-                    <TableRow key={product.id} className="hover:bg-muted/40 transition-colors">
+                    <TableRow key={product.id} className="hover:bg-zinc-800/60 transition-colors">
                       {/* Código */}
-                      <TableCell className="font-mono text-xs font-bold text-foreground">
+                      <TableCell className="font-mono text-xs font-bold text-orange-400">
                         {product.code}
                       </TableCell>
 
                       {/* Producto */}
                       <TableCell className="max-w-xs">
-                        <div className="font-bold text-sm text-foreground line-clamp-1">
+                        <div className="font-bold text-sm text-white line-clamp-1">
                           {product.name}
                         </div>
                         {product.description && (
-                          <div className="text-[11px] text-muted-foreground line-clamp-1 font-normal">
+                          <div className="text-[11px] text-zinc-400 line-clamp-1 font-normal">
                             {product.description}
                           </div>
                         )}
@@ -699,7 +683,7 @@ export default function StockPage() {
 
                       {/* Categoría */}
                       <TableCell>
-                        <span className="text-xs text-[var(--primary-text)] font-semibold">
+                        <span className="text-xs text-zinc-300 font-medium">
                           {category?.name || product.categoryName || "General"}
                         </span>
                       </TableCell>
@@ -719,9 +703,9 @@ export default function StockPage() {
                             return (
                               <span
                                 key={key}
-                                className="inline-flex items-center text-[10px] bg-muted border border-border px-1.5 py-0.5 rounded text-foreground font-medium"
+                                className="inline-flex items-center text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 font-medium"
                               >
-                                <strong className="capitalize mr-1 text-foreground/80">{key}:</strong>
+                                <strong className="capitalize mr-1 text-zinc-400">{key}:</strong>
                                 {String(val)}
                               </span>
                             )
@@ -731,10 +715,10 @@ export default function StockPage() {
 
                       {/* Precio Venta */}
                       <TableCell className="text-right">
-                        <div className="font-extrabold text-sm text-foreground">
+                        <div className="font-extrabold text-sm text-white">
                           ${product.salePrice.toLocaleString("es-CL")}
                         </div>
-                        <div className="text-[10px] text-muted-foreground font-medium">
+                        <div className="text-[10px] text-zinc-500 font-medium">
                           Costo: ${product.costPrice.toLocaleString("es-CL")}
                         </div>
                       </TableCell>
@@ -743,17 +727,17 @@ export default function StockPage() {
                       <TableCell className="text-center">
                         <div className="flex flex-col items-center">
                           <span
-                            className={`font-extrabold text-sm ${
+                            className={`font-black text-sm ${
                               isOut
-                                ? "text-red-700 font-black"
+                                ? "text-red-400"
                                 : isLow
-                                ? "text-amber-700 font-black"
-                                : "text-foreground"
+                                ? "text-amber-400"
+                                : "text-white"
                             }`}
                           >
                             {product.stock} un.
                           </span>
-                          <span className="text-[10px] text-muted-foreground font-medium">Mín: {product.minStock}</span>
+                          <span className="text-[10px] text-zinc-500 font-medium">Mín: {product.minStock}</span>
                         </div>
                       </TableCell>
 
@@ -781,45 +765,42 @@ export default function StockPage() {
                       {/* Acciones */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Re-stock */}
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                          {/* Re-stock Button */}
+                          <button
+                            type="button"
                             title="Re-stock / Ajuste de Cantidad"
-                            className="h-8 px-2.5 text-xs text-[var(--primary-text)] bg-[var(--primary-light)] hover:opacity-90 font-bold"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-colors cursor-pointer"
                             onClick={() => {
                               setAdjustingProduct(product)
                               setIsAdjustmentModalOpen(true)
                             }}
-                            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
                           >
+                            <RefreshCw className="h-3.5 w-3.5" />
                             <span>Re-stock</span>
-                          </Button>
+                          </button>
 
-                          {/* Editar */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          {/* Editar Button */}
+                          <button
+                            type="button"
                             title="Editar Producto Completo"
-                            className="h-8 px-2 text-foreground/70 hover:text-[var(--primary-text)] hover:bg-muted"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
                             onClick={() => {
                               setEditingProduct(product)
                               setIsProductModalOpen(true)
                             }}
                           >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
+                            <Edit2 className="h-4 w-4" />
+                          </button>
 
-                          {/* Eliminar */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          {/* Eliminar Button */}
+                          <button
+                            type="button"
                             title="Eliminar del Catálogo"
-                            className="h-8 px-2 text-foreground/40 hover:text-red-700 hover:bg-red-50"
+                            className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer"
                             onClick={() => setDeletingProduct(product)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -830,18 +811,18 @@ export default function StockPage() {
           </Table>
 
           {/* Pagination Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-border text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-zinc-800 text-xs text-zinc-400">
             <div className="flex items-center gap-2">
               <span>Mostrando</span>
-              <span className="font-bold text-foreground">
+              <span className="font-bold text-white">
                 {filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
               </span>
               <span>a</span>
-              <span className="font-bold text-foreground">
+              <span className="font-bold text-white">
                 {Math.min(currentPage * itemsPerPage, filteredProducts.length)}
               </span>
               <span>de</span>
-              <span className="font-bold text-foreground">
+              <span className="font-bold text-white">
                 {filteredProducts.length}
               </span>
               <span>productos</span>
@@ -858,7 +839,7 @@ export default function StockPage() {
                 Anterior
               </Button>
 
-              <span className="px-3 py-1 font-bold text-foreground">
+              <span className="px-3 py-1 font-bold text-white">
                 Página {currentPage} de {totalPages}
               </span>
 

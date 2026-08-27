@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
 import { DynamicFormRenderer, DynamicFormSchemaConfig } from "@/components/dynamic-forms"
-import { Users, Plus, Search, Mail, Phone, Building } from "lucide-react"
+import { Users, Plus, Search } from "lucide-react"
 
 const newCustomerSchema: DynamicFormSchemaConfig = {
   columns: 2,
@@ -44,11 +44,11 @@ export default function ClientesPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <Users className="h-8 w-8 text-orange-500" />
             Directorio de Clientes
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-zinc-400 mt-1 font-medium">
             Gestión de cartera de clientes, datos de facturación y crédito comercial.
           </p>
         </div>
@@ -75,23 +75,23 @@ export default function ClientesPage() {
           <Table className="border-0 rounded-none">
             <TableHeader>
               <TableRow>
-                <TableHead>RUT</TableHead>
-                <TableHead>Razón Social</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Ubicación</TableHead>
-                <TableHead className="text-center">Estado</TableHead>
+                <TableHead className="font-bold">RUT</TableHead>
+                <TableHead className="font-bold">Razón Social</TableHead>
+                <TableHead className="font-bold">Contacto</TableHead>
+                <TableHead className="font-bold">Ubicación</TableHead>
+                <TableHead className="text-center font-bold">Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredClients.map((client) => (
                 <TableRow key={client.id}>
-                  <TableCell className="font-mono text-xs font-semibold">{client.rut}</TableCell>
-                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{client.name}</TableCell>
+                  <TableCell className="font-mono text-xs font-bold text-orange-400">{client.rut}</TableCell>
+                  <TableCell className="font-bold text-white text-sm">{client.name}</TableCell>
                   <TableCell>
-                    <div className="text-xs">{client.email}</div>
-                    <div className="text-[11px] text-slate-400">{client.phone}</div>
+                    <div className="text-xs text-zinc-300 font-medium">{client.email}</div>
+                    <div className="text-[11px] text-zinc-500 font-mono">{client.phone}</div>
                   </TableCell>
-                  <TableCell className="text-xs">{client.city}</TableCell>
+                  <TableCell className="text-xs text-zinc-300 font-medium">{client.city}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={client.status === "Activo" ? "success" : "destructive"} size="sm" dot>
                       {client.status}

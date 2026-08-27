@@ -1,158 +1,127 @@
 @import "tailwindcss";
 
 :root {
-  /* Default Theme: Blue (Azul Clásico) */
-  --background: #f1f5f9;
-  --foreground: #0f172a;
-  --card: #f8fafc;
-  --card-foreground: #0f172a;
-  --border: #cbd5e1;
-  --muted: #e2e8f0;
-  --muted-foreground: #475569;
+  /* Default Theme: Dark Graphite with Orange Accents (#f97316) */
+  --background: #121214;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
 
-  --sidebar: #0f172a;
-  --sidebar-border: #1e293b;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-muted: #94a3b8;
-  --sidebar-hover: #1e293b;
-  --sidebar-active: #2563eb;
+  --sidebar: #09090b;
+  --sidebar-border: #27272a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #71717a;
+  --sidebar-hover: #18181b;
+  --sidebar-active: #ea580c;
   --sidebar-active-text: #ffffff;
 
-  --header: #ffffff;
-  --header-border: #cbd5e1;
+  --header: #121214;
+  --header-border: #27272a;
 
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --primary-light-border: #bfdbfe;
-  --primary-text: #2563eb;
+  --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-light: rgba(249, 115, 22, 0.12);
+  --primary-light-border: rgba(249, 115, 22, 0.3);
+  --primary-text: #fb923c;
   --primary-foreground: #ffffff;
-  --primary-ring: rgba(37, 99, 235, 0.35);
-  --accent: #4f46e5;
+  --primary-ring: rgba(249, 115, 22, 0.4);
+  --accent: #f97316;
 }
 
-/* 1. Tema: Azul Clásico */
+/* 1. Tema: Naranja Grafito (Predeterminado / Dark Modern) */
+.theme-orange, [data-theme="orange"] {
+  --background: #121214;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  --sidebar: #09090b;
+  --sidebar-border: #27272a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #71717a;
+  --sidebar-hover: #18181b;
+  --sidebar-active: #ea580c;
+  --sidebar-active-text: #ffffff;
+
+  --header: #121214;
+  --header-border: #27272a;
+
+  --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-light: rgba(249, 115, 22, 0.12);
+  --primary-light-border: rgba(249, 115, 22, 0.3);
+  --primary-text: #fb923c;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(249, 115, 22, 0.4);
+  --accent: #f97316;
+}
+
+/* 2. Tema: Azul Cobalto Dark */
 .theme-blue, [data-theme="blue"] {
-  --background: #f1f5f9;
-  --foreground: #0f172a;
-  --card: #f8fafc;
-  --card-foreground: #0f172a;
-  --border: #cbd5e1;
-  --muted: #e2e8f0;
-  --muted-foreground: #475569;
+  --background: #0b0f19;
+  --foreground: #f1f5f9;
+  --card: #111827;
+  --card-foreground: #f8fafc;
+  --border: #1f2937;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
 
-  --sidebar: #0f172a;
+  --sidebar: #070b14;
   --sidebar-border: #1e293b;
   --sidebar-foreground: #f8fafc;
-  --sidebar-muted: #94a3b8;
-  --sidebar-hover: #1e293b;
+  --sidebar-muted: #64748b;
+  --sidebar-hover: #111827;
   --sidebar-active: #2563eb;
   --sidebar-active-text: #ffffff;
 
-  --header: #ffffff;
-  --header-border: #cbd5e1;
+  --header: #0b0f19;
+  --header-border: #1f2937;
 
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --primary-light-border: #bfdbfe;
-  --primary-text: #2563eb;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.12);
+  --primary-light-border: rgba(59, 130, 246, 0.3);
+  --primary-text: #60a5fa;
   --primary-foreground: #ffffff;
-  --primary-ring: rgba(37, 99, 235, 0.35);
-  --accent: #4f46e5;
+  --primary-ring: rgba(59, 130, 246, 0.4);
+  --accent: #6366f1;
 }
 
-/* 2. Tema: Verde Agua / Mint */
-.theme-green, [data-theme="green"] {
-  --background: #ecfdf5;
-  --foreground: #064e3b;
-  --card: #f7fdfa;
-  --card-foreground: #064e3b;
-  --border: #c6f0dc;
-  --muted: #d1fae5;
-  --muted-foreground: #047857;
-
-  --sidebar: #064e3b;
-  --sidebar-border: #047857;
-  --sidebar-foreground: #ecfdf5;
-  --sidebar-muted: #6ee7b7;
-  --sidebar-hover: #047857;
-  --sidebar-active: #059669;
-  --sidebar-active-text: #ffffff;
-
-  --header: #f7fdfa;
-  --header-border: #c6f0dc;
-
-  --primary: #059669;
-  --primary-hover: #047857;
-  --primary-light: #d1fae5;
-  --primary-light-border: #a7f3d0;
-  --primary-text: #059669;
-  --primary-foreground: #ffffff;
-  --primary-ring: rgba(5, 150, 105, 0.35);
-  --accent: #10b981;
-}
-
-/* 3. Tema: Beige / Cálido Arena */
-.theme-beige, [data-theme="beige"] {
-  --background: #f5efe6;
-  --foreground: #292524;
-  --card: #fdfcf9;
-  --card-foreground: #292524;
-  --border: #e3d8c8;
-  --muted: #eaddcb;
-  --muted-foreground: #78716c;
-
-  --sidebar: #292524;
-  --sidebar-border: #44403c;
-  --sidebar-foreground: #fafaf9;
-  --sidebar-muted: #a8a29e;
-  --sidebar-hover: #44403c;
-  --sidebar-active: #d97706;
-  --sidebar-active-text: #ffffff;
-
-  --header: #fdfcf9;
-  --header-border: #e3d8c8;
-
-  --primary: #d97706;
-  --primary-hover: #b45309;
-  --primary-light: #fef3c7;
-  --primary-light-border: #fde68a;
-  --primary-text: #d97706;
-  --primary-foreground: #ffffff;
-  --primary-ring: rgba(217, 119, 6, 0.35);
-  --accent: #c2410c;
-}
-
-/* 4. Tema: Rosa / Rose */
+/* 3. Tema: Rosa Borgoña Dark */
 .theme-rose, [data-theme="rose"] {
-  --background: #fdf2f4;
-  --foreground: #4a0418;
-  --card: #fffbfc;
-  --card-foreground: #4a0418;
-  --border: #f4ccd3;
-  --muted: #fce7ea;
-  --muted-foreground: #7c2d43;
+  --background: #140b10;
+  --foreground: #fdf2f8;
+  --card: #1c1017;
+  --card-foreground: #fff1f2;
+  --border: #3b1424;
+  --muted: #2d131f;
+  --muted-foreground: #fda4af;
 
-  --sidebar: #4c0519;
-  --sidebar-border: #881337;
+  --sidebar: #0f060c;
+  --sidebar-border: #3b1424;
   --sidebar-foreground: #fff1f2;
-  --sidebar-muted: #fda4af;
-  --sidebar-hover: #881337;
+  --sidebar-muted: #9f1239;
+  --sidebar-hover: #1c1017;
   --sidebar-active: #e11d48;
   --sidebar-active-text: #ffffff;
 
-  --header: #fffbfc;
-  --header-border: #f4ccd3;
+  --header: #140b10;
+  --header-border: #3b1424;
 
-  --primary: #e11d48;
-  --primary-hover: #be123c;
-  --primary-light: #fce7ea;
-  --primary-light-border: #f4ccd3;
-  --primary-text: #e11d48;
+  --primary: #f43f5e;
+  --primary-hover: #e11d48;
+  --primary-light: rgba(244, 63, 94, 0.12);
+  --primary-light-border: rgba(244, 63, 94, 0.3);
+  --primary-text: #fb7185;
   --primary-foreground: #ffffff;
-  --primary-ring: rgba(225, 29, 72, 0.35);
-  --accent: #db2777;
+  --primary-ring: rgba(244, 63, 94, 0.4);
+  --accent: #ec4899;
 }
 
 @theme inline {
