@@ -12,7 +12,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm border border-transparent focus-visible:ring-blue-500",
+    "bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 active:scale-[0.99] shadow-sm border border-transparent focus-visible:ring-[var(--primary-ring)]",
   secondary:
     "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 border border-transparent focus-visible:ring-slate-400",
   destructive:
@@ -22,7 +22,7 @@ const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   ghost:
     "bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 focus-visible:ring-slate-400",
   link:
-    "bg-transparent text-blue-600 dark:text-blue-400 hover:underline p-0 h-auto shadow-none focus-visible:ring-blue-500",
+    "bg-transparent text-[var(--primary-text)] hover:underline p-0 h-auto shadow-none focus-visible:ring-[var(--primary-ring)]",
   success:
     "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-sm border border-transparent focus-visible:ring-emerald-500",
 }

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
 import { mockCategories } from "@/mocks/inventoryData"
+import { ThemeSelector } from "@/components/theme"
 import {
   Settings,
   Building2,
@@ -47,6 +48,7 @@ import {
   Store,
   KeyRound,
   FileSpreadsheet,
+  Palette,
 } from "lucide-react"
 
 type ConfigTab = "GENERAL" | "USERS" | "FIELDS" | "NOTIFICATIONS"
@@ -405,6 +407,22 @@ export default function ConfiguracionPage() {
                 Guardar Cambios de Empresa
               </Button>
             </CardFooter>
+          </Card>
+
+          {/* Theme Palette Customization Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Palette className="h-5 w-5 text-[var(--primary-text)]" />
+                <span>Personalización de Paleta de Colores Global</span>
+              </CardTitle>
+              <CardDescription>
+                Selecciona la estética visual corporativa que mejor se adapte a tu marca. Los cambios se aplican en tiempo real y se guardan automáticamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThemeSelector variant="inline" />
+            </CardContent>
           </Card>
         </form>
       )}

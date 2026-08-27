@@ -105,13 +105,16 @@ export function Sidebar({
             className="flex items-center gap-3 overflow-hidden group"
             onClick={() => setIsMobileOpen(false)}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-transform group-hover:scale-105"
+              style={{ backgroundColor: "var(--primary)" }}
+            >
               <Sparkles className="h-5 w-5" />
             </div>
             {(!isCollapsed || isMobileOpen) && (
               <div className="flex flex-col truncate">
                 <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                  Gestión<span className="text-blue-400">Manager</span>
+                  Gestión<span className="text-[var(--primary-text)]">Manager</span>
                 </span>
                 <span className="text-[11px] font-medium text-slate-400 tracking-wider uppercase">
                   Enterprise Suite
@@ -149,9 +152,10 @@ export function Sidebar({
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 group relative",
                   active
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-semibold"
+                    ? "text-white font-semibold shadow-sm"
                     : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                 )}
+                style={active ? { backgroundColor: "var(--primary)" } : undefined}
                 title={isCollapsed && !isMobileOpen ? item.title : undefined}
               >
                 <Icon
@@ -170,7 +174,7 @@ export function Sidebar({
                     className={cn(
                       "px-2 py-0.5 text-[10px] font-bold rounded-full ml-auto",
                       active
-                        ? "bg-blue-800 text-blue-100"
+                        ? "bg-black/20 text-white"
                         : "bg-slate-800 text-slate-300 border border-slate-700"
                     )}
                   >
@@ -192,7 +196,7 @@ export function Sidebar({
           {(!isCollapsed || isMobileOpen) && (
             <div className="rounded-xl bg-slate-800/60 border border-slate-700/60 p-3 text-xs">
               <div className="flex items-center gap-2 font-semibold text-slate-200">
-                <BarChart3 className="h-4 w-4 text-blue-400" />
+                <BarChart3 className="h-4 w-4 text-[var(--primary-text)]" />
                 <span>Estado del Sistema</span>
               </div>
               <p className="text-slate-400 text-[11px] mt-1">Multi-tenant v1.0 • Operativo</p>

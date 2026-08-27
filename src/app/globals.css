@@ -2,12 +2,98 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+
+  /* Default Theme: Blue */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --primary-light-border: #bfdbfe;
+  --primary-text: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(37, 99, 235, 0.35);
+  --accent: #4f46e5;
+  --sidebar-active: #2563eb;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 1. Theme: Blue (Azul Corporativo) */
+.theme-blue, [data-theme="blue"] {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --primary-light-border: #bfdbfe;
+  --primary-text: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(37, 99, 235, 0.35);
+  --accent: #4f46e5;
+  --sidebar-active: #2563eb;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 2. Theme: Beige (Arena & Trigo Cálido) */
+.theme-beige, [data-theme="beige"] {
+  --primary: #b45309;
+  --primary-hover: #92400e;
+  --primary-light: #fef3c7;
+  --primary-light-border: #fde68a;
+  --primary-text: #b45309;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(180, 83, 9, 0.35);
+  --accent: #78350f;
+  --sidebar-active: #b45309;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 3. Theme: Mint (Verde Agua & Esmeralda) */
+.theme-mint, [data-theme="mint"] {
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: #ecfdf5;
+  --primary-light-border: #a7f3d0;
+  --primary-text: #059669;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(5, 150, 105, 0.35);
+  --accent: #0f766e;
+  --sidebar-active: #059669;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 4. Theme: White (Monocromático Minimal) */
+.theme-white, [data-theme="white"] {
+  --primary: #18181b;
+  --primary-hover: #09090b;
+  --primary-light: #f4f4f5;
+  --primary-light-border: #e4e4e7;
+  --primary-text: #18181b;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(24, 24, 27, 0.35);
+  --accent: #3f3f46;
+  --sidebar-active: #18181b;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 5. Theme: Rose (Rose & Berry Pastel) */
+.theme-rose, [data-theme="rose"] {
+  --primary: #e11d48;
+  --primary-hover: #be123c;
+  --primary-light: #fff1f2;
+  --primary-light-border: #fecdd3;
+  --primary-text: #e11d48;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(225, 29, 72, 0.35);
+  --accent: #db2777;
+  --sidebar-active: #e11d48;
+  --sidebar-active-text: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-text: var(--primary-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -23,4 +109,22 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Global Dynamic Theme utility classes */
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.text-primary {
+  color: var(--primary-text) !important;
+}
+
+.border-primary {
+  border-color: var(--primary) !important;
+}
+
+.bg-primary-light {
+  background-color: var(--primary-light) !important;
 }
