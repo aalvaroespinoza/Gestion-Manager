@@ -2,13 +2,13 @@
 
 :root {
   /* Default Theme: Blue (Azul Clásico) */
-  --background: #f8fafc;
+  --background: #f1f5f9;
   --foreground: #0f172a;
-  --card: #ffffff;
+  --card: #f8fafc;
   --card-foreground: #0f172a;
-  --border: #e2e8f0;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --border: #cbd5e1;
+  --muted: #e2e8f0;
+  --muted-foreground: #475569;
 
   --sidebar: #0f172a;
   --sidebar-border: #1e293b;
@@ -19,7 +19,7 @@
   --sidebar-active-text: #ffffff;
 
   --header: #ffffff;
-  --header-border: #e2e8f0;
+  --header-border: #cbd5e1;
 
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
@@ -31,15 +31,15 @@
   --accent: #4f46e5;
 }
 
-/* 1. Theme: Blue (Azul Clásico) */
+/* 1. Tema: Azul Clásico */
 .theme-blue, [data-theme="blue"] {
-  --background: #f8fafc;
+  --background: #f1f5f9;
   --foreground: #0f172a;
-  --card: #ffffff;
+  --card: #f8fafc;
   --card-foreground: #0f172a;
-  --border: #e2e8f0;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --border: #cbd5e1;
+  --muted: #e2e8f0;
+  --muted-foreground: #475569;
 
   --sidebar: #0f172a;
   --sidebar-border: #1e293b;
@@ -50,7 +50,7 @@
   --sidebar-active-text: #ffffff;
 
   --header: #ffffff;
-  --header-border: #e2e8f0;
+  --header-border: #cbd5e1;
 
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
@@ -62,14 +62,14 @@
   --accent: #4f46e5;
 }
 
-/* 2. Theme: Green (Verde Agua / Mint) */
+/* 2. Tema: Verde Agua / Mint */
 .theme-green, [data-theme="green"] {
-  --background: #f0fdf4;
+  --background: #ecfdf5;
   --foreground: #064e3b;
-  --card: #ffffff;
+  --card: #f7fdfa;
   --card-foreground: #064e3b;
-  --border: #bbf7d0;
-  --muted: #dcfce7;
+  --border: #c6f0dc;
+  --muted: #d1fae5;
   --muted-foreground: #047857;
 
   --sidebar: #064e3b;
@@ -80,12 +80,12 @@
   --sidebar-active: #059669;
   --sidebar-active-text: #ffffff;
 
-  --header: #ffffff;
-  --header-border: #d1fae5;
+  --header: #f7fdfa;
+  --header-border: #c6f0dc;
 
   --primary: #059669;
   --primary-hover: #047857;
-  --primary-light: #ecfdf5;
+  --primary-light: #d1fae5;
   --primary-light-border: #a7f3d0;
   --primary-text: #059669;
   --primary-foreground: #ffffff;
@@ -93,14 +93,14 @@
   --accent: #10b981;
 }
 
-/* 3. Theme: Beige (Beige / Cálido Arena) */
+/* 3. Tema: Beige / Cálido Arena */
 .theme-beige, [data-theme="beige"] {
-  --background: #faf8f5;
+  --background: #f5efe6;
   --foreground: #292524;
-  --card: #ffffff;
+  --card: #fdfcf9;
   --card-foreground: #292524;
-  --border: #e7e0d3;
-  --muted: #f5f0e8;
+  --border: #e3d8c8;
+  --muted: #eaddcb;
   --muted-foreground: #78716c;
 
   --sidebar: #292524;
@@ -111,8 +111,8 @@
   --sidebar-active: #d97706;
   --sidebar-active-text: #ffffff;
 
-  --header: #fdfbf7;
-  --header-border: #e7e0d3;
+  --header: #fdfcf9;
+  --header-border: #e3d8c8;
 
   --primary: #d97706;
   --primary-hover: #b45309;
@@ -124,15 +124,15 @@
   --accent: #c2410c;
 }
 
-/* 4. Theme: Rose (Rosa / Rose) */
+/* 4. Tema: Rosa / Rose */
 .theme-rose, [data-theme="rose"] {
-  --background: #fff1f2;
-  --foreground: #4c0519;
-  --card: #ffffff;
-  --card-foreground: #4c0519;
-  --border: #fecdd3;
-  --muted: #ffe4e6;
-  --muted-foreground: #be123c;
+  --background: #fdf2f4;
+  --foreground: #4a0418;
+  --card: #fffbfc;
+  --card-foreground: #4a0418;
+  --border: #f4ccd3;
+  --muted: #fce7ea;
+  --muted-foreground: #7c2d43;
 
   --sidebar: #4c0519;
   --sidebar-border: #881337;
@@ -142,13 +142,13 @@
   --sidebar-active: #e11d48;
   --sidebar-active-text: #ffffff;
 
-  --header: #ffffff;
-  --header-border: #ffe4e6;
+  --header: #fffbfc;
+  --header-border: #f4ccd3;
 
   --primary: #e11d48;
   --primary-hover: #be123c;
-  --primary-light: #fff1f2;
-  --primary-light-border: #fecdd3;
+  --primary-light: #fce7ea;
+  --primary-light-border: #f4ccd3;
   --primary-text: #e11d48;
   --primary-foreground: #ffffff;
   --primary-ring: rgba(225, 29, 72, 0.35);
@@ -194,6 +194,10 @@ body {
 
 .text-foreground {
   color: var(--foreground) !important;
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground) !important;
 }
 
 .bg-card {

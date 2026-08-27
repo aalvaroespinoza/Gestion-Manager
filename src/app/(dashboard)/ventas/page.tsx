@@ -313,10 +313,8 @@ export default function VentasPage() {
 
   // --- Complete Sale Handler ---
   const handleConfirmSale = async (invoice: InvoiceData) => {
-    // 1. Add to sales history
     setSalesHistory((prev) => [invoice, ...prev])
 
-    // 2. Deduct sold units from inventory stock
     setProducts((prev) =>
       prev.map((prod) => {
         const soldItem = invoice.items.find((it) => it.productId === prod.id)
@@ -343,12 +341,10 @@ export default function VentasPage() {
   // --- Filtered Catalog ---
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      // Category filter
       if (selectedCategory !== "ALL" && product.categoryId !== selectedCategory) {
         return false
       }
 
-      // Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         const matchCode = product.code.toLowerCase().includes(q)
@@ -370,14 +366,12 @@ export default function VentasPage() {
       const activeTag = (document.activeElement?.tagName || "").toLowerCase()
       const isInputActive = activeTag === "input" || activeTag === "textarea"
 
-      // "/" or "F2" to focus search
       if ((e.key === "/" && !isInputActive) || e.key === "F2") {
         e.preventDefault()
         searchInputRef.current?.focus()
         searchInputRef.current?.select()
       }
 
-      // "F4" or "Ctrl+Enter" to open checkout
       if ((e.key === "F4" || (e.ctrlKey && e.key === "Enter")) && cart.length > 0 && !isCheckoutOpen) {
         e.preventDefault()
         setViewingTicketInvoice(null)
@@ -389,7 +383,6 @@ export default function VentasPage() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [cart, isCheckoutOpen])
 
-  // Quick enter handler in search bar: if 1 exact product, add it directly!
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && filteredProducts.length === 1) {
       handleAddToCart(filteredProducts[0])
@@ -435,11 +428,11 @@ export default function VentasPage() {
       {/* Top Header & Tab Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <ShoppingCart className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
+            <ShoppingCart className="h-8 w-8 text-[var(--primary-text)]" />
             Punto de Venta (Terminal POS)
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Terminal rápida de mostrador con atajos de teclado y persistencia de sesión.
           </p>
         </div>
@@ -447,7 +440,7 @@ export default function VentasPage() {
         {/* View Mode Toggle Buttons */}
         <div className="flex items-center gap-2">
           {activeTab === "HISTORY" && (
-            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-xs">
+            <div className="flex items-center gap-1 bg-card border border-border rounded-xl p-1 shadow-xs">
               <Button
                 variant="ghost"
                 size="sm"
@@ -461,7 +454,7 @@ export default function VentasPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleExportSalesJSON}
-                leftIcon={<FileJson className="h-3.5 w-3.5 text-blue-600" />}
+                leftIcon={<FileJson className="h-3.5 w-3.5 text-[var(--primary-text)]" />}
                 className="h-8 text-xs font-semibold"
               >
                 JSON
@@ -469,14 +462,14 @@ export default function VentasPage() {
             </div>
           )}
 
-          <div className="flex items-center rounded-xl bg-slate-200/80 dark:bg-slate-800 p-1">
+          <div className="flex items-center rounded-xl bg-muted p-1 border border-border">
             <button
               type="button"
               onClick={() => setActiveTab("POS")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 activeTab === "POS"
-                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  ? "bg-card text-[var(--primary-text)] shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Store className="h-4 w-4" />
@@ -486,10 +479,10 @@ export default function VentasPage() {
             <button
               type="button"
               onClick={() => setActiveTab("HISTORY")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 activeTab === "HISTORY"
-                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  ? "bg-card text-[var(--primary-text)] shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <History className="h-4 w-4" />
@@ -516,7 +509,7 @@ export default function VentasPage() {
                     placeholder="Buscar producto por nombre o código de barra (Enter para agregar)..."
                     leftIcon={<Search className="h-4 w-4" />}
                     rightIcon={
-                      <kbd className="hidden sm:inline-block rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 text-[10px] font-mono text-slate-500">
+                      <kbd className="hidden sm:inline-block rounded bg-muted border border-border px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
                         / o F2
                       </kbd>
                     }
@@ -532,10 +525,10 @@ export default function VentasPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedCategory("ALL")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${
                       selectedCategory === "ALL"
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        ? "bg-[var(--primary)] text-white shadow-xs"
+                        : "bg-card text-foreground/70 border border-border hover:bg-muted"
                     }`}
                   >
                     Todos ({products.length})
@@ -548,10 +541,10 @@ export default function VentasPage() {
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-colors ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${
                           isSelected
-                            ? "bg-blue-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                            ? "bg-[var(--primary)] text-white shadow-xs"
+                            : "bg-card text-foreground/70 border border-border hover:bg-muted"
                         }`}
                       >
                         {cat.name} ({count})
@@ -565,9 +558,9 @@ export default function VentasPage() {
                 {/* Product Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[560px] overflow-y-auto pr-1">
                   {filteredProducts.length === 0 ? (
-                    <div className="col-span-full py-16 text-center text-slate-400 space-y-3">
-                      <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700" />
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="col-span-full py-16 text-center text-muted-foreground space-y-3">
+                      <Package className="h-10 w-10 mx-auto text-muted-foreground/50" />
+                      <p className="text-sm font-bold text-foreground">
                         No se encontraron productos en el catálogo.
                       </p>
                       <Button
@@ -595,13 +588,13 @@ export default function VentasPage() {
                           onClick={() => !isOutOfStock && handleAddToCart(product)}
                           className={`relative p-3.5 rounded-2xl border transition-all select-none text-left flex flex-col justify-between ${
                             isOutOfStock
-                              ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
-                              : "cursor-pointer bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:shadow-md active:scale-[0.99]"
+                              ? "opacity-50 cursor-not-allowed bg-muted border-border"
+                              : "cursor-pointer bg-card border-border hover:border-[var(--primary)] hover:shadow-md active:scale-[0.99]"
                           }`}
                         >
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="font-mono text-[11px] font-semibold text-slate-500">
+                              <span className="font-mono text-[11px] font-bold text-muted-foreground">
                                 {product.code}
                               </span>
                               <Badge
@@ -615,7 +608,7 @@ export default function VentasPage() {
                               </Badge>
                             </div>
 
-                            <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
+                            <h4 className="font-bold text-sm text-foreground line-clamp-2 leading-snug">
                               {product.name}
                             </h4>
 
@@ -626,7 +619,7 @@ export default function VentasPage() {
                                 return (
                                   <span
                                     key={k}
-                                    className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400"
+                                    className="text-[10px] bg-muted border border-border px-1.5 py-0.5 rounded text-foreground/80 font-medium"
                                   >
                                     {String(v)}
                                   </span>
@@ -635,8 +628,8 @@ export default function VentasPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-100 dark:border-slate-800">
-                            <span className="text-base font-extrabold text-blue-600 dark:text-blue-400">
+                          <div className="flex items-center justify-between pt-3 mt-2 border-t border-border">
+                            <span className="text-base font-extrabold text-[var(--primary-text)]">
                               ${product.salePrice.toLocaleString("es-CL")}
                             </span>
 
@@ -657,11 +650,11 @@ export default function VentasPage() {
 
           {/* RIGHT PANEL: Cart & Live Financial Breakdown (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
-            <Card className="border-blue-200 dark:border-blue-900/60 shadow-md">
-              <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800 space-y-3">
+            <Card className="border-[var(--primary-light-border)] shadow-md">
+              <CardHeader className="pb-3 border-b border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <ShoppingCart className="h-5 w-5 text-[var(--primary-text)]" />
                     <CardTitle className="text-base">Orden de Venta Actual</CardTitle>
                   </div>
                   {cart.length > 0 && (
@@ -669,7 +662,7 @@ export default function VentasPage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleClearCart}
-                      className="text-xs text-red-500 hover:text-red-700 h-7 px-2"
+                      className="text-xs text-red-600 hover:text-red-700 h-7 px-2 font-semibold"
                     >
                       Vaciar Carrito
                     </Button>
@@ -678,8 +671,8 @@ export default function VentasPage() {
 
                 {/* Client Selector Dropdown */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-blue-500" />
+                  <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-[var(--primary-text)]" />
                     Cliente Asignado
                   </label>
                   <Select
@@ -700,12 +693,12 @@ export default function VentasPage() {
                 {/* Cart Items List */}
                 <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
                   {cart.length === 0 ? (
-                    <div className="py-12 text-center text-slate-400 space-y-2">
-                      <ShoppingCart className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700" />
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    <div className="py-12 text-center text-muted-foreground space-y-2">
+                      <ShoppingCart className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                      <p className="text-xs font-bold text-foreground">
                         El carrito está vacío
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-muted-foreground">
                         Haz clic en los productos del catálogo izquierdo para agregarlos a la orden.
                       </p>
                     </div>
@@ -716,14 +709,14 @@ export default function VentasPage() {
                       return (
                         <div
                           key={item.productId}
-                          className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2"
+                          className="p-2.5 rounded-xl border border-border bg-muted/40 space-y-2"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 line-clamp-1">
+                              <p className="text-xs font-bold text-foreground line-clamp-1">
                                 {item.name}
                               </p>
-                              <span className="text-[10px] text-slate-400 font-mono">
+                              <span className="text-[10px] text-muted-foreground font-mono font-medium">
                                 {item.code} • ${item.unitPrice.toLocaleString("es-CL")} c/u
                               </span>
                             </div>
@@ -731,7 +724,7 @@ export default function VentasPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveFromCart(item.productId)}
-                              className="text-slate-400 hover:text-red-500 p-1"
+                              className="text-muted-foreground hover:text-red-600 p-1"
                               title="Quitar ítem"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -744,7 +737,7 @@ export default function VentasPage() {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                                className="h-7 w-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                                className="h-7 w-7 rounded-lg bg-card border border-border flex items-center justify-center text-foreground hover:bg-muted"
                               >
                                 <Minus className="h-3 w-3" />
                               </button>
@@ -760,26 +753,26 @@ export default function VentasPage() {
                                 }
                                 min={1}
                                 max={item.stock}
-                                className="h-7 w-12 text-center text-xs font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg"
+                                className="h-7 w-12 text-center text-xs font-bold bg-card border border-border rounded-lg text-foreground"
                               />
 
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
                                 disabled={isMaxStockReached}
-                                className="h-7 w-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 disabled:opacity-40"
+                                className="h-7 w-7 rounded-lg bg-card border border-border flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-40"
                               >
                                 <Plus className="h-3 w-3" />
                               </button>
                             </div>
 
-                            <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                            <span className="text-sm font-extrabold text-foreground">
                               ${item.subtotal.toLocaleString("es-CL")}
                             </span>
                           </div>
 
                           {isMaxStockReached && (
-                            <p className="text-[10px] text-amber-600 font-medium">
+                            <p className="text-[10px] text-amber-700 font-bold">
                               Máximo disponible en stock: {item.stock} un.
                             </p>
                           )}
@@ -791,11 +784,11 @@ export default function VentasPage() {
 
                 {/* Financial Summary Breakdown */}
                 {cart.length > 0 && (
-                  <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="space-y-3 pt-3 border-t border-border">
                     {/* Discounts Selector */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                        <Percent className="h-3.5 w-3.5 text-blue-500" />
+                      <span className="text-xs text-foreground/80 font-medium flex items-center gap-1">
+                        <Percent className="h-3.5 w-3.5 text-[var(--primary-text)]" />
                         Descuento Comercial:
                       </span>
                       <div className="flex items-center gap-1">
@@ -804,10 +797,10 @@ export default function VentasPage() {
                             key={pct}
                             type="button"
                             onClick={() => setDiscountPercent(pct)}
-                            className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${
+                            className={`px-2 py-0.5 text-xs font-bold rounded-md border ${
                               discountPercent === pct
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 hover:bg-slate-100"
+                                ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                                : "bg-card border-border text-foreground hover:bg-muted"
                             }`}
                           >
                             {pct}%
@@ -817,16 +810,16 @@ export default function VentasPage() {
                     </div>
 
                     {/* Subtotal, Descuentos e IVA */}
-                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="space-y-1.5 text-xs text-foreground/80">
                       <div className="flex justify-between">
                         <span>Subtotal Neto:</span>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-foreground">
                           ${saleSummary.subtotal.toLocaleString("es-CL")}
                         </span>
                       </div>
 
                       {saleSummary.discountAmount > 0 && (
-                        <div className="flex justify-between text-emerald-600 font-semibold">
+                        <div className="flex justify-between text-emerald-700 font-bold">
                           <span>Descuento ({discountPercent}%):</span>
                           <span>-${saleSummary.discountAmount.toLocaleString("es-CL")}</span>
                         </div>
@@ -838,27 +831,27 @@ export default function VentasPage() {
                             type="checkbox"
                             checked={applyTax}
                             onChange={(e) => setApplyTax(e.target.checked)}
-                            className="rounded border-slate-300 text-blue-600 h-3.5 w-3.5"
+                            className="rounded border-border text-[var(--primary)] h-3.5 w-3.5"
                           />
                           <span>IVA Estimado (21%):</span>
                         </label>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-foreground">
                           ${saleSummary.taxAmount.toLocaleString("es-CL")}
                         </span>
                       </div>
                     </div>
 
                     {/* Total Highlighting Banner */}
-                    <div className="p-3.5 rounded-xl bg-slate-900 text-white flex items-center justify-between shadow-sm">
+                    <div className="p-3.5 rounded-xl bg-sidebar text-sidebar-foreground flex items-center justify-between shadow-sm">
                       <div>
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                        <span className="text-[10px] uppercase tracking-wider text-[var(--sidebar-muted)] font-bold">
                           Total a Pagar
                         </span>
-                        <div className="text-2xl font-extrabold text-blue-400">
+                        <div className="text-2xl font-black text-white">
                           ${saleSummary.total.toLocaleString("es-CL")}
                         </div>
                       </div>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-[var(--sidebar-muted)] font-medium">
                         {saleSummary.totalUnits} un. en total
                       </span>
                     </div>
@@ -871,11 +864,11 @@ export default function VentasPage() {
                         setViewingTicketInvoice(null)
                         setIsCheckoutOpen(true)
                       }}
-                      className="w-full h-12 text-base font-bold shadow-md bg-emerald-600 hover:bg-emerald-700"
+                      className="w-full h-12 text-base font-bold shadow-md"
                       leftIcon={<CheckCircle2 className="h-5 w-5" />}
                     >
                       <span>Cobrar Venta</span>
-                      <kbd className="ml-2 px-1.5 py-0.5 bg-emerald-800/60 text-xs rounded font-mono">
+                      <kbd className="ml-2 px-1.5 py-0.5 bg-black/20 text-xs rounded font-mono">
                         F4 / Enter
                       </kbd>
                     </Button>
@@ -892,16 +885,16 @@ export default function VentasPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Total Facturado Hoy
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-500" />
+                <DollarSign className="h-4 w-4 text-emerald-700" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="text-2xl font-black text-foreground">
                   ${totalSalesRevenue.toLocaleString("es-CL")}
                 </div>
-                <p className="text-xs text-emerald-600 font-medium mt-1">
+                <p className="text-xs text-emerald-700 font-bold mt-1">
                   {totalSalesCount} transacciones completadas
                 </p>
               </CardContent>
@@ -909,46 +902,46 @@ export default function VentasPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Ticket Promedio
                 </CardTitle>
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <TrendingUp className="h-4 w-4 text-[var(--primary-text)]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="text-2xl font-black text-foreground">
                   ${averageTicket.toLocaleString("es-CL")}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Por cliente atendido</p>
+                <p className="text-xs text-muted-foreground font-medium mt-1">Por cliente atendido</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Ventas en Efectivo
                 </CardTitle>
-                <Banknote className="h-4 w-4 text-emerald-500" />
+                <Banknote className="h-4 w-4 text-emerald-700" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="text-2xl font-black text-foreground">
                   {cashSalesCount}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Caja chica al mostrador</p>
+                <p className="text-xs text-muted-foreground font-medium mt-1">Caja chica al mostrador</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Operador Activo
                 </CardTitle>
-                <User className="h-4 w-4 text-purple-500" />
+                <User className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-base font-bold text-slate-900 dark:text-slate-100 truncate">
+                <div className="text-base font-bold text-foreground truncate">
                   Álvaro Espinoza
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Turno Mañana • Casa Matriz</p>
+                <p className="text-xs text-muted-foreground font-medium mt-1">Turno Mañana • Casa Matriz</p>
               </CardContent>
             </Card>
           </div>
@@ -977,14 +970,14 @@ export default function VentasPage() {
               <Table className="border-0 rounded-none">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>N° Ticket</TableHead>
-                    <TableHead>Fecha & Hora</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Medio de Pago</TableHead>
-                    <TableHead className="text-center">Ítems</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="font-bold">N° Ticket</TableHead>
+                    <TableHead className="font-bold">Fecha & Hora</TableHead>
+                    <TableHead className="font-bold">Cliente</TableHead>
+                    <TableHead className="font-bold">Medio de Pago</TableHead>
+                    <TableHead className="text-center font-bold">Ítems</TableHead>
+                    <TableHead className="text-right font-bold">Total</TableHead>
+                    <TableHead className="text-center font-bold">Estado</TableHead>
+                    <TableHead className="text-right font-bold">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -993,25 +986,25 @@ export default function VentasPage() {
                   ) : (
                     salesHistory.map((sale) => (
                       <TableRow key={sale.id}>
-                        <TableCell className="font-mono font-semibold text-xs text-slate-800 dark:text-slate-200">
+                        <TableCell className="font-mono font-bold text-xs text-foreground">
                           {sale.saleNumber}
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500">{sale.date}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground font-medium">{sale.date}</TableCell>
                         <TableCell>
-                          <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                          <div className="font-bold text-xs text-foreground">
                             {sale.clientName}
                           </div>
-                          <div className="text-[10px] text-slate-400">{sale.clientDoc}</div>
+                          <div className="text-[10px] text-muted-foreground">{sale.clientDoc}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" size="sm">
                             {sale.paymentMethod}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center text-xs">
+                        <TableCell className="text-center text-xs font-semibold text-foreground">
                           {sale.summary.totalUnits} un. ({sale.summary.totalItems} art.)
                         </TableCell>
-                        <TableCell className="text-right font-bold text-sm text-slate-900 dark:text-slate-100">
+                        <TableCell className="text-right font-black text-sm text-foreground">
                           ${sale.summary.total.toLocaleString("es-CL")}
                         </TableCell>
                         <TableCell className="text-center">
@@ -1028,7 +1021,7 @@ export default function VentasPage() {
                               setIsCheckoutOpen(true)
                             }}
                             leftIcon={<Receipt className="h-3.5 w-3.5" />}
-                            className="h-8 text-xs text-blue-600 dark:text-blue-400 font-semibold"
+                            className="h-8 text-xs text-[var(--primary-text)] font-bold hover:bg-muted"
                           >
                             Ver Ticket
                           </Button>
