@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect, useCallback } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,12 +15,15 @@ import {
   TableCell,
   TableEmpty,
 } from "@/components/ui/table"
+import { ToastContainer, ToastMessage } from "@/components/ui/toast"
 import {
   ProductModal,
   StockAdjustmentModal,
   DeleteProductDialog,
 } from "@/components/modules/inventory"
 import { mockCategories, mockProducts } from "@/mocks/inventoryData"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
 import {
   Category,
   Product,
@@ -46,18 +49,36 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Download,
+  FileSpreadsheet,
+  FileJson,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  RotateCcw,
+  Sliders,
+  Keyboard,
 } from "lucide-react"
 
+type SortField = "code" | "name" | "category" | "salePrice" | "stock"
+type SortOrder = "asc" | "desc"
+
 export default function StockPage() {
-  // State for inventory products & categories
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  // Persistent Products in LocalStorage
+  const [products, setProducts, isHydrated] = useLocalStorage<Product[]>(
+    "gm_inventory_products",
+    mockProducts
+  )
   const [categories] = useState<Category[]>(mockCategories)
 
   // Filters & Search State
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL")
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL")
-  const [sortBy, setSortBy] = useState<"name" | "stock" | "price-asc" | "price-desc">("name")
+
+  // Interactive Column Sorting
+  const [sortField, setSortField] = useState<SortField>("name")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -66,24 +87,66 @@ export default function StockPage() {
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
-
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
 
-  // Toast feedback notification
-  const [toastMessage, setToastMessage] = useState<{
-    text: string
-    type: "success" | "info" | "danger"
-  } | null>(null)
+  // Rich Toasts Stack
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  const showToast = (text: string, type: "success" | "info" | "danger" = "success") => {
-    setToastMessage({ text, type })
-    setTimeout(() => setToastMessage(null), 3500)
+  const addToast = useCallback(
+    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
+      const newToast: ToastMessage = {
+        id: `toast-${Date.now()}-${Math.random()}`,
+        title,
+        description,
+        type,
+      }
+      setToasts((prev) => [...prev, newToast])
+    },
+    []
+  )
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  // Keyboard Shortcuts (N / Alt+N -> New Product, Escape -> Close Modals)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || "").toLowerCase()
+      const isInputActive = activeTag === "input" || activeTag === "textarea" || activeTag === "select"
+
+      if (e.key === "Escape") {
+        setIsProductModalOpen(false)
+        setIsAdjustmentModalOpen(false)
+        setDeletingProduct(null)
+        setEditingProduct(null)
+        setAdjustingProduct(null)
+      } else if ((e.key === "n" || e.key === "N") && (e.altKey || !isInputActive)) {
+        if (!isProductModalOpen && !isAdjustmentModalOpen && !deletingProduct) {
+          e.preventDefault()
+          setEditingProduct(null)
+          setIsProductModalOpen(true)
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isProductModalOpen, isAdjustmentModalOpen, deletingProduct])
+
+  // --- Sorting Handler ---
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortOrder("asc")
+    }
   }
 
-  // --- CRUD Mutations in Local React State ---
+  // --- CRUD Mutations in Persistent State ---
 
   // 1. Create or Edit Product
   const handleSaveProduct = (
@@ -94,7 +157,7 @@ export default function StockPage() {
     const now = new Date().toISOString()
 
     if (productData.id) {
-      // Update existing product without duplicating
+      // Update existing
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productData.id
@@ -107,9 +170,13 @@ export default function StockPage() {
             : p
         )
       )
-      showToast(`Producto "${productData.name}" modificado exitosamente.`, "success")
+      addToast(
+        "Producto Actualizado",
+        `Se guardaron los cambios para "${productData.name}" (${productData.code}).`,
+        "success"
+      )
     } else {
-      // Create new product
+      // Create new
       const newProd: Product = {
         id: `prod-${Date.now()}`,
         ...productData,
@@ -119,11 +186,15 @@ export default function StockPage() {
         updatedAt: now,
       }
       setProducts((prev) => [newProd, ...prev])
-      showToast(`Producto "${productData.name}" registrado en el catálogo.`, "success")
+      addToast(
+        "Producto Creado",
+        `"${productData.name}" ha sido incorporado al catálogo con ${productData.stock} unidades iniciales.`,
+        "success"
+      )
     }
   }
 
-  // 2. Fast Stock Adjustment (Re-stock / Egreso / Conteo con motivo)
+  // 2. Fast Stock Adjustment (Re-stock / Egreso / Conteo)
   const handleConfirmStockAdjustment = (
     productId: string,
     newStock: number,
@@ -136,9 +207,12 @@ export default function StockPage() {
       documentRef?: string
     }
   ) => {
+    let affectedProd: Product | null = null
+
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id === productId) {
+          affectedProd = p
           let status: StockStatus = "IN_STOCK"
           if (newStock === 0) status = "OUT_OF_STOCK"
           else if (newStock <= p.minStock) status = "LOW_STOCK"
@@ -161,18 +235,45 @@ export default function StockPage() {
         ? `-${movement.quantity} un. descontadas`
         : `Stock fijado en ${newStock} un.`
 
-    showToast(
-      `Re-Stock aplicado (${opLabel}). Motivo: "${movement.reason}". Nuevo total: ${newStock} un.`,
-      movement.type === "IN" ? "success" : "info"
-    )
+    if (newStock === 0) {
+      addToast(
+        "⚠️ Producto Agotado",
+        `${affectedProd?.name || "Producto"}: stock en 0 un. tras ajuste (${movement.reason}).`,
+        "destructive"
+      )
+    } else if (affectedProd && newStock <= affectedProd.minStock) {
+      addToast(
+        "⚠️ Alerta de Stock Bajo",
+        `${affectedProd.name}: ${newStock} un. restantes (Bajo el umbral mínimo de ${affectedProd.minStock} un.).`,
+        "warning"
+      )
+    } else {
+      addToast(
+        "Re-Stock Aplicado con Éxito",
+        `${affectedProd?.name || "Producto"}: ${opLabel}. Nuevo total: ${newStock} un.`,
+        "success"
+      )
+    }
   }
 
-  // 3. Delete Product with safety removal
+  // 3. Delete Product
   const handleDeleteProduct = (productId: string) => {
     const prod = products.find((p) => p.id === productId)
     setProducts((prev) => prev.filter((p) => p.id !== productId))
     setDeletingProduct(null)
-    showToast(`Producto "${prod?.name || productId}" eliminado del catálogo.`, "danger")
+    addToast(
+      "Producto Eliminado",
+      `"${prod?.name || productId}" fue removido permanentemente del inventario.`,
+      "destructive"
+    )
+  }
+
+  // --- Reset All Filters ---
+  const handleResetFilters = () => {
+    setSearchQuery("")
+    setSelectedCategory("ALL")
+    setSelectedStatus("ALL")
+    setCurrentPage(1)
   }
 
   // --- Filtered & Sorted Products ---
@@ -189,7 +290,7 @@ export default function StockPage() {
           return false
         }
 
-        // Filter by search text (code, name, description, customAttributes)
+        // Search Query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase()
           const matchCode = product.code.toLowerCase().includes(q)
@@ -204,13 +305,41 @@ export default function StockPage() {
         return true
       })
       .sort((a, b) => {
-        if (sortBy === "name") return a.name.localeCompare(b.name)
-        if (sortBy === "stock") return b.stock - a.stock
-        if (sortBy === "price-asc") return a.salePrice - b.salePrice
-        if (sortBy === "price-desc") return b.salePrice - a.salePrice
-        return 0
+        let comp = 0
+        if (sortField === "code") comp = a.code.localeCompare(b.code)
+        else if (sortField === "name") comp = a.name.localeCompare(b.name)
+        else if (sortField === "category")
+          comp = (a.categoryName || "").localeCompare(b.categoryName || "")
+        else if (sortField === "salePrice") comp = a.salePrice - b.salePrice
+        else if (sortField === "stock") comp = a.stock - b.stock
+
+        return sortOrder === "asc" ? comp : -comp
       })
-  }, [products, searchQuery, selectedCategory, selectedStatus, sortBy])
+  }, [products, searchQuery, selectedCategory, selectedStatus, sortField, sortOrder])
+
+  // --- Export Handlers ---
+  const handleExportCSV = () => {
+    exportToCSV(
+      "inventario_stock_gestion_manager",
+      filteredProducts,
+      [
+        { key: "code", label: "Código SKU" },
+        { key: "name", label: "Producto" },
+        { key: "categoryName", label: "Categoría" },
+        { key: "costPrice", label: "Costo Neto", format: (v) => `$${Number(v).toLocaleString("es-CL")}` },
+        { key: "salePrice", label: "Precio Venta", format: (v) => `$${Number(v).toLocaleString("es-CL")}` },
+        { key: "stock", label: "Stock Actual" },
+        { key: "minStock", label: "Stock Mínimo" },
+        { key: "status", label: "Estado", format: (v) => (v === "IN_STOCK" ? "En Stock" : v === "LOW_STOCK" ? "Stock Bajo" : "Agotado") },
+      ]
+    )
+    addToast("Exportación Completada", "Archivo CSV generado y descargado con éxito.", "info")
+  }
+
+  const handleExportJSON = () => {
+    exportToJSON("inventario_stock_gestion_manager", filteredProducts)
+    addToast("Exportación JSON", "Catálogo exportado en formato estructurado JSON.", "info")
+  }
 
   // --- Pagination Slice ---
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1
@@ -229,21 +358,8 @@ export default function StockPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Toast Feedback Notification */}
-      {toastMessage && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border text-sm font-medium animate-in slide-in-from-bottom-5 ${
-            toastMessage.type === "success"
-              ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-500/20"
-              : toastMessage.type === "danger"
-              ? "bg-red-600 text-white border-red-500 shadow-red-500/20"
-              : "bg-blue-600 text-white border-blue-500 shadow-blue-500/20"
-          }`}
-        >
-          <CheckCircle2 className="h-5 w-5 shrink-0" />
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
+      {/* Rich Toasts Floating Stack */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       {/* Header & New Product Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -253,21 +369,50 @@ export default function StockPage() {
             Control de Stock & Inventario
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gestión completa de existencias, atributos técnicos, re-stock rápido y edición en vivo.
+            Gestión completa de existencias, atributos técnicos, re-stock rápido y ordenamiento interactivo.
           </p>
         </div>
 
-        <Button
-          variant="default"
-          leftIcon={<Plus className="h-4 w-4" />}
-          onClick={() => {
-            setEditingProduct(null)
-            setIsProductModalOpen(true)
-          }}
-          className="shadow-sm"
-        >
-          Nuevo Producto
-        </Button>
+        {/* Actions: Export & New Product */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExportCSV}
+              leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />}
+              className="h-8 text-xs font-semibold"
+              title="Descargar tabla en formato Excel CSV"
+            >
+              CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExportJSON}
+              leftIcon={<FileJson className="h-3.5 w-3.5 text-blue-600" />}
+              className="h-8 text-xs font-semibold"
+              title="Descargar catálogo en formato JSON"
+            >
+              JSON
+            </Button>
+          </div>
+
+          <Button
+            variant="default"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={() => {
+              setEditingProduct(null)
+              setIsProductModalOpen(true)
+            }}
+            className="shadow-sm font-semibold"
+          >
+            <span>Nuevo Producto</span>
+            <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-blue-700/50 text-[10px] rounded font-mono">
+              N
+            </kbd>
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards Overview */}
@@ -354,9 +499,9 @@ export default function StockPage() {
         <CardHeader className="space-y-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
             {/* Real-time Search */}
-            <div className="sm:col-span-4">
+            <div className="sm:col-span-5">
               <Input
-                placeholder="Buscar por código, nombre o atributos..."
+                placeholder="Buscar por código, nombre o atributos (ej: 20V, OSB, 6m)..."
                 leftIcon={<Search className="h-4 w-4" />}
                 value={searchQuery}
                 onChange={(e) => {
@@ -398,18 +543,19 @@ export default function StockPage() {
               />
             </div>
 
-            {/* Sorter */}
-            <div className="sm:col-span-2">
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                options={[
-                  { label: "Nombre (A-Z)", value: "name" },
-                  { label: "Mayor Stock", value: "stock" },
-                  { label: "Menor Precio", value: "price-asc" },
-                  { label: "Mayor Precio", value: "price-desc" },
-                ]}
-              />
+            {/* Reset Filter Button */}
+            <div className="sm:col-span-1 flex items-center justify-end">
+              {(searchQuery || selectedCategory !== "ALL" || selectedStatus !== "ALL") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="w-full h-10 px-2"
+                  title="Limpiar todos los filtros"
+                >
+                  <RotateCcw className="h-4 w-4 text-slate-500" />
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -418,22 +564,114 @@ export default function StockPage() {
           <Table className="border-0 rounded-none">
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Producto</TableHead>
-                <TableHead>Categoría</TableHead>
+                {/* Sortable Column: Código */}
+                <TableHead
+                  onClick={() => handleSort("code")}
+                  className="cursor-pointer hover:text-blue-600 transition-colors select-none"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Código</span>
+                    {sortField === "code" ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </TableHead>
+
+                {/* Sortable Column: Producto */}
+                <TableHead
+                  onClick={() => handleSort("name")}
+                  className="cursor-pointer hover:text-blue-600 transition-colors select-none"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Producto</span>
+                    {sortField === "name" ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </TableHead>
+
+                {/* Sortable Column: Categoría */}
+                <TableHead
+                  onClick={() => handleSort("category")}
+                  className="cursor-pointer hover:text-blue-600 transition-colors select-none"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Categoría</span>
+                    {sortField === "category" ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </TableHead>
+
                 <TableHead>Atributos Extra</TableHead>
-                <TableHead className="text-right">Precio Venta</TableHead>
-                <TableHead className="text-center">Stock</TableHead>
+
+                {/* Sortable Column: Precio Venta */}
+                <TableHead
+                  onClick={() => handleSort("salePrice")}
+                  className="text-right cursor-pointer hover:text-blue-600 transition-colors select-none"
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Precio Venta</span>
+                    {sortField === "salePrice" ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </TableHead>
+
+                {/* Sortable Column: Stock */}
+                <TableHead
+                  onClick={() => handleSort("stock")}
+                  className="text-center cursor-pointer hover:text-blue-600 transition-colors select-none"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Stock</span>
+                    {sortField === "stock" ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </TableHead>
+
                 <TableHead className="text-center">Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {paginatedProducts.length === 0 ? (
-                <TableEmpty
-                  colSpan={8}
-                  message="No se encontraron productos que coincidan con la búsqueda o filtros aplicados."
-                />
+                /* Illustrated Empty State */
+                <TableRow>
+                  <TableCell colSpan={8} className="py-16 text-center">
+                    <div className="max-w-sm mx-auto space-y-3">
+                      <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
+                        <Search className="h-6 w-6" />
+                      </div>
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                        No se encontraron productos coincidentes
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        No hay registros que cumplan con los criterios de búsqueda o filtros seleccionados.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResetFilters}
+                        leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+                      >
+                        Limpiar Filtros
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 paginatedProducts.map((product) => {
                   const category = categories.find((c) => c.id === product.categoryId)
@@ -441,7 +679,7 @@ export default function StockPage() {
                   const isOut = product.status === "OUT_OF_STOCK"
 
                   return (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
                       {/* Código */}
                       <TableCell className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {product.code}
@@ -540,10 +778,10 @@ export default function StockPage() {
                         </Badge>
                       </TableCell>
 
-                      {/* Acciones: 3 Botones Clave (Re-stock, Editar, Eliminar) */}
+                      {/* Acciones */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Botón 1: Re-stock / Ajustar Stock */}
+                          {/* Re-stock */}
                           <Button
                             variant="secondary"
                             size="sm"
@@ -558,7 +796,7 @@ export default function StockPage() {
                             <span>Re-stock</span>
                           </Button>
 
-                          {/* Botón 2: Editar */}
+                          {/* Editar */}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -572,7 +810,7 @@ export default function StockPage() {
                             <Edit2 className="h-3.5 w-3.5" />
                           </Button>
 
-                          {/* Botón 3: Eliminar */}
+                          {/* Eliminar */}
                           <Button
                             variant="ghost"
                             size="sm"
