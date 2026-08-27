@@ -99,7 +99,7 @@ export function UserProfileModal({
       size="lg"
       title={
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/30">
             <User className="h-5 w-5" />
           </div>
           <span className="text-white font-bold">Mi Perfil de Usuario</span>
@@ -126,7 +126,7 @@ export function UserProfileModal({
 
         {/* User Avatar Card Header */}
         <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-orange-600 flex items-center justify-center text-white text-lg font-bold shadow-md shadow-orange-950/40">
+          <div className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shadow-md">
             {formData.name
               .split(" ")
               .map((n) => n[0])
@@ -152,7 +152,7 @@ export function UserProfileModal({
         {/* Personal Details Section */}
         <div className="space-y-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-orange-400" />
+            <ShieldCheck className="h-4 w-4 text-primary" />
             Información Personal & Contacto
           </h4>
 
@@ -195,13 +195,13 @@ export function UserProfileModal({
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
             <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <KeyRound className="h-4 w-4 text-orange-400" />
+              <KeyRound className="h-4 w-4 text-primary" />
               Cambio de Contraseña (Opcional)
             </h4>
             <button
               type="button"
               onClick={() => setShowPasswords(!showPasswords)}
-              className="text-xs text-orange-400 hover:text-orange-300 inline-flex items-center gap-1 cursor-pointer font-medium"
+              className="text-xs text-primary hover:opacity-80 inline-flex items-center gap-1 cursor-pointer font-medium"
             >
               {showPasswords ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               <span>{showPasswords ? "Ocultar" : "Mostrar"}</span>

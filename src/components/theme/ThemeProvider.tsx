@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-export type ThemePalette = "orange" | "blue" | "rose"
+export type ThemePalette = "orange" | "blue" | "rose" | "beige"
 
 export interface ThemeConfig {
   id: ThemePalette
@@ -19,7 +19,7 @@ export const themeOptions: ThemeConfig[] = [
   {
     id: "orange",
     name: "Dark Grafito & Naranja",
-    subtitle: "Moderno & Pro (Por Defecto)",
+    subtitle: "Moderno & Pro (Predeterminado)",
     swatchColor: "#f97316",
     accentColor: "#ea580c",
     bgSoft: "#121214",
@@ -46,6 +46,16 @@ export const themeOptions: ThemeConfig[] = [
     sidebarColor: "#0f060c",
     description: "Fondo grafito vino (#140b10), tarjetas borgoña (#1c1017) y acentos frambuesa/rose.",
   },
+  {
+    id: "beige",
+    name: "Dark Arena Cálido",
+    subtitle: "Minimalista & Ámbar",
+    swatchColor: "#d97706",
+    accentColor: "#b45309",
+    bgSoft: "#151311",
+    sidebarColor: "#100e0c",
+    description: "Fondo cálido oscuro (#151311), tarjetas carbón arena (#1f1a15) y acentos ámbar dorado.",
+  },
 ]
 
 interface ThemeContextType {
@@ -66,7 +76,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem(STORAGE_KEY) as ThemePalette
-      // If user had "green" or "beige" from previous tests, reset cleanly to "orange"
       if (savedTheme && themeOptions.some((t) => t.id === savedTheme)) {
         setThemeState(savedTheme)
         applyThemeClass(savedTheme)
@@ -86,7 +95,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof document !== "undefined") {
       const root = document.documentElement
       // Remove any previous theme classes
-      root.classList.remove("theme-orange", "theme-blue", "theme-rose", "theme-green", "theme-beige", "theme-mint", "theme-white")
+      root.classList.remove("theme-orange", "theme-blue", "theme-rose", "theme-beige", "theme-green", "theme-mint", "theme-white")
 
       // Add new theme class & data-theme attribute
       root.classList.add(`theme-${newTheme}`)

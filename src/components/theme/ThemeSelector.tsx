@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { useTheme, themeOptions, ThemePalette } from "./ThemeProvider"
+import { useTheme, themeOptions } from "./ThemeProvider"
 import { Palette, Check, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +30,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
 
   if (variant === "inline") {
     return (
-      <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-3", className)}>
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3", className)}>
         {themeOptions.map((item) => {
           const isActive = theme === item.id
 
@@ -40,10 +40,10 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
               type="button"
               onClick={() => setTheme(item.id)}
               className={cn(
-                "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none",
+                "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none cursor-pointer",
                 isActive
-                  ? "border-[var(--primary)] bg-[var(--primary-light)] ring-2 ring-[var(--primary-ring)] shadow-xs"
-                  : "border-border bg-card hover:border-[var(--primary)]/50 hover:bg-muted/40"
+                  ? "border-primary bg-primary-light ring-2 ring-primary/40 shadow-xs"
+                  : "border-border bg-card hover:border-primary/50 hover:bg-muted/40"
               )}
             >
               <div className="flex items-center justify-between w-full mb-3">
@@ -62,7 +62,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 </div>
 
                 {isActive && (
-                  <span className="text-[10px] font-bold text-[var(--primary-text)] uppercase tracking-wider bg-[var(--primary-light)] px-2 py-0.5 rounded-full border border-[var(--primary-light-border)]">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary-light px-2 py-0.5 rounded-full border border-primary/30">
                     Activo
                   </span>
                 )}
@@ -94,9 +94,9 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Cambiar paleta de colores"
         title="Personalizar acento de color"
-        className="flex items-center gap-1.5 rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
       >
-        <Palette className="h-4 w-4 text-[var(--primary-text)]" />
+        <Palette className="h-4 w-4 text-primary" />
         <div
           className="h-3 w-3 rounded-full border border-zinc-700 shadow-xs"
           style={{
@@ -110,7 +110,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
           <div className="px-3 py-2 border-b border-border flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--primary-text)]" />
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
                 <span>Paleta de Colores Dark</span>
               </p>
               <p className="text-[10px] text-muted-foreground">
@@ -132,9 +132,9 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                     setIsOpen(false)
                   }}
                   className={cn(
-                    "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-all",
+                    "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-all cursor-pointer",
                     isActive
-                      ? "bg-[var(--primary-light)] text-[var(--primary-text)] font-bold ring-1 ring-[var(--primary-ring)]"
+                      ? "bg-primary-light text-primary font-bold ring-1 ring-primary/40"
                       : "text-foreground hover:bg-muted"
                   )}
                 >
@@ -155,7 +155,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                     </div>
                   </div>
 
-                  {isActive && <Check className="h-4 w-4 text-[var(--primary-text)]" />}
+                  {isActive && <Check className="h-4 w-4 text-primary" />}
                 </button>
               )
             })}

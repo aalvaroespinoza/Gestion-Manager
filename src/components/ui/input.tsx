@@ -21,7 +21,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className="text-xs font-semibold text-zinc-300 select-none flex items-center justify-between"
           >
             <span>{label}</span>
-            {props.required && <span className="text-orange-500 text-xs font-bold ml-1">*</span>}
+            {props.required && <span className="text-primary text-xs font-bold ml-1">*</span>}
           </label>
         )}
         <div className="relative flex items-center">
@@ -37,7 +37,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             className={cn(
               "flex h-10 w-full rounded-xl border border-zinc-700 bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-zinc-500 transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:border-orange-500",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary",
               "disabled:cursor-not-allowed disabled:opacity-40 disabled:bg-zinc-900",
               leftIcon && "pl-9",
               rightIcon && "pr-9",

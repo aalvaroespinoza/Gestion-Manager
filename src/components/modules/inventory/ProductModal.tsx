@@ -10,7 +10,6 @@ import { DynamicFormRenderer, DynamicFormSchemaConfig } from "@/components/dynam
 import { Category, Product, ProductFormData, StockStatus } from "@/types/inventory"
 import {
   Package,
-  Layers,
   DollarSign,
   Barcode,
   Save,
@@ -166,7 +165,7 @@ export function ProductModal({
       size="xl"
       title={
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Package className="h-5 w-5" />
           </div>
           <span className="text-white font-bold">{isEditing ? "Editar Producto en Stock" : "Nuevo Producto en Stock"}</span>
@@ -185,7 +184,7 @@ export function ProductModal({
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
             <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <Barcode className="h-4 w-4 text-orange-400" />
+              <Barcode className="h-4 w-4 text-primary" />
               1. Identificación del Producto
             </h4>
           </div>
@@ -303,7 +302,7 @@ export function ProductModal({
           <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-orange-400" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white">
                   3. Atributos Específicos: {activeCategory.name}
                 </h4>

@@ -8,7 +8,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles: Record<NonNullable<BadgeProps["variant"]>, string> = {
-  default: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  default: "bg-primary/15 text-primary border-primary/30",
   secondary: "bg-zinc-800 text-zinc-300 border-zinc-700",
   destructive: "bg-red-500/15 text-red-400 border-red-500/30",
   outline: "bg-transparent text-zinc-300 border-zinc-700",
@@ -18,7 +18,7 @@ const variantStyles: Record<NonNullable<BadgeProps["variant"]>, string> = {
 }
 
 const dotStyles: Record<NonNullable<BadgeProps["variant"]>, string> = {
-  default: "bg-orange-400",
+  default: "bg-primary",
   secondary: "bg-zinc-400",
   destructive: "bg-red-400",
   outline: "bg-zinc-400",

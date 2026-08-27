@@ -150,7 +150,7 @@ export function CheckoutModal({
       title={
         step === "PAYMENT" ? (
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Wallet className="h-5 w-5" />
             </div>
             <span className="text-white font-bold">Cobro y Cierre de Venta</span>
@@ -175,22 +175,22 @@ export function CheckoutModal({
       {step === "PAYMENT" ? (
         <form onSubmit={handleConfirm} className="space-y-6">
           {/* Total Display Banner */}
-          <div className="p-4 rounded-2xl bg-orange-600 text-white flex items-center justify-between shadow-md shadow-orange-950/40">
+          <div className="p-4 rounded-2xl bg-primary text-primary-foreground flex items-center justify-between shadow-md">
             <div>
-              <span className="text-xs uppercase tracking-wider text-orange-100 font-bold">
+              <span className="text-xs uppercase tracking-wider opacity-90 font-bold">
                 Monto Total a Cobrar
               </span>
               <div className="text-3xl font-black tracking-tight">
                 ${summary.total.toLocaleString("es-CL")}
               </div>
-              <span className="text-xs text-orange-100 font-medium">
+              <span className="text-xs opacity-90 font-medium">
                 {summary.totalItems} ítems ({summary.totalUnits} unidades)
               </span>
             </div>
             <div className="text-right">
-              <span className="text-xs text-orange-200">Cliente</span>
+              <span className="text-xs opacity-80">Cliente</span>
               <div className="text-sm font-bold max-w-[180px] truncate text-white">{client.name}</div>
-              <span className="text-[11px] text-orange-200">{client.taxCondition}</span>
+              <span className="text-[11px] opacity-80">{client.taxCondition}</span>
             </div>
           </div>
 
@@ -216,13 +216,13 @@ export function CheckoutModal({
                     }}
                     className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold transition-all text-left cursor-pointer ${
                       isSelected
-                        ? "border-orange-500 bg-orange-500/15 text-orange-300 ring-1 ring-orange-500/40 font-bold"
+                        ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 font-bold"
                         : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
                     }`}
                   >
                     <Icon
                       className={`h-4 w-4 shrink-0 ${
-                        isSelected ? "text-orange-400" : "text-zinc-500"
+                        isSelected ? "text-primary" : "text-zinc-500"
                       }`}
                     />
                     <span className="truncate">{pm.label}</span>
@@ -370,7 +370,7 @@ export function CheckoutModal({
             <div className="space-y-1 text-[11px] border-b border-dashed border-zinc-700 pb-3">
               <div className="flex justify-between">
                 <span className="text-zinc-400">N° COMPROBANTE:</span>
-                <span className="font-bold text-orange-400">{generatedInvoice.saleNumber}</span>
+                <span className="font-bold text-primary">{generatedInvoice.saleNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">FECHA & HORA:</span>
@@ -430,7 +430,7 @@ export function CheckoutModal({
 
               <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-zinc-700">
                 <span>TOTAL A PAGAR:</span>
-                <span className="text-orange-400">${generatedInvoice.summary.total.toLocaleString("es-CL")}</span>
+                <span className="text-primary font-black">${generatedInvoice.summary.total.toLocaleString("es-CL")}</span>
               </div>
             </div>
 

@@ -127,7 +127,7 @@ export function DialogContent({
             type="button"
             onClick={() => context.setOpen(false)}
             aria-label="Cerrar modal"
-            className="absolute right-4 top-4 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="absolute right-4 top-4 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <X className="h-4 w-4" />
           </button>

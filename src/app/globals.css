@@ -124,6 +124,37 @@
   --accent: #ec4899;
 }
 
+/* 4. Tema: Beige Arena Cálido Dark */
+.theme-beige, [data-theme="beige"] {
+  --background: #151311;
+  --foreground: #fefce8;
+  --card: #1f1a15;
+  --card-foreground: #fef9c3;
+  --border: #383025;
+  --muted: #2a231b;
+  --muted-foreground: #d4c5a9;
+
+  --sidebar: #100e0c;
+  --sidebar-border: #383025;
+  --sidebar-foreground: #fef9c3;
+  --sidebar-muted: #927e65;
+  --sidebar-hover: #1f1a15;
+  --sidebar-active: #d97706;
+  --sidebar-active-text: #ffffff;
+
+  --header: #151311;
+  --header-border: #383025;
+
+  --primary: #d97706;
+  --primary-hover: #b45309;
+  --primary-light: rgba(217, 119, 6, 0.12);
+  --primary-light-border: rgba(217, 119, 6, 0.3);
+  --primary-text: #fbbf24;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(217, 119, 6, 0.4);
+  --accent: #f59e0b;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -145,6 +176,8 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
   --color-primary-text: var(--primary-text);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -158,61 +191,49 @@ body {
 
 /* Global utility classes mapped to CSS custom properties */
 .bg-background {
-  background-color: var(--background) !important;
+  background-color: var(--background);
 }
 
 .text-foreground {
-  color: var(--foreground) !important;
+  color: var(--foreground);
 }
 
 .text-muted-foreground {
-  color: var(--muted-foreground) !important;
+  color: var(--muted-foreground);
 }
 
 .bg-card {
-  background-color: var(--card) !important;
+  background-color: var(--card);
 }
 
 .text-card-foreground {
-  color: var(--card-foreground) !important;
+  color: var(--card-foreground);
 }
 
 .border-border {
-  border-color: var(--border) !important;
+  border-color: var(--border);
 }
 
 .bg-sidebar {
-  background-color: var(--sidebar) !important;
+  background-color: var(--sidebar);
 }
 
 .text-sidebar-foreground {
-  color: var(--sidebar-foreground) !important;
+  color: var(--sidebar-foreground);
 }
 
 .border-sidebar {
-  border-color: var(--sidebar-border) !important;
+  border-color: var(--sidebar-border);
 }
 
 .bg-header {
-  background-color: var(--header) !important;
+  background-color: var(--header);
 }
 
 .border-header {
-  border-color: var(--header-border) !important;
-}
-
-.bg-primary {
-  background-color: var(--primary) !important;
-}
-
-.text-primary {
-  color: var(--primary-text) !important;
-}
-
-.border-primary {
-  border-color: var(--primary) !important;
+  border-color: var(--header-border);
 }
 
 .bg-primary-light {
-  background-color: var(--primary-light) !important;
+  background-color: var(--primary-light);
 }

@@ -45,7 +45,7 @@ export default function ClientesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <Users className="h-8 w-8 text-orange-500" />
+            <Users className="h-8 w-8 text-primary" />
             Directorio de Clientes
           </h1>
           <p className="text-sm text-zinc-400 mt-1 font-medium">
@@ -85,7 +85,7 @@ export default function ClientesPage() {
             <TableBody>
               {filteredClients.map((client) => (
                 <TableRow key={client.id}>
-                  <TableCell className="font-mono text-xs font-bold text-orange-400">{client.rut}</TableCell>
+                  <TableCell className="font-mono text-xs font-medium text-primary">{client.rut}</TableCell>
                   <TableCell className="font-bold text-white text-sm">{client.name}</TableCell>
                   <TableCell>
                     <div className="text-xs text-zinc-300 font-medium">{client.email}</div>

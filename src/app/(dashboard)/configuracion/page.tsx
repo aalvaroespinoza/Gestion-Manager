@@ -22,9 +22,10 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
-import { ThemeSelector } from "@/components/theme"
+import { ThemeSelector } from "@/components/theme/ThemeSelector"
 import { mockCategories } from "@/mocks/inventoryData"
-import { DynamicFieldConfig } from "@/types/inventory"
+import { Category } from "@/types/inventory"
+import { DynamicFormFieldConfig } from "@/components/dynamic-forms/types"
 import {
   Settings,
   Building2,
@@ -34,13 +35,15 @@ import {
   Save,
   Plus,
   Trash2,
-  UserPlus,
-  Palette,
   CheckCircle2,
+  UserPlus,
   Mail,
-  Receipt,
   Sparkles,
+  Palette,
+  Receipt,
 } from "lucide-react"
+
+type ConfigTab = "GENERAL" | "USERS" | "FIELDS" | "NOTIFICATIONS"
 
 interface UserMember {
   id: string
@@ -51,98 +54,95 @@ interface UserMember {
   lastLogin: string
 }
 
-const mockTeamUsers: UserMember[] = [
+const initialTeam: UserMember[] = [
   {
     id: "usr-1",
     name: "Álvaro Espinoza",
-    email: "admin@gestionmanager.com",
+    email: "alvaro@gestionmanager.com",
     role: "SUPERADMIN",
     status: "ACTIVO",
-    lastLogin: "Hace 5 minutos",
+    lastLogin: "Hoy a las 08:30 (Esta sesión)",
   },
   {
     id: "usr-2",
-    name: "Carolina Valenzuela",
-    email: "carolina.v@gestionmanager.com",
-    role: "ADMIN",
-    status: "ACTIVO",
-    lastLogin: "Hace 2 horas",
-  },
-  {
-    id: "usr-3",
-    name: "Rodrigo Morales",
-    email: "rodrigo.m@gestionmanager.com",
+    name: "Carolina Silva",
+    email: "carolina.v@empresa.cl",
     role: "VENDEDOR",
     status: "ACTIVO",
     lastLogin: "Ayer a las 18:40",
   },
   {
-    id: "usr-4",
-    name: "Ignacio Soto",
-    email: "ignacio.s@gestionmanager.com",
+    id: "usr-3",
+    name: "Rodrigo Morales",
+    email: "rmorales@bodega.cl",
     role: "BODEGUERO",
+    status: "ACTIVO",
+    lastLogin: "21/08/2026 14:15",
+  },
+  {
+    id: "usr-4",
+    name: "Patricio Araya",
+    email: "paraya@contabilidad.cl",
+    role: "ADMIN",
     status: "INVITADO",
     lastLogin: "Pendiente de activación",
   },
 ]
 
-export default function ConfigurationPage() {
-  const [activeTab, setActiveTab] = useState<
-    "GENERAL" | "USERS" | "FIELDS" | "NOTIFICATIONS"
-  >("GENERAL")
+export default function ConfiguracionPage() {
+  const [activeTab, setActiveTab] = useState<ConfigTab>("GENERAL")
 
-  // Company settings state
+  // Company Settings Form State
   const [companySettings, setCompanySettings] = useState({
-    companyName: "Gestión Manager SpA",
-    fantasyName: "Comercial & Ferretería Central",
-    taxId: "76.452.890-K",
-    economicActivity: "Venta al por mayor y menor de materiales y ferretería",
-    address: "Av. Providencia 1234, Of. 601, Santiago",
+    companyName: "Distribuidora Industrial S.A.",
+    fantasyName: "Gestión Manager Materiales",
+    taxId: "76.123.456-7",
+    address: "Av. Industrial 4520, Quilicura, Región Metropolitana",
+    economicActivity: "Venta al por mayor de materiales de construcción y ferretería",
     currency: "CLP",
     defaultTaxRate: 21,
     mainIndustry: "construccion",
   })
 
-  // Team users state
-  const [teamUsers, setTeamUsers] = useState<UserMember[]>(mockTeamUsers)
+  // Users Management State
+  const [teamUsers, setTeamUsers] = useState<UserMember[]>(initialTeam)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [inviteName, setInviteName] = useState("")
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<UserMember["role"]>("VENDEDOR")
 
-  // Dynamic fields configuration state
-  const [categoriesList, setCategoriesList] = useState(mockCategories)
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState(mockCategories[0].id)
+  // Dynamic Fields Builder State
+  const [categoriesList, setCategoriesList] = useState<Category[]>(mockCategories)
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>(mockCategories[0].id)
   const [isNewFieldModalOpen, setIsNewFieldModalOpen] = useState(false)
-  const [newFieldLabel, setNewFieldLabel] = useState("")
   const [newFieldName, setNewFieldName] = useState("")
-  const [newFieldType, setNewFieldType] = useState<"text" | "number" | "select" | "boolean">("text")
+  const [newFieldLabel, setNewFieldLabel] = useState("")
+  const [newFieldType, setNewFieldType] = useState<DynamicFormFieldConfig["type"]>("text")
 
-  // Notifications settings state
+  // System Notifications Preferences
   const [notificationsSettings, setNotificationsSettings] = useState({
     emailCriticalStock: true,
     emailDailyReport: true,
-    emailNewClient: false,
     autoPrintReceipt: true,
+    assignedPosTerminal: "Terminal Caja #01 - Casa Matriz",
     defaultReceiptType: "TICKET",
-    assignedPosTerminal: "Caja Principal - Salón",
   })
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
-    setTimeout(() => setToastMessage(null), 3500)
+    setTimeout(() => setToastMessage(null), 3000)
   }
 
   const handleSaveCompany = (e: React.FormEvent) => {
     e.preventDefault()
-    showToast("Datos de la empresa y tenant actualizados con éxito.")
+    showToast("Datos de la empresa actualizados con éxito.")
   }
 
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault()
-    showToast("Preferencias de notificaciones y facturación guardadas.")
+    showToast("Preferencias de notificaciones y POS guardadas.")
   }
 
   const handleInviteUser = (e: React.FormEvent) => {
@@ -174,7 +174,7 @@ export default function ConfigurationPage() {
     e.preventDefault()
     if (!newFieldLabel || !newFieldName) return
 
-    const newField: DynamicFieldConfig = {
+    const newField: DynamicFormFieldConfig = {
       name: newFieldName,
       label: newFieldLabel,
       type: newFieldType,
@@ -205,7 +205,7 @@ export default function ConfigurationPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl bg-orange-600 text-white border border-orange-500 font-bold text-xs animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl bg-primary text-primary-foreground border border-primary/40 font-bold text-xs animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -214,7 +214,7 @@ export default function ConfigurationPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-          <Settings className="h-8 w-8 text-orange-500" />
+          <Settings className="h-8 w-8 text-primary" />
           Configuración & Parámetros
         </h1>
         <p className="text-sm text-zinc-400 mt-1 font-medium">
@@ -229,7 +229,7 @@ export default function ConfigurationPage() {
           onClick={() => setActiveTab("GENERAL")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "GENERAL"
-              ? "border-orange-500 text-orange-400"
+              ? "border-primary text-primary"
               : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
@@ -242,7 +242,7 @@ export default function ConfigurationPage() {
           onClick={() => setActiveTab("USERS")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "USERS"
-              ? "border-orange-500 text-orange-400"
+              ? "border-primary text-primary"
               : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
@@ -258,7 +258,7 @@ export default function ConfigurationPage() {
           onClick={() => setActiveTab("FIELDS")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "FIELDS"
-              ? "border-orange-500 text-orange-400"
+              ? "border-primary text-primary"
               : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
@@ -271,7 +271,7 @@ export default function ConfigurationPage() {
           onClick={() => setActiveTab("NOTIFICATIONS")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "NOTIFICATIONS"
-              ? "border-orange-500 text-orange-400"
+              ? "border-primary text-primary"
               : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
@@ -397,7 +397,7 @@ export default function ConfigurationPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Palette className="h-5 w-5 text-orange-400" />
+                <Palette className="h-5 w-5 text-primary" />
                 <span>Personalización de Paleta de Colores Global</span>
               </CardTitle>
               <CardDescription>
@@ -450,7 +450,7 @@ export default function ConfigurationPage() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                          <div className="h-8 w-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center text-xs shadow-xs">
                             {user.name
                               .split(" ")
                               .map((n) => n[0])
@@ -528,7 +528,7 @@ export default function ConfigurationPage() {
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-orange-400" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   <span>Esquema de Atributos Dinámicos por Rubro (JSONB)</span>
                 </CardTitle>
                 <CardDescription>
@@ -556,7 +556,7 @@ export default function ConfigurationPage() {
                     onClick={() => setSelectedCategoryTab(cat.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
                       selectedCategoryTab === cat.id
-                        ? "bg-orange-600 text-white shadow-xs"
+                        ? "bg-primary text-primary-foreground shadow-xs"
                         : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white"
                     }`}
                   >
@@ -582,7 +582,7 @@ export default function ConfigurationPage() {
                     </div>
 
                     <p className="text-[11px] text-zinc-400 font-mono">
-                      Clave JSON: <code className="text-orange-400 font-bold">{field.name}</code>
+                      Clave JSON: <code className="text-primary font-bold">{field.name}</code>
                     </p>
 
                     {field.description && (
@@ -619,7 +619,7 @@ export default function ConfigurationPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-orange-400" />
+                  <Bell className="h-5 w-5 text-primary" />
                   <span>Alertas del Sistema</span>
                 </CardTitle>
                 <CardDescription>
@@ -638,7 +638,7 @@ export default function ConfigurationPage() {
                         emailCriticalStock: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-orange-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
                     <span className="font-bold text-xs text-white">
@@ -660,7 +660,7 @@ export default function ConfigurationPage() {
                         emailDailyReport: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-orange-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
                     <span className="font-bold text-xs text-white">
@@ -724,7 +724,7 @@ export default function ConfigurationPage() {
                         autoPrintReceipt: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-orange-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
                     <span className="font-bold text-xs text-white">
@@ -754,7 +754,7 @@ export default function ConfigurationPage() {
         size="default"
         title={
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <UserPlus className="h-5 w-5" />
             </div>
             <span className="text-white font-bold">Invitar Usuario al Equipo</span>
@@ -809,7 +809,7 @@ export default function ConfigurationPage() {
         size="default"
         title={
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Sparkles className="h-5 w-5" />
             </div>
             <span className="text-white font-bold">Agregar Atributo a {currentCategoryObj?.name}</span>

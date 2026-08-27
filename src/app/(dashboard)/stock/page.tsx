@@ -195,12 +195,11 @@ export default function StockPage() {
       documentRef?: string
     }
   ) => {
-    let affectedProd: Product | null = null
+    const affectedProd = products.find((p) => p.id === productId)
 
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id === productId) {
-          affectedProd = p
           let status: StockStatus = "IN_STOCK"
           if (newStock === 0) status = "OUT_OF_STOCK"
           else if (newStock <= p.minStock) status = "LOW_STOCK"
@@ -350,7 +349,7 @@ export default function StockPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <Boxes className="h-8 w-8 text-orange-500" />
+            <Boxes className="h-8 w-8 text-primary" />
             Control de Stock & Inventario
           </h1>
           <p className="text-sm text-zinc-400 mt-1 font-medium">
@@ -375,7 +374,7 @@ export default function StockPage() {
               variant="ghost"
               size="sm"
               onClick={handleExportJSON}
-              leftIcon={<FileJson className="h-3.5 w-3.5 text-orange-400" />}
+              leftIcon={<FileJson className="h-3.5 w-3.5 text-primary" />}
               className="h-8 text-xs font-semibold text-zinc-300 hover:text-white"
               title="Descargar catálogo en formato JSON"
             >
@@ -390,7 +389,7 @@ export default function StockPage() {
               setEditingProduct(null)
               setIsProductModalOpen(true)
             }}
-            className="shadow-md shadow-orange-950/40 font-bold"
+            className="font-bold"
           >
             <span>Nuevo Producto</span>
             <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-black/25 text-[10px] rounded font-mono">
@@ -407,7 +406,7 @@ export default function StockPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Total de Productos
             </CardTitle>
-            <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Package className="h-4 w-4" />
             </div>
           </CardHeader>
@@ -552,12 +551,12 @@ export default function StockPage() {
                 {/* Sortable Column: Código */}
                 <TableHead
                   onClick={() => handleSort("code")}
-                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-primary transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Código</span>
                     {sortField === "code" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -567,12 +566,12 @@ export default function StockPage() {
                 {/* Sortable Column: Producto */}
                 <TableHead
                   onClick={() => handleSort("name")}
-                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-primary transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Producto</span>
                     {sortField === "name" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -582,12 +581,12 @@ export default function StockPage() {
                 {/* Sortable Column: Categoría */}
                 <TableHead
                   onClick={() => handleSort("category")}
-                  className="cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
+                  className="cursor-pointer hover:text-primary transition-colors select-none font-bold"
                 >
                   <div className="flex items-center gap-1">
                     <span>Categoría</span>
                     {sortField === "category" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -599,12 +598,12 @@ export default function StockPage() {
                 {/* Sortable Column: Precio Venta */}
                 <TableHead
                   onClick={() => handleSort("salePrice")}
-                  className="text-right cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
+                  className="text-right cursor-pointer hover:text-primary transition-colors select-none font-bold"
                 >
                   <div className="flex items-center justify-end gap-1">
                     <span>Precio Venta</span>
                     {sortField === "salePrice" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -614,12 +613,12 @@ export default function StockPage() {
                 {/* Sortable Column: Stock */}
                 <TableHead
                   onClick={() => handleSort("stock")}
-                  className="text-center cursor-pointer hover:text-orange-400 transition-colors select-none font-bold"
+                  className="text-center cursor-pointer hover:text-primary transition-colors select-none font-bold"
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span>Stock</span>
                     {sortField === "stock" ? (
-                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-orange-400" /> : <ArrowDown className="h-3 w-3 text-orange-400" />
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
                     ) : (
                       <ArrowUpDown className="h-3 w-3 opacity-40" />
                     )}
@@ -665,7 +664,7 @@ export default function StockPage() {
                   return (
                     <TableRow key={product.id} className="hover:bg-zinc-800/60 transition-colors">
                       {/* Código */}
-                      <TableCell className="font-mono text-xs font-bold text-orange-400">
+                      <TableCell className="font-mono text-xs font-medium text-primary">
                         {product.code}
                       </TableCell>
 
@@ -769,7 +768,7 @@ export default function StockPage() {
                           <button
                             type="button"
                             title="Re-stock / Ajuste de Cantidad"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 transition-colors cursor-pointer"
                             onClick={() => {
                               setAdjustingProduct(product)
                               setIsAdjustmentModalOpen(true)

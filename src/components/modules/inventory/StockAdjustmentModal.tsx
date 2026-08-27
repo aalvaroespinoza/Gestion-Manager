@@ -116,7 +116,7 @@ export function StockAdjustmentModal({
       size="default"
       title={
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/30">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Boxes className="h-5 w-5" />
           </div>
           <span className="text-white font-bold">Ajuste Rápido de Stock / Re-Stock</span>
@@ -126,7 +126,7 @@ export function StockAdjustmentModal({
         <span className="text-zinc-400 text-xs">
           Modificación directa de existencias para{" "}
           <strong className="text-zinc-200">{product.name}</strong>{" "}
-          (Código: <code className="font-mono text-xs text-orange-400">{product.code}</code>)
+          (Código: <code className="font-mono text-xs text-primary">{product.code}</code>)
         </span>
       }
     >
@@ -189,7 +189,7 @@ export function StockAdjustmentModal({
             <button
               type="button"
               onClick={() => setOperationType("IN")}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all ${
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "IN"
                   ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30 font-bold"
                   : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
@@ -203,7 +203,7 @@ export function StockAdjustmentModal({
             <button
               type="button"
               onClick={() => setOperationType("OUT")}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all ${
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "OUT"
                   ? "border-red-500/50 bg-red-500/15 text-red-300 ring-1 ring-red-500/30 font-bold"
                   : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
@@ -217,13 +217,13 @@ export function StockAdjustmentModal({
             <button
               type="button"
               onClick={() => setOperationType("SET")}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all ${
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "SET"
-                  ? "border-orange-500/50 bg-orange-500/15 text-orange-300 ring-1 ring-orange-500/30 font-bold"
+                  ? "border-primary/50 bg-primary/15 text-primary ring-1 ring-primary/30 font-bold"
                   : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
               }`}
             >
-              <Sliders className="h-4 w-4 mb-1 text-orange-400" />
+              <Sliders className="h-4 w-4 mb-1 text-primary" />
               <span>Conteo Directo</span>
               <span className="text-[10px] text-zinc-400 font-normal mt-0.5">(Fija valor =)</span>
             </button>

@@ -127,12 +127,7 @@ const recentInventoryMovements = [
 ]
 
 export default function DashboardOverviewPage() {
-  const [isClientMounted, setIsClientMounted] = useState(false)
   const [activeActivityTab, setActiveActivityTab] = useState<"SALES" | "STOCK">("SALES")
-
-  useEffect(() => {
-    setIsClientMounted(true)
-  }, [])
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -140,7 +135,7 @@ export default function DashboardOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <TrendingUp className="h-8 w-8 text-orange-500" />
+            <TrendingUp className="h-8 w-8 text-primary" />
             Panel de Control
           </h1>
           <p className="text-sm text-zinc-400 mt-1 font-medium">
@@ -151,7 +146,7 @@ export default function DashboardOverviewPage() {
         {/* Quick Branch & Status Badge */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-zinc-800 text-xs font-semibold text-zinc-200">
-            <Building2 className="h-4 w-4 text-orange-400" />
+            <Building2 className="h-4 w-4 text-primary" />
             <span>Sucursal: <strong className="text-white">Casa Matriz (Santiago)</strong></span>
           </div>
           <Badge variant="success" size="sm" dot>
@@ -168,7 +163,7 @@ export default function DashboardOverviewPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Ventas del Mes
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 border border-orange-500/30">
+            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
               <DollarSign className="h-5 w-5" />
             </div>
           </CardHeader>
@@ -189,7 +184,7 @@ export default function DashboardOverviewPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Órdenes Procesadas
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 border border-orange-500/30">
+            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
               <ShoppingCart className="h-5 w-5" />
             </div>
           </CardHeader>
@@ -232,7 +227,7 @@ export default function DashboardOverviewPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Clientes Activos
             </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 border border-orange-500/30">
+            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
               <Users className="h-5 w-5" />
             </div>
           </CardHeader>
@@ -258,14 +253,14 @@ export default function DashboardOverviewPage() {
           {/* Quick Action 1: POS Sales */}
           <Link
             href="/ventas"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-orange-500/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-orange-600 text-white shadow-md shadow-orange-950/40 group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
                 <ShoppingCart className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors">
+                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
                   Nueva Venta (POS)
                 </h4>
                 <p className="text-xs text-zinc-400 mt-0.5 font-medium">
@@ -273,20 +268,20 @@ export default function DashboardOverviewPage() {
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
 
           {/* Quick Action 2: Stock & Inventory */}
           <Link
             href="/stock"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-orange-500/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-zinc-800 text-orange-400 border border-zinc-700 shadow-md group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-zinc-800 text-primary border border-zinc-700 shadow-md group-hover:scale-105 transition-transform">
                 <Boxes className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors">
+                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
                   Catálogo & Re-Stock
                 </h4>
                 <p className="text-xs text-zinc-400 mt-0.5 font-medium">
@@ -294,20 +289,20 @@ export default function DashboardOverviewPage() {
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
 
           {/* Quick Action 3: Clients */}
           <Link
             href="/clientes"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-orange-500/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-md group-hover:scale-105 transition-transform">
                 <Users className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors">
+                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
                   Directorio de Clientes
                 </h4>
                 <p className="text-xs text-zinc-400 mt-0.5 font-medium">
@@ -315,7 +310,7 @@ export default function DashboardOverviewPage() {
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
         </div>
       </div>
@@ -361,7 +356,7 @@ export default function DashboardOverviewPage() {
 
                     <div className="h-3 w-full rounded-full bg-zinc-900 overflow-hidden border border-zinc-800">
                       <div
-                        className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-600 to-amber-500"
+                        className="h-full rounded-full transition-all duration-500 bg-primary"
                         style={{ width: `${Math.min(100, item.percentage)}%` }}
                       />
                     </div>
@@ -407,7 +402,7 @@ export default function DashboardOverviewPage() {
                     onClick={() => setActiveActivityTab("SALES")}
                     className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                       activeActivityTab === "SALES"
-                        ? "bg-zinc-800 text-orange-400 font-bold shadow-xs"
+                        ? "bg-zinc-800 text-primary font-bold shadow-xs"
                         : "text-zinc-400 hover:text-white"
                     }`}
                   >
@@ -418,7 +413,7 @@ export default function DashboardOverviewPage() {
                     onClick={() => setActiveActivityTab("STOCK")}
                     className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                       activeActivityTab === "STOCK"
-                        ? "bg-zinc-800 text-orange-400 font-bold shadow-xs"
+                        ? "bg-zinc-800 text-primary font-bold shadow-xs"
                         : "text-zinc-400 hover:text-white"
                     }`}
                   >
@@ -443,7 +438,7 @@ export default function DashboardOverviewPage() {
                     {recentTransactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell>
-                          <div className="font-mono text-xs font-bold text-orange-400">
+                          <div className="font-mono text-xs font-bold text-primary">
                             {tx.ticket}
                           </div>
                           <span className="text-[10px] text-zinc-500 font-medium">{tx.time}</span>
@@ -525,7 +520,7 @@ export default function DashboardOverviewPage() {
               <div className="p-3 border-t border-zinc-800 text-center">
                 <Link
                   href={activeActivityTab === "SALES" ? "/ventas" : "/stock"}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
                 >
                   <span>Ver todas las operaciones en {activeActivityTab === "SALES" ? "Ventas" : "Stock"}</span>
                   <ChevronRight className="h-3.5 w-3.5" />
