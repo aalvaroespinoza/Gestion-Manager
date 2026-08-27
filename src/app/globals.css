@@ -1,26 +1,239 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Default Theme: Dark Graphite with Orange Accents (#f97316) */
+  --background: #121214;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  --sidebar: #09090b;
+  --sidebar-border: #27272a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #71717a;
+  --sidebar-hover: #18181b;
+  --sidebar-active: #ea580c;
+  --sidebar-active-text: #ffffff;
+
+  --header: #121214;
+  --header-border: #27272a;
+
+  --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-light: rgba(249, 115, 22, 0.12);
+  --primary-light-border: rgba(249, 115, 22, 0.3);
+  --primary-text: #fb923c;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(249, 115, 22, 0.4);
+  --accent: #f97316;
+}
+
+/* 1. Tema: Naranja Grafito (Predeterminado / Dark Modern) */
+.theme-orange, [data-theme="orange"] {
+  --background: #121214;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  --sidebar: #09090b;
+  --sidebar-border: #27272a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #71717a;
+  --sidebar-hover: #18181b;
+  --sidebar-active: #ea580c;
+  --sidebar-active-text: #ffffff;
+
+  --header: #121214;
+  --header-border: #27272a;
+
+  --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-light: rgba(249, 115, 22, 0.12);
+  --primary-light-border: rgba(249, 115, 22, 0.3);
+  --primary-text: #fb923c;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(249, 115, 22, 0.4);
+  --accent: #f97316;
+}
+
+/* 2. Tema: Azul Cobalto Dark */
+.theme-blue, [data-theme="blue"] {
+  --background: #0b0f19;
+  --foreground: #f1f5f9;
+  --card: #111827;
+  --card-foreground: #f8fafc;
+  --border: #1f2937;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --sidebar: #070b14;
+  --sidebar-border: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-muted: #64748b;
+  --sidebar-hover: #111827;
+  --sidebar-active: #2563eb;
+  --sidebar-active-text: #ffffff;
+
+  --header: #0b0f19;
+  --header-border: #1f2937;
+
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.12);
+  --primary-light-border: rgba(59, 130, 246, 0.3);
+  --primary-text: #60a5fa;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(59, 130, 246, 0.4);
+  --accent: #6366f1;
+}
+
+/* 3. Tema: Rosa Borgoña Dark */
+.theme-rose, [data-theme="rose"] {
+  --background: #140b10;
+  --foreground: #fdf2f8;
+  --card: #1c1017;
+  --card-foreground: #fff1f2;
+  --border: #3b1424;
+  --muted: #2d131f;
+  --muted-foreground: #fda4af;
+
+  --sidebar: #0f060c;
+  --sidebar-border: #3b1424;
+  --sidebar-foreground: #fff1f2;
+  --sidebar-muted: #9f1239;
+  --sidebar-hover: #1c1017;
+  --sidebar-active: #e11d48;
+  --sidebar-active-text: #ffffff;
+
+  --header: #140b10;
+  --header-border: #3b1424;
+
+  --primary: #f43f5e;
+  --primary-hover: #e11d48;
+  --primary-light: rgba(244, 63, 94, 0.12);
+  --primary-light-border: rgba(244, 63, 94, 0.3);
+  --primary-text: #fb7185;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(244, 63, 94, 0.4);
+  --accent: #ec4899;
+}
+
+/* 4. Tema: Beige Arena Cálido Dark */
+.theme-beige, [data-theme="beige"] {
+  --background: #151311;
+  --foreground: #fefce8;
+  --card: #1f1a15;
+  --card-foreground: #fef9c3;
+  --border: #383025;
+  --muted: #2a231b;
+  --muted-foreground: #d4c5a9;
+
+  --sidebar: #100e0c;
+  --sidebar-border: #383025;
+  --sidebar-foreground: #fef9c3;
+  --sidebar-muted: #927e65;
+  --sidebar-hover: #1f1a15;
+  --sidebar-active: #d97706;
+  --sidebar-active-text: #ffffff;
+
+  --header: #151311;
+  --header-border: #383025;
+
+  --primary: #d97706;
+  --primary-hover: #b45309;
+  --primary-light: rgba(217, 119, 6, 0.12);
+  --primary-light-border: rgba(217, 119, 6, 0.3);
+  --primary-text: #fbbf24;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(217, 119, 6, 0.4);
+  --accent: #f59e0b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-header: var(--header);
+  --color-header-border: var(--header-border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-text: var(--primary-text);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Global utility classes mapped to CSS custom properties */
+.bg-background {
+  background-color: var(--background);
+}
+
+.text-foreground {
+  color: var(--foreground);
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.bg-card {
+  background-color: var(--card);
+}
+
+.text-card-foreground {
+  color: var(--card-foreground);
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.bg-sidebar {
+  background-color: var(--sidebar);
+}
+
+.text-sidebar-foreground {
+  color: var(--sidebar-foreground);
+}
+
+.border-sidebar {
+  border-color: var(--sidebar-border);
+}
+
+.bg-header {
+  background-color: var(--header);
+}
+
+.border-header {
+  border-color: var(--header-border);
+}
+
+.bg-primary-light {
+  background-color: var(--primary-light);
 }

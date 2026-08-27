@@ -91,7 +91,7 @@ export function Sidebar({
       {/* Sidebar Container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-slate-900 text-slate-100 border-r border-slate-800 transition-all duration-300 ease-in-out shadow-xl lg:shadow-none",
+          "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar transition-all duration-300 ease-in-out shadow-xl lg:shadow-none",
           // Desktop width
           isCollapsed ? "lg:w-20" : "lg:w-64",
           // Mobile translation
@@ -99,21 +99,24 @@ export function Sidebar({
         )}
       >
         {/* Brand / Logo Header */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-slate-800 shrink-0">
+        <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar shrink-0">
           <Link
             href="/dashboard"
             className="flex items-center gap-3 overflow-hidden group"
             onClick={() => setIsMobileOpen(false)}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-transform group-hover:scale-105"
+              style={{ backgroundColor: "var(--primary)" }}
+            >
               <Sparkles className="h-5 w-5" />
             </div>
             {(!isCollapsed || isMobileOpen) && (
               <div className="flex flex-col truncate">
-                <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                  Gestión<span className="text-blue-400">Manager</span>
+                <span className="font-bold text-base tracking-tight text-sidebar-foreground flex items-center gap-1.5">
+                  Gestión<span className="text-[var(--primary-text)]">Manager</span>
                 </span>
-                <span className="text-[11px] font-medium text-slate-400 tracking-wider uppercase">
+                <span className="text-[11px] font-medium text-[var(--sidebar-muted)] tracking-wider uppercase">
                   Enterprise Suite
                 </span>
               </div>
@@ -125,15 +128,15 @@ export function Sidebar({
             type="button"
             onClick={() => setIsMobileOpen(false)}
             aria-label="Cerrar barra lateral"
-            className="lg:hidden rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="lg:hidden rounded-lg p-1.5 text-[var(--sidebar-muted)] hover:text-sidebar-foreground hover:bg-[var(--sidebar-hover)] transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation List */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-700">
-          <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin">
+          <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]">
             {(!isCollapsed || isMobileOpen) ? "Menú Principal" : "•"}
           </div>
 
@@ -149,15 +152,16 @@ export function Sidebar({
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 group relative",
                   active
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-semibold"
-                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                    ? "text-white font-semibold shadow-sm"
+                    : "text-sidebar-foreground/80 hover:bg-[var(--sidebar-hover)] hover:text-white"
                 )}
+                style={active ? { backgroundColor: "var(--sidebar-active)", color: "var(--sidebar-active-text)" } : undefined}
                 title={isCollapsed && !isMobileOpen ? item.title : undefined}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 shrink-0 transition-transform group-hover:scale-110",
-                    active ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                    active ? "text-white" : "text-[var(--sidebar-muted)] group-hover:text-white"
                   )}
                 />
 
@@ -170,8 +174,8 @@ export function Sidebar({
                     className={cn(
                       "px-2 py-0.5 text-[10px] font-bold rounded-full ml-auto",
                       active
-                        ? "bg-blue-800 text-blue-100"
-                        : "bg-slate-800 text-slate-300 border border-slate-700"
+                        ? "bg-black/20 text-white"
+                        : "bg-[var(--sidebar-hover)] text-sidebar-foreground border border-sidebar"
                     )}
                   >
                     {item.badge}
@@ -188,14 +192,14 @@ export function Sidebar({
         </div>
 
         {/* Bottom Section */}
-        <div className="p-3 border-t border-slate-800 space-y-2 shrink-0">
+        <div className="p-3 border-t border-sidebar space-y-2 shrink-0">
           {(!isCollapsed || isMobileOpen) && (
-            <div className="rounded-xl bg-slate-800/60 border border-slate-700/60 p-3 text-xs">
-              <div className="flex items-center gap-2 font-semibold text-slate-200">
-                <BarChart3 className="h-4 w-4 text-blue-400" />
+            <div className="rounded-xl bg-[var(--sidebar-hover)]/60 border border-sidebar p-3 text-xs">
+              <div className="flex items-center gap-2 font-semibold text-sidebar-foreground">
+                <BarChart3 className="h-4 w-4 text-[var(--primary-text)]" />
                 <span>Estado del Sistema</span>
               </div>
-              <p className="text-slate-400 text-[11px] mt-1">Multi-tenant v1.0 • Operativo</p>
+              <p className="text-[var(--sidebar-muted)] text-[11px] mt-1">Multi-tenant v1.0 • Operativo</p>
             </div>
           )}
 
@@ -204,7 +208,7 @@ export function Sidebar({
             type="button"
             onClick={() => setIsCollapsed((prev) => !prev)}
             aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
-            className="hidden lg:flex w-full items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="hidden lg:flex w-full items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-medium text-[var(--sidebar-muted)] hover:text-sidebar-foreground hover:bg-[var(--sidebar-hover)] transition-colors"
           >
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4" />

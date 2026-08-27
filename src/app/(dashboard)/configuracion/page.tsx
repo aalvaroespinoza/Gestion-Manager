@@ -20,10 +20,12 @@ import {
   TableHead,
   TableRow,
   TableCell,
-  TableEmpty,
 } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
+import { ThemeSelector } from "@/components/theme/ThemeSelector"
 import { mockCategories } from "@/mocks/inventoryData"
+import { Category } from "@/types/inventory"
+import { DynamicFormFieldConfig } from "@/components/dynamic-forms/types"
 import {
   Settings,
   Building2,
@@ -32,26 +34,18 @@ import {
   Bell,
   Save,
   Plus,
-  Shield,
-  CheckCircle2,
-  Mail,
-  UserPlus,
   Trash2,
-  Edit2,
+  CheckCircle2,
+  UserPlus,
+  Mail,
   Sparkles,
+  Palette,
   Receipt,
-  Printer,
-  Sliders,
-  DollarSign,
-  Briefcase,
-  Store,
-  KeyRound,
-  FileSpreadsheet,
 } from "lucide-react"
 
 type ConfigTab = "GENERAL" | "USERS" | "FIELDS" | "NOTIFICATIONS"
 
-interface TeamUser {
+interface UserMember {
   id: string
   name: string
   email: string
@@ -60,151 +54,143 @@ interface TeamUser {
   lastLogin: string
 }
 
-const initialTeamUsers: TeamUser[] = [
+const initialTeam: UserMember[] = [
   {
     id: "usr-1",
     name: "Álvaro Espinoza",
-    email: "admin@gestionmanager.com",
+    email: "alvaro@gestionmanager.com",
     role: "SUPERADMIN",
     status: "ACTIVO",
-    lastLogin: "Hace 5 minutos",
+    lastLogin: "Hoy a las 08:30 (Esta sesión)",
   },
   {
     id: "usr-2",
-    name: "Carolina Morales",
-    email: "carolina.ventas@empresa.com",
+    name: "Carolina Silva",
+    email: "carolina.v@empresa.cl",
     role: "VENDEDOR",
     status: "ACTIVO",
-    lastLogin: "Hoy 14:30",
+    lastLogin: "Ayer a las 18:40",
   },
   {
     id: "usr-3",
-    name: "Rodrigo Fuentes",
-    email: "rodrigo.bodega@empresa.com",
+    name: "Rodrigo Morales",
+    email: "rmorales@bodega.cl",
     role: "BODEGUERO",
     status: "ACTIVO",
-    lastLogin: "Ayer 18:20",
+    lastLogin: "21/08/2026 14:15",
   },
   {
     id: "usr-4",
-    name: "María Eugenia Tapia",
-    email: "contabilidad@empresa.com",
+    name: "Patricio Araya",
+    email: "paraya@contabilidad.cl",
     role: "ADMIN",
     status: "INVITADO",
-    lastLogin: "Pendiente",
+    lastLogin: "Pendiente de activación",
   },
 ]
 
 export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState<ConfigTab>("GENERAL")
 
-  // Tab 1: General & Company Form State
+  // Company Settings Form State
   const [companySettings, setCompanySettings] = useState({
-    companyName: "Gestión Manager SpA",
-    fantasyName: "Gestión Manager Almacén Central",
-    taxId: "77.123.456-0",
-    economicActivity: "Venta al por mayor y menor de materiales y artículos de ferretería",
-    address: "Av. Industrial 4500, Bodega 12, Santiago",
+    companyName: "Distribuidora Industrial S.A.",
+    fantasyName: "Gestión Manager Materiales",
+    taxId: "76.123.456-7",
+    address: "Av. Industrial 4520, Quilicura, Región Metropolitana",
+    economicActivity: "Venta al por mayor de materiales de construcción y ferretería",
     currency: "CLP",
-    defaultTaxRate: 19,
+    defaultTaxRate: 21,
     mainIndustry: "construccion",
   })
 
-  // Tab 2: Users and Permissions
-  const [teamUsers, setTeamUsers] = useState<TeamUser[]>(initialTeamUsers)
+  // Users Management State
+  const [teamUsers, setTeamUsers] = useState<UserMember[]>(initialTeam)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [inviteName, setInviteName] = useState("")
   const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState<"ADMIN" | "VENDEDOR" | "BODEGUERO">("VENDEDOR")
+  const [inviteRole, setInviteRole] = useState<UserMember["role"]>("VENDEDOR")
 
-  // Tab 3: Custom Category Fields
-  const [categoriesList, setCategoriesList] = useState(mockCategories)
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState(mockCategories[0].id)
+  // Dynamic Fields Builder State
+  const [categoriesList, setCategoriesList] = useState<Category[]>(mockCategories)
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>(mockCategories[0].id)
   const [isNewFieldModalOpen, setIsNewFieldModalOpen] = useState(false)
   const [newFieldName, setNewFieldName] = useState("")
   const [newFieldLabel, setNewFieldLabel] = useState("")
-  const [newFieldType, setNewFieldType] = useState<"text" | "number" | "select" | "boolean">("text")
+  const [newFieldType, setNewFieldType] = useState<DynamicFormFieldConfig["type"]>("text")
 
-  // Tab 4: Notifications & Invoicing
+  // System Notifications Preferences
   const [notificationsSettings, setNotificationsSettings] = useState({
     emailCriticalStock: true,
     emailDailyReport: true,
-    cashShiftAlerts: true,
-    defaultReceiptType: "BOLETA",
     autoPrintReceipt: true,
-    allowNegativeStock: false,
-    assignedPosTerminal: "Caja Mostrador 01",
+    assignedPosTerminal: "Terminal Caja #01 - Casa Matriz",
+    defaultReceiptType: "TICKET",
   })
 
-  // Global Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const showToast = (text: string) => {
-    setToastMessage(text)
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  // Handle Save Company
   const handleSaveCompany = (e: React.FormEvent) => {
     e.preventDefault()
-    showToast("Datos de la empresa y parámetros fiscales guardados.")
+    showToast("Datos de la empresa actualizados con éxito.")
   }
 
-  // Handle Save Notifications
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault()
-    showToast("Preferencias de facturación y notificaciones actualizadas.")
+    showToast("Preferencias de notificaciones y POS guardadas.")
   }
 
-  // Handle Invite User
   const handleInviteUser = (e: React.FormEvent) => {
     e.preventDefault()
     if (!inviteName || !inviteEmail) return
 
-    const newUser: TeamUser = {
+    const newUser: UserMember = {
       id: `usr-${Date.now()}`,
       name: inviteName,
       email: inviteEmail,
       role: inviteRole,
       status: "INVITADO",
-      lastLogin: "Pendiente",
+      lastLogin: "Invitación enviada",
     }
 
-    setTeamUsers((prev) => [...prev, newUser])
+    setTeamUsers([...teamUsers, newUser])
     setIsInviteModalOpen(false)
     setInviteName("")
     setInviteEmail("")
-    showToast(`Invitación enviada exitosamente a ${inviteEmail}.`)
+    showToast(`Invitación enviada a ${inviteEmail}.`)
   }
 
-  // Handle Delete User
   const handleDeleteUser = (id: string) => {
-    setTeamUsers((prev) => prev.filter((u) => u.id !== id))
+    setTeamUsers(teamUsers.filter((u) => u.id !== id))
     showToast("Usuario removido del equipo.")
   }
 
-  // Handle Add Custom Field to Category
   const handleAddCustomField = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newFieldName || !newFieldLabel) return
+    if (!newFieldLabel || !newFieldName) return
+
+    const newField: DynamicFormFieldConfig = {
+      name: newFieldName,
+      label: newFieldLabel,
+      type: newFieldType,
+      required: false,
+      placeholder: `Ingrese ${newFieldLabel.toLowerCase()}`,
+    }
 
     setCategoriesList((prev) =>
-      prev.map((cat) => {
-        if (cat.id === selectedCategoryTab) {
-          return {
-            ...cat,
-            dynamicFieldsConfig: [
-              ...cat.dynamicFieldsConfig,
-              {
-                name: newFieldName.toLowerCase().replace(/\s+/g, "_"),
-                label: newFieldLabel,
-                type: newFieldType,
-                required: false,
-              },
-            ],
-          }
-        }
-        return cat
-      })
+      prev.map((cat) =>
+        cat.id === selectedCategoryTab
+          ? {
+              ...cat,
+              dynamicFieldsConfig: [...cat.dynamicFieldsConfig, newField],
+            }
+          : cat
+      )
     )
 
     setIsNewFieldModalOpen(false)
@@ -219,7 +205,7 @@ export default function ConfiguracionPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl bg-emerald-600 text-white border border-emerald-500 font-medium text-xs animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl bg-primary text-primary-foreground border border-primary/40 font-bold text-xs animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -227,24 +213,24 @@ export default function ConfiguracionPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-          <Settings className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <Settings className="h-8 w-8 text-primary" />
           Configuración & Parámetros
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-zinc-400 mt-1 font-medium">
           Ajustes del tenant, administración de equipo, esquemas dinámicos por rubro y facturación.
         </p>
       </div>
 
       {/* Tabs Navigation Bar */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-px">
+      <div className="flex items-center gap-2 border-b border-zinc-800 overflow-x-auto pb-px">
         <button
           type="button"
           onClick={() => setActiveTab("GENERAL")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "GENERAL"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              ? "border-primary text-primary"
+              : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -254,10 +240,10 @@ export default function ConfiguracionPage() {
         <button
           type="button"
           onClick={() => setActiveTab("USERS")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "USERS"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              ? "border-primary text-primary"
+              : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
           <Users className="h-4 w-4" />
@@ -270,10 +256,10 @@ export default function ConfiguracionPage() {
         <button
           type="button"
           onClick={() => setActiveTab("FIELDS")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "FIELDS"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              ? "border-primary text-primary"
+              : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
           <Layers className="h-4 w-4" />
@@ -283,10 +269,10 @@ export default function ConfiguracionPage() {
         <button
           type="button"
           onClick={() => setActiveTab("NOTIFICATIONS")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "NOTIFICATIONS"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              ? "border-primary text-primary"
+              : "border-transparent text-zinc-400 hover:text-white"
           }`}
         >
           <Bell className="h-4 w-4" />
@@ -400,11 +386,27 @@ export default function ConfiguracionPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
+            <CardFooter className="flex justify-end border-t border-zinc-800 pt-4">
               <Button type="submit" variant="default" leftIcon={<Save className="h-4 w-4" />}>
                 Guardar Cambios de Empresa
               </Button>
             </CardFooter>
+          </Card>
+
+          {/* Theme Palette Customization Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" />
+                <span>Personalización de Paleta de Colores Global</span>
+              </CardTitle>
+              <CardDescription>
+                Selecciona la estética visual que mejor se adapte a tu preferencia. Los cambios se aplican inmediatamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThemeSelector variant="inline" />
+            </CardContent>
           </Card>
         </form>
       )}
@@ -435,12 +437,12 @@ export default function ConfiguracionPage() {
               <Table className="border-0 rounded-none">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Rol Asignado</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead>Último Acceso</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="font-bold">Usuario</TableHead>
+                    <TableHead className="font-bold">Email</TableHead>
+                    <TableHead className="font-bold">Rol Asignado</TableHead>
+                    <TableHead className="text-center font-bold">Estado</TableHead>
+                    <TableHead className="font-bold">Último Acceso</TableHead>
+                    <TableHead className="text-right font-bold">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -448,20 +450,20 @@ export default function ConfiguracionPage() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-xs">
+                          <div className="h-8 w-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center text-xs shadow-xs">
                             {user.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")
                               .slice(0, 2)}
                           </div>
-                          <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                          <span className="font-bold text-xs text-white">
                             {user.name}
                           </span>
                         </div>
                       </TableCell>
 
-                      <TableCell className="text-xs text-slate-500 font-mono">
+                      <TableCell className="text-xs text-zinc-400 font-mono">
                         {user.email}
                       </TableCell>
 
@@ -496,19 +498,18 @@ export default function ConfiguracionPage() {
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-xs text-slate-500">{user.lastLogin}</TableCell>
+                      <TableCell className="text-xs text-zinc-400">{user.lastLogin}</TableCell>
 
                       <TableCell className="text-right">
                         {user.role !== "SUPERADMIN" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => handleDeleteUser(user.id)}
-                            className="h-8 px-2 text-slate-400 hover:text-red-600"
+                            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                             title="Remover Usuario"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -527,7 +528,7 @@ export default function ConfiguracionPage() {
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-blue-500" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   <span>Esquema de Atributos Dinámicos por Rubro (JSONB)</span>
                 </CardTitle>
                 <CardDescription>
@@ -553,10 +554,10 @@ export default function ConfiguracionPage() {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategoryTab(cat.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
                       selectedCategoryTab === cat.id
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white"
                     }`}
                   >
                     {cat.name} ({cat.dynamicFieldsConfig.length} atributos)
@@ -569,10 +570,10 @@ export default function ConfiguracionPage() {
                 {currentCategoryObj?.dynamicFieldsConfig.map((field, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 space-y-2"
+                    className="p-3.5 rounded-2xl border border-zinc-800 bg-zinc-900/70 space-y-2"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                      <span className="font-bold text-xs text-white">
                         {field.label}
                       </span>
                       <Badge variant="info" size="sm">
@@ -580,12 +581,12 @@ export default function ConfiguracionPage() {
                       </Badge>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 font-mono">
-                      Clave JSON: <code>{field.name}</code>
+                    <p className="text-[11px] text-zinc-400 font-mono">
+                      Clave JSON: <code className="text-primary font-bold">{field.name}</code>
                     </p>
 
                     {field.description && (
-                      <p className="text-[11px] text-slate-500 line-clamp-2">
+                      <p className="text-[11px] text-zinc-400 line-clamp-2">
                         {field.description}
                       </p>
                     )}
@@ -595,7 +596,7 @@ export default function ConfiguracionPage() {
                         {field.options.map((opt, i) => (
                           <span
                             key={i}
-                            className="text-[9px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300"
+                            className="text-[9px] bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded text-zinc-200 font-medium"
                           >
                             {opt.label}
                           </span>
@@ -618,7 +619,7 @@ export default function ConfiguracionPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-blue-500" />
+                  <Bell className="h-5 w-5 text-primary" />
                   <span>Alertas del Sistema</span>
                 </CardTitle>
                 <CardDescription>
@@ -627,7 +628,7 @@ export default function ConfiguracionPage() {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.emailCriticalStock}
@@ -637,19 +638,19 @@ export default function ConfiguracionPage() {
                         emailCriticalStock: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-slate-300 text-blue-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                    <span className="font-bold text-xs text-white">
                       Alertas de Stock Crítico
                     </span>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
                       Enviar email automático cuando un producto alcance su umbral mínimo de seguridad.
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.emailDailyReport}
@@ -659,13 +660,13 @@ export default function ConfiguracionPage() {
                         emailDailyReport: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-slate-300 text-blue-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                    <span className="font-bold text-xs text-white">
                       Resumen Diario de Cierre de Caja
                     </span>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
                       Recibir reporte consolidado de ventas y caja al final de cada jornada.
                     </p>
                   </div>
@@ -677,7 +678,7 @@ export default function ConfiguracionPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-emerald-500" />
+                  <Receipt className="h-5 w-5 text-emerald-400" />
                   <span>Punto de Venta & Emisión</span>
                 </CardTitle>
                 <CardDescription>
@@ -713,7 +714,7 @@ export default function ConfiguracionPage() {
                   }
                 />
 
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.autoPrintReceipt}
@@ -723,13 +724,13 @@ export default function ConfiguracionPage() {
                         autoPrintReceipt: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-slate-300 text-blue-600 h-4 w-4"
+                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                    <span className="font-bold text-xs text-white">
                       Impresión Inmediata de Ticket
                     </span>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
                       Abrir cuadro de diálogo de impresión automáticamente al confirmar una venta en el POS.
                     </p>
                   </div>
@@ -752,9 +753,11 @@ export default function ConfiguracionPage() {
         onClose={() => setIsInviteModalOpen(false)}
         size="default"
         title={
-          <div className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-blue-600" />
-            <span>Invitar Usuario al Equipo</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
+              <UserPlus className="h-5 w-5" />
+            </div>
+            <span className="text-white font-bold">Invitar Usuario al Equipo</span>
           </div>
         }
         description="El usuario recibirá un correo con las credenciales provisionales para ingresar a este Tenant."
@@ -788,8 +791,8 @@ export default function ConfiguracionPage() {
             ]}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button type="button" variant="outline" onClick={() => setIsInviteModalOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+            <Button type="button" variant="secondary" onClick={() => setIsInviteModalOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" variant="default" leftIcon={<Mail className="h-4 w-4" />}>
@@ -805,9 +808,11 @@ export default function ConfiguracionPage() {
         onClose={() => setIsNewFieldModalOpen(false)}
         size="default"
         title={
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-600" />
-            <span>Agregar Atributo a {currentCategoryObj?.name}</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <span className="text-white font-bold">Agregar Atributo a {currentCategoryObj?.name}</span>
           </div>
         }
         description="Define un nuevo campo personalizado que aparecerá en los formularios dinámicos de esta categoría."
@@ -846,8 +851,8 @@ export default function ConfiguracionPage() {
             ]}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button type="button" variant="outline" onClick={() => setIsNewFieldModalOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+            <Button type="button" variant="secondary" onClick={() => setIsNewFieldModalOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" variant="default" leftIcon={<Plus className="h-4 w-4" />}>

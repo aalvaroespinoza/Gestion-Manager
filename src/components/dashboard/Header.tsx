@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { UserProfileModal, UserProfileData } from "./UserProfileModal"
+import { ThemeSelector } from "@/components/theme"
 import {
   Menu,
   Building2,
@@ -21,6 +22,7 @@ import {
   HelpCircle,
   ExternalLink,
   Briefcase,
+  Palette,
 } from "lucide-react"
 
 export interface TenantBranch {
@@ -94,21 +96,20 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   const handleLogout = () => {
-    // Clear session cookie and redirect to login
     document.cookie = "gestion_session=; path=/; max-age=0"
     setIsUserOpen(false)
     router.push("/login")
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 sm:px-6 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-header bg-header text-foreground px-4 sm:px-6 backdrop-blur-md transition-colors duration-200">
       {/* Left Area: Mobile Trigger & Tenant/Branch Selector */}
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
           aria-label="Abrir menú de navegación"
-          className="lg:hidden rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="lg:hidden rounded-lg p-2 text-foreground/70 hover:bg-muted transition-colors"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -122,30 +123,30 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsUserOpen(false)
               setIsNotificationsOpen(false)
             }}
-            className="flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+            className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-[var(--primary-light)]/40 hover:border-[var(--primary)] transition-all shadow-xs"
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--primary-light)] text-[var(--primary-text)]">
               <Store className="h-3.5 w-3.5" />
             </div>
             <div className="flex flex-col text-left">
               <span className="truncate max-w-[140px] sm:max-w-[200px] text-xs font-semibold">
                 {selectedBranch.name}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
+              <span className="text-[10px] text-foreground/60 font-normal">
                 {selectedBranch.code} • {selectedBranch.role}
               </span>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 ml-1" />
+            <ChevronDown className="h-3.5 w-3.5 text-foreground/40 shrink-0 ml-1" />
           </button>
 
           {/* Tenant Dropdown Popover */}
           {isTenantOpen && (
-            <div className="absolute left-0 mt-2 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
-              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+            <div className="absolute left-0 mt-2 w-72 rounded-2xl border border-border bg-card p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="px-3 py-2 border-b border-border">
+                <p className="text-xs font-semibold text-foreground">
                   Seleccionar Sucursal / Tenant
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-foreground/60">
                   Cambia de espacio de trabajo activo
                 </p>
               </div>
@@ -161,31 +162,31 @@ export function Header({ onMenuClick }: HeaderProps) {
                       className={cn(
                         "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors",
                         isCurrent
-                          ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-medium"
-                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          ? "bg-[var(--primary-light)]/70 text-[var(--primary-text)] font-semibold"
+                          : "text-foreground hover:bg-muted"
                       )}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Building2 className="h-4 w-4 text-slate-400" />
+                        <Building2 className="h-4 w-4 text-foreground/50" />
                         <div>
                           <p className="font-semibold">{branch.name}</p>
-                          <p className="text-[10px] text-slate-500">{branch.code}</p>
+                          <p className="text-[10px] text-foreground/50">{branch.code}</p>
                         </div>
                       </div>
-                      {isCurrent && <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
+                      {isCurrent && <Check className="h-4 w-4 text-[var(--primary-text)]" />}
                     </button>
                   )
                 })}
               </div>
 
-              <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-2 mt-1 border-t border-border">
                 <button
                   type="button"
                   onClick={() => {
                     setIsTenantOpen(false)
                     router.push("/configuracion")
                   }}
-                  className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-medium transition-colors"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-[var(--primary-text)] hover:bg-[var(--primary-light)] font-medium transition-colors"
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span>Gestionar Sucursales en Configuración</span>
@@ -196,21 +197,24 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
       </div>
 
-      {/* Right Area: Search, Notifications & User Menu */}
+      {/* Right Area: Search, Theme Selector, Notifications & User Menu */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Quick Search Shortcut */}
-        <div className="hidden md:flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 border border-transparent focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-slate-900 transition-all">
-          <Search className="h-3.5 w-3.5 mr-2 text-slate-400" />
+        <div className="hidden md:flex items-center rounded-xl bg-card px-3 py-1.5 text-xs text-foreground/60 border border-border focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)] transition-all">
+          <Search className="h-3.5 w-3.5 mr-2 text-foreground/40" />
           <input
             type="text"
             placeholder="Buscar en el sistema..."
             aria-label="Buscar en el sistema"
-            className="bg-transparent focus:outline-none text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 w-36 lg:w-48"
+            className="bg-transparent focus:outline-none text-xs text-foreground placeholder:text-foreground/40 w-36 lg:w-48"
           />
-          <kbd className="hidden lg:inline-block rounded bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-300 ml-2">
+          <kbd className="hidden lg:inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-foreground/60 ml-2">
             ⌘K
           </kbd>
         </div>
+
+        {/* Theme Palette Switcher Dropdown */}
+        <ThemeSelector variant="dropdown" />
 
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
@@ -222,28 +226,28 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsUserOpen(false)
             }}
             aria-label="Notificaciones del sistema"
-            className="relative rounded-xl p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="relative rounded-xl p-2 text-foreground/70 hover:bg-muted transition-colors"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-slate-900" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--primary)] ring-2 ring-card" />
           </button>
 
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-card p-3 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="flex items-center justify-between pb-2 border-b border-border">
+                <span className="text-xs font-semibold text-foreground">
                   Notificaciones
                 </span>
                 <Badge size="sm" variant="default">3 nuevas</Badge>
               </div>
               <div className="py-2 space-y-2 text-xs">
-                <div className="p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/30">
-                  <p className="font-semibold text-blue-900 dark:text-blue-300">Alerta de Stock Crítico</p>
-                  <p className="text-slate-600 dark:text-slate-400 text-[11px]">4 productos requieren re-abastecimiento.</p>
+                <div className="p-2 rounded-lg bg-[var(--primary-light)]/60">
+                  <p className="font-semibold text-foreground">Alerta de Stock Crítico</p>
+                  <p className="text-foreground/70 text-[11px]">4 productos requieren re-abastecimiento.</p>
                 </div>
-                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">Venta POS Registrada</p>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px]">Ticket #TK-2026-0004521 emitido por $229.670.</p>
+                <div className="p-2 rounded-lg bg-muted">
+                  <p className="font-semibold text-foreground">Venta POS Registrada</p>
+                  <p className="text-foreground/60 text-[11px]">Ticket #TK-2026-0004521 emitido por $229.670.</p>
                 </div>
               </div>
             </div>
@@ -259,9 +263,12 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsTenantOpen(false)
               setIsNotificationsOpen(false)
             }}
-            className="flex items-center gap-2.5 rounded-xl p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-2.5 rounded-xl p-1.5 hover:bg-muted transition-colors"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm"
+              style={{ backgroundColor: "var(--primary)" }}
+            >
               {currentUser.name
                 .split(" ")
                 .map((n) => n[0])
@@ -270,31 +277,31 @@ export function Header({ onMenuClick }: HeaderProps) {
                 .toUpperCase()}
             </div>
             <div className="hidden sm:flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 leading-tight">
+              <span className="text-xs font-semibold text-foreground leading-tight">
                 {currentUser.name}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="text-[10px] text-foreground/60">
                 {currentUser.role}
               </span>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-foreground/40" />
           </button>
 
           {/* User Menu Dropdown Popover */}
           {isUserOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
-              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-card p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="px-3 py-2 border-b border-border">
+                <p className="text-xs font-semibold text-foreground">
                   {currentUser.name}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                <p className="text-[11px] text-foreground/60 truncate">
                   {currentUser.email}
                 </p>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <Badge size="sm" variant="success" dot>
                     {currentUser.role}
                   </Badge>
-                  <span className="text-[10px] text-slate-400">• {currentUser.position}</span>
+                  <span className="text-[10px] text-foreground/50">• {currentUser.position}</span>
                 </div>
               </div>
 
@@ -306,9 +313,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     setIsProfileModalOpen(true)
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
                 >
-                  <User className="h-4 w-4 text-blue-500" />
+                  <User className="h-4 w-4 text-[var(--primary-text)]" />
                   <span>Mi Perfil de Usuario</span>
                 </button>
 
@@ -319,9 +326,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     router.push("/configuracion")
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
                 >
-                  <Settings className="h-4 w-4 text-slate-400" />
+                  <Settings className="h-4 w-4 text-foreground/50" />
                   <span>Configuración de Cuenta</span>
                 </button>
 
@@ -332,7 +339,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     setIsTenantOpen(true)
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
                 >
                   <Store className="h-4 w-4 text-amber-500" />
                   <span>Cambiar Sucursal / Negocio</span>
@@ -340,7 +347,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               </div>
 
               {/* Option 4: Cerrar Sesión */}
-              <div className="pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-1 mt-1 border-t border-border">
                 <button
                   type="button"
                   onClick={handleLogout}

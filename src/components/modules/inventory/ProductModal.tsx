@@ -10,12 +10,10 @@ import { DynamicFormRenderer, DynamicFormSchemaConfig } from "@/components/dynam
 import { Category, Product, ProductFormData, StockStatus } from "@/types/inventory"
 import {
   Package,
-  Layers,
   DollarSign,
   Barcode,
   Save,
   Sparkles,
-  Boxes,
 } from "lucide-react"
 
 export interface ProductModalProps {
@@ -166,25 +164,27 @@ export function ProductModal({
       onClose={onClose}
       size="xl"
       title={
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Package className="h-5 w-5" />
           </div>
-          <span>{isEditing ? "Editar Producto en Stock" : "Nuevo Producto en Stock"}</span>
+          <span className="text-white font-bold">{isEditing ? "Editar Producto en Stock" : "Nuevo Producto en Stock"}</span>
         </div>
       }
       description={
-        isEditing
-          ? `Modificando características y existencias para: ${activeProduct?.name}`
-          : "Completa la información base y los atributos específicos del rubro."
+        <span className="text-zinc-400 text-xs">
+          {isEditing
+            ? `Modificando características y existencias para: ${activeProduct?.name}`
+            : "Completa la información base y los atributos específicos del rubro."}
+        </span>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto pr-1">
         {/* Section 1: Fixed Base Fields */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <Barcode className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+              <Barcode className="h-4 w-4 text-primary" />
               1. Identificación del Producto
             </h4>
           </div>
@@ -218,7 +218,6 @@ export function ProductModal({
                 value={categoryId}
                 onChange={(e) => {
                   setCategoryId(e.target.value)
-                  // Reset custom attributes when changing category if creating new
                   if (!isEditing) {
                     setCustomAttributes({})
                   }
@@ -247,9 +246,9 @@ export function ProductModal({
 
         {/* Section 2: Pricing & Stock */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-emerald-400" />
               2. Precios & Existencias
             </h4>
             <div className="flex items-center gap-2">
@@ -300,18 +299,18 @@ export function ProductModal({
 
         {/* Section 3: Dynamic Category-Specific Extra Fields */}
         {activeCategory && activeCategory.dynamicFieldsConfig?.length > 0 && (
-          <div className="space-y-4 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 p-4">
-            <div className="flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
+          <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white">
                   3. Atributos Específicos: {activeCategory.name}
                 </h4>
               </div>
-              <Badge variant="info" size="sm">Dynamic Form Engine</Badge>
+              <Badge variant="default" size="sm">Dynamic Form Engine</Badge>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-zinc-400">
               Campos autogenerados dinámicamente según la categoría seleccionada (espesor, medidas, talles, voltajes, etc.).
             </p>
 
@@ -328,8 +327,8 @@ export function ProductModal({
         )}
 
         {/* Modal Action Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button
