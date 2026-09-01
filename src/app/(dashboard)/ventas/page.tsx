@@ -1,1042 +1,204 @@
-"use client"
-
-import React, { useState, useMemo, useRef, useEffect, useCallback } from "react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableEmpty,
-} from "@/components/ui/table"
-import { ToastContainer, ToastMessage } from "@/components/ui/toast"
-import { CheckoutModal } from "@/components/modules/sales/CheckoutModal"
+import { getProducts, getCategories } from "@/modules/inventory/actions"
+import { getClients } from "@/modules/clients/actions"
+import { getSales } from "@/modules/sales/actions"
+import { VentasView } from "@/components/modules/sales/VentasView"
 import { mockProducts, mockCategories } from "@/mocks/inventoryData"
 import { mockClients } from "@/mocks/clientsData"
-import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
-import { Product, Category } from "@/types/inventory"
-import {
-  CartItem,
-  ClientSelectOption,
-  InvoiceData,
-  SaleSummary,
-} from "@/types/sales"
-import {
-  ShoppingCart,
-  Search,
-  Plus,
-  Minus,
-  Trash2,
-  Receipt,
-  User,
-  Banknote,
-  Percent,
-  CheckCircle2,
-  History,
-  Store,
-  DollarSign,
-  TrendingUp,
-  Package,
-  FileSpreadsheet,
-  FileJson,
-  RotateCcw,
-} from "lucide-react"
+import { Category, Product, StockStatus } from "@/types/inventory"
+import { ClientSelectOption, InvoiceData, PaymentMethod } from "@/types/sales"
+import { DynamicFormFieldConfig } from "@/components/dynamic-forms/types"
 
-const defaultSalesHistory: InvoiceData[] = [
-  {
-    id: "sale-hist-1",
-    saleNumber: "TK-2026-0004520",
-    date: "22/08/2026 11:30",
-    clientId: "cli-01",
-    clientName: "Constructora Andina S.A.",
-    clientDoc: "CUIT: 30-71234567-8",
-    clientTaxCondition: "Responsable Inscripto (IVA 21%)",
-    items: [
-      {
-        productId: "prod-1",
-        code: "CST-PER-GALV",
-        name: "Perfil Metalcon C Estructural",
-        unitPrice: 9990,
-        costPrice: 6200,
-        quantity: 20,
-        stock: 120,
-        subtotal: 199800,
-      },
-    ],
-    summary: {
-      subtotal: 199800,
-      discountType: "PERCENT",
-      discountValue: 5,
-      discountAmount: 9990,
-      taxRate: 0.21,
-      taxAmount: 39860,
-      total: 229670,
-      totalItems: 1,
-      totalUnits: 20,
-    },
-    paymentMethod: "TRANSFERENCIA",
-    amountPaid: 229670,
-    changeAmount: 0,
-    status: "COMPLETADA",
-    cashierName: "Álvaro Espinoza",
-    branchName: "Casa Matriz - Salón de Ventas",
-  },
-  {
-    id: "sale-hist-2",
-    saleNumber: "TK-2026-0004519",
-    date: "22/08/2026 10:15",
-    clientId: "cli-cf",
-    clientName: "Consumidor Final",
-    clientDoc: "DNI: 00000000",
-    clientTaxCondition: "Consumidor Final",
-    items: [
-      {
-        productId: "prod-8",
-        code: "FER-TAL-20V-BL",
-        name: "Taladro Percutor Inalámbrico Brushless 20V",
-        unitPrice: 149990,
-        costPrice: 89000,
-        quantity: 1,
-        stock: 16,
-        subtotal: 149990,
-      },
-    ],
-    summary: {
-      subtotal: 149990,
-      discountType: "PERCENT",
-      discountValue: 0,
-      discountAmount: 0,
-      taxRate: 0.21,
-      taxAmount: 31498,
-      total: 181488,
-      totalItems: 1,
-      totalUnits: 1,
-    },
-    paymentMethod: "EFECTIVO",
-    amountPaid: 200000,
-    changeAmount: 18512,
-    status: "COMPLETADA",
-    cashierName: "Álvaro Espinoza",
-    branchName: "Casa Matriz - Salón de Ventas",
-  },
-]
+function mapDbPaymentMethodToUi(method: string): PaymentMethod {
+  switch (method) {
+    case "CASH":
+      return "EFECTIVO"
+    case "CARD":
+      return "TARJETA_DEBITO"
+    case "TRANSFER":
+      return "TRANSFERENCIA"
+    case "CURRENT_ACCOUNT":
+      return "CUENTA_CORRIENTE"
+    default:
+      return "EFECTIVO"
+  }
+}
 
-export default function VentasPage() {
-  const [activeTab, setActiveTab] = useState<"POS" | "HISTORY">("POS")
+export default async function VentasPage() {
+  let products: Product[] = []
+  let categories: Category[] = []
+  let clients: ClientSelectOption[] = []
+  let salesHistory: InvoiceData[] = []
 
-  const [products, setProducts] = useLocalStorage<Product[]>(
-    "gm_inventory_products",
-    mockProducts
-  )
-  const [cart, setCart] = useLocalStorage<CartItem[]>("gm_pos_cart", [])
-  const [clients] = useState<ClientSelectOption[]>(mockClients)
-  const [selectedClient, setSelectedClient] = useLocalStorage<ClientSelectOption>(
-    "gm_pos_client",
-    mockClients[0]
-  )
-  const [salesHistory, setSalesHistory] = useLocalStorage<InvoiceData[]>(
-    "gm_sales_history",
-    defaultSalesHistory
-  )
+  try {
+    const [productsRes, categoriesRes, clientsRes, salesRes] = await Promise.all([
+      getProducts({ page: 1, pageSize: 100 }),
+      getCategories(),
+      getClients({ page: 1, pageSize: 100 }),
+      getSales({ page: 1, pageSize: 50 }),
+    ])
 
-  const [categories] = useState<Category[]>(mockCategories)
-
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL")
-  const searchInputRef = useRef<HTMLInputElement>(null)
-
-  const [discountPercent, setDiscountPercent] = useState<number>(0)
-  const [applyTax, setApplyTax] = useState<boolean>(true)
-
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
-  const [viewingTicketInvoice, setViewingTicketInvoice] = useState<InvoiceData | null>(null)
-
-  const [toasts, setToasts] = useState<ToastMessage[]>([])
-
-  const addToast = useCallback(
-    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
-      const newToast: ToastMessage = {
-        id: `toast-${Date.now()}-${Math.random()}`,
-        title,
-        description,
-        type,
-      }
-      setToasts((prev) => [...prev, newToast])
-    },
-    []
-  )
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
-
-  useEffect(() => {
-    if (activeTab === "POS") {
-      searchInputRef.current?.focus()
-    }
-  }, [activeTab])
-
-  // --- Cart Operations ---
-  const handleAddToCart = (product: Product) => {
-    if (product.stock <= 0) {
-      addToast(
-        "Producto Agotado",
-        `"${product.name}" no tiene existencias disponibles en bodega.`,
-        "destructive"
-      )
-      return
-    }
-
-    setCart((prev) => {
-      const existing = prev.find((item) => item.productId === product.id)
-      if (existing) {
-        if (existing.quantity >= product.stock) {
-          addToast(
-            "Límite de Stock Alcanzado",
-            `No es posible agregar más unidades de "${product.name}" (Máximo: ${product.stock} un.).`,
-            "warning"
-          )
-          return prev
+    // 1. Categories
+    if (categoriesRes.success && categoriesRes.data && categoriesRes.data.length > 0) {
+      categories = categoriesRes.data.map((c: any) => {
+        let dynamicFieldsConfig: DynamicFormFieldConfig[] = []
+        if (c.dynamicFieldsConfig?.fields && Array.isArray(c.dynamicFieldsConfig.fields)) {
+          dynamicFieldsConfig = c.dynamicFieldsConfig.fields
+        } else if (Array.isArray(c.dynamicFieldsConfig)) {
+          dynamicFieldsConfig = c.dynamicFieldsConfig
         }
-        return prev.map((item) =>
-          item.productId === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-                subtotal: (item.quantity + 1) * item.unitPrice,
-              }
-            : item
-        )
-      }
 
-      const newItem: CartItem = {
-        productId: product.id,
-        code: product.code,
-        name: product.name,
-        categoryName: product.categoryName,
-        unitPrice: product.salePrice,
-        costPrice: product.costPrice,
-        quantity: 1,
-        stock: product.stock,
-        subtotal: product.salePrice,
-        customAttributes: product.customAttributes,
-      }
-      return [...prev, newItem]
-    })
-  }
-
-  const handleUpdateQuantity = (productId: string, newQty: number) => {
-    const product = products.find((p) => p.id === productId)
-    const maxStock = product?.stock ?? 9999
-
-    if (newQty <= 0) {
-      handleRemoveFromCart(productId)
-      return
-    }
-
-    const clampedQty = Math.min(newQty, maxStock)
-
-    setCart((prev) =>
-      prev.map((item) =>
-        item.productId === productId
-          ? {
-              ...item,
-              quantity: clampedQty,
-              subtotal: clampedQty * item.unitPrice,
-            }
-          : item
-      )
-    )
-  }
-
-  const handleRemoveFromCart = (productId: string) => {
-    const item = cart.find((i) => i.productId === productId)
-    setCart((prev) => prev.filter((i) => i.productId !== productId))
-    if (item) {
-      addToast("Ítem Quitado", `"${item.name}" fue removido de la orden.`, "info")
-    }
-  }
-
-  const handleClearCart = () => {
-    setCart([])
-    setDiscountPercent(0)
-    addToast("Carrito Vaciado", "Se han removido todos los artículos de la orden.", "info")
-  }
-
-  // --- Financial Summary Calculations ---
-  const saleSummary: SaleSummary = useMemo(() => {
-    const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0)
-    const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0)
-    const totalItems = cart.length
-
-    const discountAmount = Math.round(subtotal * (discountPercent / 100))
-    const taxableBase = Math.max(0, subtotal - discountAmount)
-    const taxRate = applyTax ? 0.21 : 0
-    const taxAmount = Math.round(taxableBase * taxRate)
-    const total = taxableBase + taxAmount
-
-    return {
-      subtotal,
-      discountType: "PERCENT",
-      discountValue: discountPercent,
-      discountAmount,
-      taxRate,
-      taxAmount,
-      total,
-      totalItems,
-      totalUnits,
-    }
-  }, [cart, discountPercent, applyTax])
-
-  // --- Complete Sale Handler ---
-  const handleConfirmSale = async (invoice: InvoiceData) => {
-    setSalesHistory((prev) => [invoice, ...prev])
-
-    setProducts((prev) =>
-      prev.map((prod) => {
-        const soldItem = invoice.items.find((it) => it.productId === prod.id)
-        if (soldItem) {
-          const newStock = Math.max(0, prod.stock - soldItem.quantity)
-          return {
-            ...prod,
-            stock: newStock,
-            status:
-              newStock === 0 ? "OUT_OF_STOCK" : newStock <= prod.minStock ? "LOW_STOCK" : "IN_STOCK",
-          }
+        return {
+          id: c.id,
+          name: c.name,
+          description: c.description || undefined,
+          dynamicFieldsConfig,
         }
-        return prod
       })
-    )
-
-    addToast(
-      "Venta Registrada",
-      `Ticket ${invoice.saleNumber} emitido por $${invoice.summary.total.toLocaleString("es-CL")}. Stock descontado automáticamente.`,
-      "success"
-    )
-  }
-
-  // --- Filtered Catalog ---
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      if (selectedCategory !== "ALL" && product.categoryId !== selectedCategory) {
-        return false
-      }
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase()
-        const matchCode = product.code.toLowerCase().includes(q)
-        const matchName = product.name.toLowerCase().includes(q)
-        const matchDesc = product.description?.toLowerCase().includes(q)
-        const matchAttrs = Object.values(product.customAttributes || {}).some(
-          (val) => String(val).toLowerCase().includes(q)
-        )
-        if (!matchCode && !matchName && !matchDesc && !matchAttrs) return false
-      }
-
-      return true
-    })
-  }, [products, searchQuery, selectedCategory])
-
-  // Keyboard Shortcuts Handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = (document.activeElement?.tagName || "").toLowerCase()
-      const isInputActive = activeTag === "input" || activeTag === "textarea"
-
-      if ((e.key === "/" && !isInputActive) || e.key === "F2") {
-        e.preventDefault()
-        searchInputRef.current?.focus()
-        searchInputRef.current?.select()
-      }
-
-      if ((e.key === "F4" || (e.ctrlKey && e.key === "Enter")) && cart.length > 0 && !isCheckoutOpen) {
-        e.preventDefault()
-        setViewingTicketInvoice(null)
-        setIsCheckoutOpen(true)
-      }
+    } else {
+      categories = mockCategories
     }
 
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [cart, isCheckoutOpen])
+    // 2. Products
+    if (
+      productsRes.success &&
+      productsRes.data &&
+      productsRes.data.products &&
+      productsRes.data.products.length > 0
+    ) {
+      products = productsRes.data.products.map((p: any) => {
+        const stockNum = Number(p.currentStock ?? 0)
+        const minStockNum = Number(p.minStock ?? 0)
+        let status: StockStatus = "IN_STOCK"
+        if (stockNum === 0) status = "OUT_OF_STOCK"
+        else if (stockNum <= minStockNum) status = "LOW_STOCK"
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && filteredProducts.length === 1) {
-      handleAddToCart(filteredProducts[0])
-      setSearchQuery("")
+        return {
+          id: p.id,
+          code: p.code || `SKU-${p.id.slice(0, 6)}`,
+          name: p.name,
+          description: p.description || undefined,
+          categoryId: p.categoryId || p.category?.id || "",
+          categoryName: p.category?.name || "General",
+          costPrice: Number(p.costPrice ?? 0),
+          salePrice: Number(p.salePrice ?? 0),
+          stock: stockNum,
+          minStock: minStockNum,
+          status,
+          customAttributes: (p.customAttributes as Record<string, any>) || {},
+          createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
+          updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : undefined,
+        }
+      })
+    } else {
+      products = mockProducts
     }
-  }
 
-  // Export Sales History
-  const handleExportSalesCSV = () => {
-    exportToCSV(
-      "historial_ventas_gestion_manager",
-      salesHistory,
-      [
-        { key: "saleNumber", label: "N° Ticket" },
-        { key: "date", label: "Fecha y Hora" },
-        { key: "clientName", label: "Cliente" },
-        { key: "clientDoc", label: "Documento" },
-        { key: "paymentMethod", label: "Medio de Pago" },
-        { key: "summary", label: "Total Facturado", format: (s) => `$${Number(s?.total || 0).toLocaleString("es-CL")}` },
-        { key: "status", label: "Estado" },
-        { key: "cashierName", label: "Cajero" },
-      ]
-    )
-    addToast("Exportación Exitosa", "Historial de ventas descargado en formato CSV.", "info")
-  }
+    // 3. Clients (Default Consumidor Final + Database Clients)
+    const defaultConsumidorFinal: ClientSelectOption = {
+      id: "cli-cf",
+      name: "Consumidor Final",
+      docType: "DNI",
+      docNumber: "00000000",
+      taxCondition: "Consumidor Final",
+    }
 
-  const handleExportSalesJSON = () => {
-    exportToJSON("historial_ventas_gestion_manager", salesHistory)
-    addToast("Exportación JSON", "Historial de transacciones descargado en JSON.", "info")
-  }
+    if (
+      clientsRes.success &&
+      clientsRes.data &&
+      clientsRes.data.clients &&
+      clientsRes.data.clients.length > 0
+    ) {
+      const dbClients: ClientSelectOption[] = clientsRes.data.clients.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        docType: (c.docType || "DNI") as "DNI" | "CUIT" | "RUT" | "OTRO",
+        docNumber: c.docNumber || "S/N",
+        taxCondition: c.docType === "CUIT" || c.docType === "RUT" ? "Responsable Inscripto" : "Consumidor Final",
+        hasCurrentAccount: Number(c.creditLimit || 0) > 0,
+        currentAccountBalance: Number(c.currentAccountBalance || 0),
+        email: c.email || undefined,
+        phone: c.phone || undefined,
+        address: c.address || undefined,
+      }))
+      clients = [defaultConsumidorFinal, ...dbClients]
+    } else {
+      clients = mockClients
+    }
 
-  // KPI calculations for history
-  const totalSalesCount = salesHistory.length
-  const totalSalesRevenue = salesHistory.reduce((sum, s) => sum + s.summary.total, 0)
-  const averageTicket = totalSalesCount > 0 ? Math.round(totalSalesRevenue / totalSalesCount) : 0
-  const cashSalesCount = salesHistory.filter((s) => s.paymentMethod === "EFECTIVO").length
+    // 4. Sales History
+    if (
+      salesRes.success &&
+      salesRes.data &&
+      salesRes.data.sales &&
+      salesRes.data.sales.length > 0
+    ) {
+      salesHistory = salesRes.data.sales.map((sale: any) => {
+        const items = (sale.items || []).map((it: any) => ({
+          productId: it.productId || it.product?.id || "",
+          code: it.product?.code || "SKU",
+          name: it.product?.name || "Producto",
+          categoryName: "General",
+          unitPrice: Number(it.unitPrice ?? 0),
+          costPrice: 0,
+          quantity: Number(it.quantity ?? 1),
+          stock: 0,
+          subtotal: Number(it.subtotal ?? 0),
+          customAttributes: (it.customSpecs as Record<string, any>) || {},
+        }))
+
+        const totalUnits = items.reduce((s: number, i: any) => s + i.quantity, 0) || (sale._count?.items ?? 0)
+
+        return {
+          id: sale.id,
+          saleNumber: sale.invoiceNumber,
+          date: new Date(sale.createdAt).toLocaleString("es-CL", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          clientId: sale.clientId || "cli-cf",
+          clientName: sale.client?.name || "Consumidor Final",
+          clientDoc: sale.client?.docNumber
+            ? `${sale.client.docType || "DOC"}: ${sale.client.docNumber}`
+            : "Consumidor Final",
+          clientTaxCondition: "Consumidor Final",
+          items,
+          summary: {
+            subtotal: Number(sale.subtotal ?? 0),
+            discountType: "PERCENT",
+            discountValue: 0,
+            discountAmount: Number(sale.discount ?? 0),
+            taxRate: 0.21,
+            taxAmount: Number(sale.tax ?? 0),
+            total: Number(sale.total ?? 0),
+            totalItems: sale._count?.items ?? items.length,
+            totalUnits,
+          },
+          paymentMethod: mapDbPaymentMethodToUi(sale.paymentMethod),
+          amountPaid: Number(sale.total ?? 0),
+          changeAmount: 0,
+          status: sale.status === "COMPLETED" ? "COMPLETADA" : sale.status === "CANCELLED" ? "ANULADA" : "PENDIENTE",
+          cashierName: sale.user?.name || "Cajero Principal",
+          branchName: "Casa Matriz - Salón de Ventas",
+          notes: sale.notes || undefined,
+        }
+      })
+    }
+  } catch (error) {
+    console.error("Error fetching POS data on server:", error)
+    products = mockProducts
+    categories = mockCategories
+    clients = mockClients
+  }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Rich Toasts Stack */}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-
-      {/* Top Header & Tab Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <ShoppingCart className="h-8 w-8 text-primary" />
-            Punto de Venta (Terminal POS)
-          </h1>
-          <p className="text-sm text-zinc-400 mt-1 font-medium">
-            Terminal rápida de mostrador con atajos de teclado y persistencia de sesión.
-          </p>
-        </div>
-
-        {/* View Mode Toggle Buttons */}
-        <div className="flex items-center gap-2">
-          {activeTab === "HISTORY" && (
-            <div className="flex items-center gap-1 bg-[#18181b] border border-zinc-800 rounded-xl p-1 shadow-xs">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExportSalesCSV}
-                leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />}
-                className="h-8 text-xs font-semibold text-zinc-300 hover:text-white"
-              >
-                CSV
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExportSalesJSON}
-                leftIcon={<FileJson className="h-3.5 w-3.5 text-primary" />}
-                className="h-8 text-xs font-semibold text-zinc-300 hover:text-white"
-              >
-                JSON
-              </Button>
-            </div>
-          )}
-
-          <div className="flex items-center rounded-xl bg-zinc-900 p-1 border border-zinc-800">
-            <button
-              type="button"
-              onClick={() => setActiveTab("POS")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === "POS"
-                  ? "bg-zinc-800 text-primary shadow-xs"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <Store className="h-4 w-4" />
-              <span>Terminal POS</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("HISTORY")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === "HISTORY"
-                  ? "bg-zinc-800 text-primary shadow-xs"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <History className="h-4 w-4" />
-              <span>Historial de Ventas</span>
-              <Badge size="sm" variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">
-                {salesHistory.length}
-              </Badge>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {activeTab === "POS" ? (
-        /* POS Split Screen */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* LEFT PANEL: Product Catalog & Fast Search (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
-            <Card>
-              <CardHeader className="pb-3 space-y-3">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Buscar producto por nombre o código de barra (Enter para agregar)..."
-                    leftIcon={<Search className="h-4 w-4" />}
-                    rightIcon={
-                      <kbd className="hidden sm:inline-block rounded bg-zinc-900 border border-zinc-700 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
-                        / o F2
-                      </kbd>
-                    }
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    className="h-11 text-base sm:text-sm"
-                  />
-                </div>
-
-                {/* Category Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory("ALL")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
-                      selectedCategory === "ALL"
-                        ? "bg-primary text-primary-foreground shadow-xs"
-                        : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white"
-                    }`}
-                  >
-                    Todos ({products.length})
-                  </button>
-                  {categories.map((cat) => {
-                    const isSelected = selectedCategory === cat.id
-                    const count = products.filter((p) => p.categoryId === cat.id).length
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
-                          isSelected
-                            ? "bg-primary text-primary-foreground shadow-xs"
-                            : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white"
-                        }`}
-                      >
-                        {cat.name} ({count})
-                      </button>
-                    )
-                  })}
-                </div>
-              </CardHeader>
-
-              <CardContent className="p-4 pt-0">
-                {/* Product Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[560px] overflow-y-auto pr-1">
-                  {filteredProducts.length === 0 ? (
-                    <div className="col-span-full py-16 text-center text-zinc-500 space-y-3">
-                      <Package className="h-10 w-10 mx-auto text-zinc-600" />
-                      <p className="text-sm font-bold text-white">
-                        No se encontraron productos en el catálogo.
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSearchQuery("")
-                          setSelectedCategory("ALL")
-                        }}
-                        leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
-                      >
-                        Limpiar Búsqueda
-                      </Button>
-                    </div>
-                  ) : (
-                    filteredProducts.map((product) => {
-                      const isOutOfStock = product.stock <= 0
-                      const isLowStock = product.status === "LOW_STOCK"
-                      const inCartItem = cart.find((i) => i.productId === product.id)
-                      const qtyInCart = inCartItem?.quantity || 0
-
-                      return (
-                        <div
-                          key={product.id}
-                          onClick={() => !isOutOfStock && handleAddToCart(product)}
-                          className={`relative p-3.5 rounded-2xl border transition-all select-none text-left flex flex-col justify-between ${
-                            isOutOfStock
-                              ? "opacity-50 cursor-not-allowed bg-zinc-900 border-zinc-800"
-                              : "cursor-pointer bg-[#18181b] border-zinc-800 hover:border-primary/60 hover:shadow-md active:scale-[0.99]"
-                          }`}
-                        >
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="font-mono text-[11px] font-bold text-primary">
-                                {product.code}
-                              </span>
-                              <Badge
-                                variant={
-                                  isOutOfStock ? "destructive" : isLowStock ? "warning" : "success"
-                                }
-                                size="sm"
-                                dot
-                              >
-                                {isOutOfStock ? "Agotado" : `${product.stock} un.`}
-                              </Badge>
-                            </div>
-
-                            <h4 className="font-bold text-sm text-white line-clamp-2 leading-snug">
-                              {product.name}
-                            </h4>
-
-                            {/* Extra attributes chips */}
-                            <div className="flex flex-wrap gap-1 pt-1">
-                              {Object.entries(product.customAttributes || {}).map(([k, v]) => {
-                                if (!v || typeof v === "boolean") return null
-                                return (
-                                  <span
-                                    key={k}
-                                    className="text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 font-medium"
-                                  >
-                                    {String(v)}
-                                  </span>
-                                )
-                              })}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 mt-2 border-t border-zinc-800">
-                            <span className="text-base font-black text-primary">
-                              ${product.salePrice.toLocaleString("es-CL")}
-                            </span>
-
-                            {qtyInCart > 0 && (
-                              <Badge variant="default" size="sm">
-                                {qtyInCart} en carrito
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* RIGHT PANEL: Cart & Financial Breakdown (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            <Card className="border-zinc-800 shadow-md">
-              <CardHeader className="pb-3 border-b border-zinc-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-base">Orden de Venta Actual</CardTitle>
-                  </div>
-                  {cart.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleClearCart}
-                      className="text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
-                    >
-                      Vaciar Carrito
-                    </button>
-                  )}
-                </div>
-
-                {/* Client Selector Dropdown */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-primary" />
-                    Cliente Asignado
-                  </label>
-                  <Select
-                    value={selectedClient.id}
-                    onChange={(e) => {
-                      const c = clients.find((item) => item.id === e.target.value)
-                      if (c) setSelectedClient(c)
-                    }}
-                    options={clients.map((c) => ({
-                      label: `${c.name} (${c.docType}: ${c.docNumber})`,
-                      value: c.id,
-                    }))}
-                  />
-                </div>
-              </CardHeader>
-
-              <CardContent className="p-4 space-y-4">
-                {/* Cart Items List */}
-                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
-                  {cart.length === 0 ? (
-                    <div className="py-12 text-center text-zinc-500 space-y-2">
-                      <ShoppingCart className="h-10 w-10 mx-auto text-zinc-600" />
-                      <p className="text-xs font-bold text-white">
-                        El carrito está vacío
-                      </p>
-                      <p className="text-[11px] text-zinc-500">
-                        Haz clic en los productos del catálogo izquierdo para agregarlos a la orden.
-                      </p>
-                    </div>
-                  ) : (
-                    cart.map((item) => {
-                      const isMaxStockReached = item.quantity >= item.stock
-
-                      return (
-                        <div
-                          key={item.productId}
-                          className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/80 space-y-2"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-xs font-bold text-white line-clamp-1">
-                                {item.name}
-                              </p>
-                              <span className="text-[10px] text-zinc-400 font-mono font-medium">
-                                {item.code} • ${item.unitPrice.toLocaleString("es-CL")} c/u
-                              </span>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFromCart(item.productId)}
-                              className="text-zinc-500 hover:text-red-400 p-1 cursor-pointer"
-                              title="Quitar ítem"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            {/* Quantity Controls */}
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                                className="h-7 w-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:bg-zinc-700 cursor-pointer"
-                              >
-                                <Minus className="h-3 w-3" />
-                              </button>
-
-                              <input
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleUpdateQuantity(
-                                    item.productId,
-                                    parseInt(e.target.value, 10) || 1
-                                  )
-                                }
-                                min={1}
-                                max={item.stock}
-                                className="h-7 w-12 text-center text-xs font-bold bg-[#18181b] border border-zinc-700 rounded-lg text-white"
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
-                                disabled={isMaxStockReached}
-                                className="h-7 w-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:bg-zinc-700 disabled:opacity-40 cursor-pointer"
-                              >
-                                <Plus className="h-3 w-3" />
-                              </button>
-                            </div>
-
-                            <span className="text-sm font-black text-white">
-                              ${item.subtotal.toLocaleString("es-CL")}
-                            </span>
-                          </div>
-
-                          {isMaxStockReached && (
-                            <p className="text-[10px] text-amber-400 font-bold">
-                              Máximo disponible en stock: {item.stock} un.
-                            </p>
-                          )}
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-
-                {/* Financial Summary Breakdown */}
-                {cart.length > 0 && (
-                  <div className="space-y-3 pt-3 border-t border-zinc-800">
-                    {/* Discounts Selector */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-zinc-300 font-medium flex items-center gap-1">
-                        <Percent className="h-3.5 w-3.5 text-primary" />
-                        Descuento Comercial:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[0, 5, 10, 15].map((pct) => (
-                          <button
-                            key={pct}
-                            type="button"
-                            onClick={() => setDiscountPercent(pct)}
-                            className={`px-2 py-0.5 text-xs font-bold rounded-md border cursor-pointer transition-colors ${
-                              discountPercent === pct
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                            }`}
-                          >
-                            {pct}%
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Subtotal, Descuentos e IVA */}
-                    <div className="space-y-1.5 text-xs text-zinc-300">
-                      <div className="flex justify-between">
-                        <span>Subtotal Neto:</span>
-                        <span className="font-bold text-white">
-                          ${saleSummary.subtotal.toLocaleString("es-CL")}
-                        </span>
-                      </div>
-
-                      {saleSummary.discountAmount > 0 && (
-                        <div className="flex justify-between text-emerald-400 font-bold">
-                          <span>Descuento ({discountPercent}%):</span>
-                          <span>-${saleSummary.discountAmount.toLocaleString("es-CL")}</span>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-center">
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={applyTax}
-                            onChange={(e) => setApplyTax(e.target.checked)}
-                            className="rounded border-zinc-700 bg-zinc-900 text-primary accent-primary h-3.5 w-3.5"
-                          />
-                          <span>IVA Estimado (21%):</span>
-                        </label>
-                        <span className="font-bold text-white">
-                          ${saleSummary.taxAmount.toLocaleString("es-CL")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Total Highlighting Banner */}
-                    <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white flex items-center justify-between shadow-sm">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">
-                          Total a Pagar
-                        </span>
-                        <div className="text-2xl font-black text-primary">
-                          ${saleSummary.total.toLocaleString("es-CL")}
-                        </div>
-                      </div>
-                      <span className="text-xs text-zinc-400 font-medium">
-                        {saleSummary.totalUnits} un. en total
-                      </span>
-                    </div>
-
-                    {/* Checkout Button */}
-                    <Button
-                      variant="default"
-                      size="lg"
-                      onClick={() => {
-                        setViewingTicketInvoice(null)
-                        setIsCheckoutOpen(true)
-                      }}
-                      className="w-full h-12 text-base font-bold shadow-md"
-                      leftIcon={<CheckCircle2 className="h-5 w-5" />}
-                    >
-                      <span>Cobrar Venta</span>
-                      <kbd className="ml-2 px-1.5 py-0.5 bg-black/25 text-xs rounded font-mono">
-                        F4 / Enter
-                      </kbd>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        /* SALES HISTORY TAB */
-        <div className="space-y-6">
-          {/* History KPI Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Total Facturado Hoy
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-white">
-                  ${totalSalesRevenue.toLocaleString("es-CL")}
-                </div>
-                <p className="text-xs text-emerald-400 font-bold mt-1">
-                  {totalSalesCount} transacciones completadas
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Ticket Promedio
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-white">
-                  ${averageTicket.toLocaleString("es-CL")}
-                </div>
-                <p className="text-xs text-zinc-400 font-medium mt-1">Por cliente atendido</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Ventas en Efectivo
-                </CardTitle>
-                <Banknote className="h-4 w-4 text-emerald-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-white">
-                  {cashSalesCount}
-                </div>
-                <p className="text-xs text-zinc-400 font-medium mt-1">Caja chica al mostrador</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Operador Activo
-                </CardTitle>
-                <User className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-base font-bold text-white truncate">
-                  Álvaro Espinoza
-                </div>
-                <p className="text-xs text-zinc-400 font-medium mt-1">Turno Mañana • Casa Matriz</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sales History Table */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">Historial de Transacciones</CardTitle>
-                  <CardDescription>
-                    Ventas procesadas y tickets emitidos en la terminal.
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setActiveTab("POS")}
-                  leftIcon={<Plus className="h-4 w-4" />}
-                >
-                  Nueva Venta
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table className="border-0 rounded-none">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-bold">N° Ticket</TableHead>
-                    <TableHead className="font-bold">Fecha & Hora</TableHead>
-                    <TableHead className="font-bold">Cliente</TableHead>
-                    <TableHead className="font-bold">Medio de Pago</TableHead>
-                    <TableHead className="text-center font-bold">Ítems</TableHead>
-                    <TableHead className="text-right font-bold">Total</TableHead>
-                    <TableHead className="text-center font-bold">Estado</TableHead>
-                    <TableHead className="text-right font-bold">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesHistory.length === 0 ? (
-                    <TableEmpty colSpan={8} message="Aún no se han emitido ventas en esta sesión." />
-                  ) : (
-                    salesHistory.map((sale) => (
-                      <TableRow key={sale.id}>
-                        <TableCell className="font-mono font-bold text-xs text-primary">
-                          {sale.saleNumber}
-                        </TableCell>
-                        <TableCell className="text-xs text-zinc-400 font-medium">{sale.date}</TableCell>
-                        <TableCell>
-                          <div className="font-bold text-xs text-white">
-                            {sale.clientName}
-                          </div>
-                          <div className="text-[10px] text-zinc-500">{sale.clientDoc}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" size="sm">
-                            {sale.paymentMethod}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center text-xs font-semibold text-zinc-200">
-                          {sale.summary.totalUnits} un. ({sale.summary.totalItems} art.)
-                        </TableCell>
-                        <TableCell className="text-right font-black text-sm text-white">
-                          ${sale.summary.total.toLocaleString("es-CL")}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="success" size="sm" dot>
-                            {sale.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setViewingTicketInvoice(sale)
-                              setIsCheckoutOpen(true)
-                            }}
-                            leftIcon={<Receipt className="h-3.5 w-3.5" />}
-                            className="h-8 text-xs text-primary font-bold hover:bg-zinc-800 hover:text-primary"
-                          >
-                            Ver Ticket
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Checkout & Ticket Modal */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => {
-          setIsCheckoutOpen(false)
-          setViewingTicketInvoice(null)
-        }}
-        items={cart}
-        summary={saleSummary}
-        client={selectedClient}
-        initialInvoice={viewingTicketInvoice}
-        onConfirmSale={handleConfirmSale}
-        onNewSale={() => {
-          handleClearCart()
-          setActiveTab("POS")
-          searchInputRef.current?.focus()
-        }}
-      />
-    </div>
+    <VentasView
+      initialProducts={products}
+      initialCategories={categories}
+      initialClients={clients}
+      initialSalesHistory={salesHistory}
+    />
   )
 }

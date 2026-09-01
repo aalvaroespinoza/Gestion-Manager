@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { SessionPayload } from './modules/auth/types'
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET || 'super-secret-default-key-change-in-production-min32chars'
+const SECRET_KEY = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'super-secret-default-key-change-in-production-min32chars'
 const encodedKey = new TextEncoder().encode(SECRET_KEY)
 const SESSION_COOKIE_NAME = 'gestion_session'
 
@@ -65,13 +65,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 3. If unauthenticated on protected route:
+  // 3. If unauthenticated on protected route -> redirect to /login
   if (!session || !session.userId || !session.tenantId) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized: Missing or invalid session' }, { status: 401 })
     }
-    // In frontend-first mode without active login UI, allow navigation downstream
-    return NextResponse.next()
+    const loginUrl = new URL('/login', request.url)
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('callbackUrl', pathname)
+    }
+    return NextResponse.redirect(loginUrl)
   }
 
   // 4. If authenticated -> inject tenant and user context headers downstream

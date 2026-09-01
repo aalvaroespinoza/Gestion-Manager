@@ -29,7 +29,7 @@ interface CheckoutModalProps {
   items: CartItem[]
   summary: SaleSummary
   client: ClientSelectOption
-  onConfirmSale: (invoice: InvoiceData) => void | Promise<void>
+  onConfirmSale: (invoice: InvoiceData) => void | InvoiceData | Promise<void | InvoiceData>
   onNewSale: () => void
   initialInvoice?: InvoiceData | null
 }
@@ -130,8 +130,8 @@ export function CheckoutModal({
 
     try {
       setIsSubmitting(true)
-      await onConfirmSale(invoice)
-      setGeneratedInvoice(invoice)
+      const confirmed = await onConfirmSale(invoice)
+      setGeneratedInvoice(confirmed || invoice)
       setStep("RECEIPT")
     } finally {
       setIsSubmitting(false)

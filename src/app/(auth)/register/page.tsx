@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
+import { registerTenantAction } from "@/modules/auth/actions"
 import {
   Building2,
   User,
@@ -17,7 +18,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Briefcase,
   CheckCircle2,
   ShieldCheck,
   ArrowRight,
@@ -93,29 +93,34 @@ export default function RegisterPage() {
     setRegisterSuccess(false)
 
     try {
-      // Simulate tenant creation and account provisioning
-      await new Promise((resolve) => setTimeout(resolve, 1100))
+      const result = await registerTenantAction({
+        companyName: data.companyName,
+        industry: data.industry,
+        adminName: data.adminName,
+        email: data.email,
+        password: data.password,
+      })
+
+      if (!result.success) {
+        setRegisterError(result.error || "No fue posible registrar la empresa. Inténtelo nuevamente.")
+        return
+      }
 
       setRegisterSuccess(true)
-
-      // Set cookie for session if needed and redirect to dashboard
-      document.cookie = `gestion_session=demo-valid-token; path=/; max-age=86400`
-
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 700)
-    } catch (err) {
+      const targetUrl = result.redirectUrl || "/dashboard"
+      window.location.href = targetUrl
+    } catch {
       setRegisterError("Ocurrió un error al intentar crear la cuenta de empresa.")
     }
   }
 
   return (
-    <Card className="shadow-xl border-slate-200/80 dark:border-slate-800 backdrop-blur-sm bg-white/95 dark:bg-slate-900/95 animate-in fade-in zoom-in-95 duration-300">
+    <Card className="shadow-2xl border-zinc-800 bg-[#18181b]/95 backdrop-blur-md animate-in fade-in zoom-in-95 duration-300">
       <CardHeader className="space-y-1.5 text-center pb-4">
-        <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <CardTitle className="text-2xl font-black tracking-tight text-white">
           Registrar Nueva Empresa
         </CardTitle>
-        <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
+        <CardDescription className="text-xs text-zinc-400">
           Crea tu espacio de trabajo Multi-Tenant y comienza a controlar tu negocio hoy.
         </CardDescription>
       </CardHeader>
@@ -124,7 +129,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
           {/* Error feedback alert */}
           {registerError && (
-            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in">
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-xs text-red-400 animate-in fade-in font-medium">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>{registerError}</span>
             </div>
@@ -132,9 +137,9 @@ export default function RegisterPage() {
 
           {/* Success feedback alert */}
           {registerSuccess && (
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2.5 text-xs text-emerald-400 animate-in fade-in font-medium">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>¡Empresa configurada con éxito! Preparando tu entorno de trabajo...</span>
+              <span>¡Empresa configurada con éxito! Ingresando al panel de control...</span>
             </div>
           )}
 
@@ -191,7 +196,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="focus:outline-none hover:text-slate-700 dark:hover:text-slate-200"
+                  className="focus:outline-none hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -212,7 +217,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="focus:outline-none hover:text-slate-700 dark:hover:text-slate-200"
+                  className="focus:outline-none hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -227,10 +232,10 @@ export default function RegisterPage() {
 
           {/* Accept Terms Checkbox */}
           <div className="pt-1">
-            <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer">
+            <label className="flex items-start gap-2.5 text-xs text-zinc-400 select-none cursor-pointer">
               <input
                 type="checkbox"
-                className="mt-0.5 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0"
+                className="mt-0.5 rounded border-zinc-700 bg-zinc-900 text-primary focus:ring-primary h-4 w-4 shrink-0"
                 {...register("acceptTerms")}
               />
               <span>
@@ -239,9 +244,9 @@ export default function RegisterPage() {
                   type="button"
                   onClick={(e) => {
                     e.preventDefault()
-                    alert("Términos de Servicio: Plataforma de demostración SaaS Gestión Manager.")
+                    alert("Términos de Servicio: Plataforma Multi-Tenant SaaS Gestión Manager.")
                   }}
-                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                  className="text-primary font-bold hover:underline"
                 >
                   Términos y Condiciones
                 </button>{" "}
@@ -249,7 +254,7 @@ export default function RegisterPage() {
               </span>
             </label>
             {errors.acceptTerms?.message && (
-              <p className="text-xs text-red-500 font-medium mt-1">
+              <p className="text-xs text-red-400 font-medium mt-1">
                 {errors.acceptTerms.message}
               </p>
             )}
@@ -263,26 +268,26 @@ export default function RegisterPage() {
             isLoading={isSubmitting}
             disabled={registerSuccess}
             rightIcon={<ArrowRight className="h-4 w-4" />}
-            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md shadow-blue-500/20"
+            className="w-full mt-3 font-bold shadow-md"
           >
             {registerSuccess ? "Configurando Empresa..." : "Crear Cuenta de Empresa"}
           </Button>
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col items-center justify-center border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2 text-center text-xs text-slate-500">
+      <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-800 pt-4 space-y-2 text-center text-xs text-zinc-400">
         <p>
           ¿Ya tienes una cuenta registrada?{" "}
           <Link
             href="/login"
-            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            className="font-bold text-primary hover:underline"
           >
             Inicia sesión
           </Link>
         </p>
 
-        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+        <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
           <span>Espacio de datos aislado (Multi-Tenant)</span>
         </div>
       </CardFooter>

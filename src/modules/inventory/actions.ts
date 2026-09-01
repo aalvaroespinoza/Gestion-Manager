@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { requireTenant } from '@/modules/auth/session-utils'
+import { requireTenant, getCurrentUser } from '@/modules/auth/session-utils'
 import { ApiResponse } from '@/types'
 import {
   categorySchema,
@@ -17,6 +17,14 @@ import {
   UpdateProductInput,
   ProductFilterInput,
 } from './validation'
+
+export interface AdjustStockInput {
+  productId: string
+  type: 'IN' | 'OUT' | 'SET'
+  quantity: number
+  reason: string
+  documentRef?: string
+}
 
 // ==========================================
 // Category Server Actions
@@ -56,6 +64,8 @@ export async function createCategory(data: CategoryInput): Promise<ApiResponse<a
       },
     })
 
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/categories')
 
@@ -151,6 +161,8 @@ export async function updateCategory(
       },
     })
 
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/categories')
 
@@ -232,6 +244,8 @@ export async function createProduct(data: ProductInput): Promise<ApiResponse<any
       },
     })
 
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
 
@@ -334,6 +348,8 @@ export async function updateProduct(
       },
     })
 
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
 
@@ -346,6 +362,97 @@ export async function updateProduct(
     return {
       success: false,
       error: error.message || 'Error al actualizar el producto',
+    }
+  }
+}
+
+/**
+ * Adjusts product stock and records an audit log entry
+ */
+export async function adjustStock(data: AdjustStockInput): Promise<ApiResponse<any>> {
+  try {
+    const tenantId = await requireTenant()
+    const { productId, type, quantity, reason, documentRef } = data
+
+    const product = await prisma.product.findFirst({
+      where: { id: productId, tenantId },
+    })
+
+    if (!product) {
+      return {
+        success: false,
+        error: 'Producto no encontrado',
+      }
+    }
+
+    const currentStockNum = Number(product.currentStock)
+    let newStock = currentStockNum
+
+    if (type === 'IN') {
+      newStock = currentStockNum + quantity
+    } else if (type === 'OUT') {
+      if (quantity > currentStockNum) {
+        return {
+          success: false,
+          error: `No es posible descontar ${quantity} unidades. El stock actual es de ${currentStockNum} un.`,
+        }
+      }
+      newStock = Math.max(0, currentStockNum - quantity)
+    } else if (type === 'SET') {
+      newStock = Math.max(0, quantity)
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedProduct = await tx.product.update({
+        where: { id: productId },
+        data: {
+          currentStock: new Prisma.Decimal(newStock),
+        },
+        include: {
+          category: true,
+        },
+      })
+
+      const user = await getCurrentUser()
+      if (user) {
+        await tx.auditLog.create({
+          data: {
+            tenantId,
+            userId: user.id,
+            action: 'MANUAL_STOCK_ADJUSTMENT',
+            entity: 'Product',
+            entityId: productId,
+            details: {
+              productCode: product.code,
+              productName: product.name,
+              type,
+              quantity,
+              previousStock: currentStockNum,
+              newStock,
+              reason,
+              documentRef,
+            },
+          },
+        })
+      }
+
+      return updatedProduct
+    })
+
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/inventory')
+    revalidatePath('/dashboard/products')
+
+    return {
+      success: true,
+      data: updated,
+      message: 'Ajuste de stock registrado exitosamente',
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Error al realizar el ajuste de stock',
     }
   }
 }
@@ -385,13 +492,15 @@ export async function deleteProduct(id: string): Promise<ApiResponse<{ id: strin
       })
     }
 
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
 
     return {
       success: true,
       data: { id },
-      message: 'Producto eliminado/archivado exitosamente',
+      message: 'Producto eliminado exitosamente',
     }
   } catch (error: any) {
     return {

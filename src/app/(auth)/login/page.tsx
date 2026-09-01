@@ -1,14 +1,15 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { Suspense, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { loginAction } from "@/modules/auth/actions"
 import {
   Mail,
   Lock,
@@ -33,8 +34,11 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+
   const [showPassword, setShowPassword] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
   const [authSuccess, setAuthSuccess] = useState(false)
@@ -46,8 +50,8 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "admin@gestionmanager.com",
-      password: "password123",
+      email: "admin@corralon.com",
+      password: "admin123",
       rememberMe: true,
     },
   })
@@ -57,35 +61,32 @@ export default function LoginPage() {
     setAuthSuccess(false)
 
     try {
-      // Simulate authentication request
-      await new Promise((resolve) => setTimeout(resolve, 900))
+      const result = await loginAction({
+        email: data.email,
+        password: data.password,
+        rememberMe: data.rememberMe,
+      })
 
-      // Demonstration mock check
-      if (data.password.length < 6) {
-        setAuthError("Credenciales inválidas. Por favor verifique su correo y contraseña.")
+      if (!result.success) {
+        setAuthError(result.error || "Credenciales inválidas. Verifique su correo y contraseña.")
         return
       }
 
       setAuthSuccess(true)
-
-      // Set cookie for session if needed and redirect to dashboard
-      document.cookie = `gestion_session=demo-valid-token; path=/; max-age=86400`
-
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 600)
-    } catch (err) {
+      const targetUrl = result.redirectUrl || callbackUrl || "/dashboard"
+      window.location.href = targetUrl
+    } catch {
       setAuthError("Ocurrió un error al intentar iniciar sesión. Inténtelo nuevamente.")
     }
   }
 
   return (
-    <Card className="shadow-xl border-slate-200/80 dark:border-slate-800 backdrop-blur-sm bg-white/95 dark:bg-slate-900/95 animate-in fade-in zoom-in-95 duration-300">
+    <Card className="shadow-2xl border-zinc-800 bg-[#18181b]/95 backdrop-blur-md animate-in fade-in zoom-in-95 duration-300">
       <CardHeader className="space-y-1.5 text-center pb-4">
-        <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <CardTitle className="text-2xl font-black tracking-tight text-white">
           Iniciar Sesión
         </CardTitle>
-        <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
+        <CardDescription className="text-xs text-zinc-400">
           Accede a tu cuenta de empresa para gestionar tu inventario y ventas.
         </CardDescription>
       </CardHeader>
@@ -94,7 +95,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {/* Error message alert */}
           {authError && (
-            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in">
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-xs text-red-400 animate-in fade-in font-medium">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>{authError}</span>
             </div>
@@ -102,9 +103,9 @@ export default function LoginPage() {
 
           {/* Success feedback alert */}
           {authSuccess && (
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2.5 text-xs text-emerald-400 animate-in fade-in font-medium">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>¡Autenticación exitosa! Redirigiendo al panel de control...</span>
+              <span>¡Autenticación exitosa! Ingresando al sistema...</span>
             </div>
           )}
 
@@ -112,7 +113,7 @@ export default function LoginPage() {
           <Input
             label="Correo Electrónico"
             type="email"
-            placeholder="admin@empresa.com"
+            placeholder="usuario@empresa.com"
             leftIcon={<Mail className="h-4 w-4" />}
             error={errors.email?.message}
             required
@@ -131,7 +132,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="focus:outline-none hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  className="focus:outline-none hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1}
                   aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 >
@@ -147,10 +148,10 @@ export default function LoginPage() {
 
           {/* Remember me & Forgot Password */}
           <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 select-none cursor-pointer">
+            <label className="flex items-center gap-2 text-zinc-400 select-none cursor-pointer">
               <input
                 type="checkbox"
-                className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                className="rounded border-zinc-700 bg-zinc-900 text-primary focus:ring-primary h-4 w-4"
                 {...register("rememberMe")}
               />
               <span>Recordarme</span>
@@ -158,8 +159,8 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => alert("Para restablecer su contraseña, contacte a soporte@gestionmanager.com")}
-              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              onClick={() => alert("Para restablecer su contraseña, contacte al administrador de su empresa o soporte@gestionmanager.com")}
+              className="text-primary hover:underline font-medium"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -173,29 +174,37 @@ export default function LoginPage() {
             isLoading={isSubmitting}
             disabled={authSuccess}
             rightIcon={<ArrowRight className="h-4 w-4" />}
-            className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md shadow-blue-500/20"
+            className="w-full mt-2 font-bold shadow-md"
           >
             {authSuccess ? "Ingresando..." : "Iniciar Sesión"}
           </Button>
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col items-center justify-center border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2 text-center text-xs text-slate-500">
+      <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-800 pt-4 space-y-2 text-center text-xs text-zinc-400">
         <p>
-          ¿No tienes una cuenta aún?{" "}
+          ¿No tienes una cuenta de empresa?{" "}
           <Link
             href="/register"
-            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+            className="font-bold text-primary hover:underline inline-flex items-center gap-1"
           >
             <span>Regístrate aquí</span>
           </Link>
         </p>
 
-        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-          <span>Acceso cifrado de extremo a extremo</span>
+        <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Acceso seguro cifrado con JWT & HttpOnly</span>
         </div>
       </CardFooter>
     </Card>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-zinc-400">Cargando formulario de acceso...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
