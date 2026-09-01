@@ -45,8 +45,8 @@ export const cancelSaleSchema = z.object({
 // ==========================================
 // Inferred TypeScript Types
 // ==========================================
-export type SaleItemInput = z.infer<typeof saleItemSchema>
-export type CreateSaleInput = z.infer<typeof createSaleSchema>
-export type CancelSaleInput = z.infer<typeof cancelSaleSchema>
-export type SaleFilterInput = z.infer<typeof saleFilterSchema>
+export type SaleItemInput = z.input<typeof saleItemSchema>
+export type CreateSaleInput = z.input<typeof createSaleSchema>
+export type CancelSaleInput = z.input<typeof cancelSaleSchema>
+export type SaleFilterInput = z.input<typeof saleFilterSchema>
 

@@ -94,8 +94,8 @@ export const productFilterSchema = z.object({
 // ==========================================
 export type DynamicFieldConfigInput = z.infer<typeof dynamicFieldConfigSchema>
 export type CategoryDynamicFieldsConfigInput = z.infer<typeof categoryDynamicFieldsConfigSchema>
-export type CategoryInput = z.infer<typeof categorySchema>
-export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>
-export type ProductInput = z.infer<typeof productSchema>
-export type UpdateProductInput = z.infer<typeof updateProductSchema>
-export type ProductFilterInput = z.infer<typeof productFilterSchema>
+export type CategoryInput = z.input<typeof categorySchema>
+export type UpdateCategoryInput = z.input<typeof updateCategorySchema>
+export type ProductInput = z.input<typeof productSchema>
+export type UpdateProductInput = z.input<typeof updateProductSchema>
+export type ProductFilterInput = z.input<typeof productFilterSchema>

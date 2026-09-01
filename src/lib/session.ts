@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { SessionPayload, UserRole } from '@/modules/auth/types'
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET || 'super-secret-default-key-change-in-production-min32chars'
+const SECRET_KEY = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'super-secret-default-key-change-in-production-min32chars'
 const encodedKey = new TextEncoder().encode(SECRET_KEY)
 export const SESSION_COOKIE_NAME = 'gestion_session'
 

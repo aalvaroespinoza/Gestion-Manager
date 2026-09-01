@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { UserProfileModal, UserProfileData } from "./UserProfileModal"
 import { ThemeSelector } from "@/components/theme"
+import { getActiveUserSession, logoutAction } from "@/modules/auth/actions"
 import {
   Menu,
   Building2,
@@ -17,12 +18,7 @@ import {
   Bell,
   Search,
   Store,
-  ShieldCheck,
   PlusCircle,
-  HelpCircle,
-  ExternalLink,
-  Briefcase,
-  Palette,
 } from "lucide-react"
 
 export interface TenantBranch {
@@ -53,18 +49,60 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
-  // Current logged in user profile state
+  // Current logged in user profile state from active session
   const [currentUser, setCurrentUser] = useState<UserProfileData>({
-    name: "Álvaro Espinoza",
-    email: "admin@gestionmanager.com",
-    phone: "+56 9 8765 4321",
+    name: "Administrador",
+    email: "admin@empresa.com",
+    phone: "+54 11 4567-8901",
     position: "Gerente General",
-    role: "Superadmin",
+    role: "Administrador",
   })
 
   const tenantRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
+
+  // Fetch active session from server on mount
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadActiveSession() {
+      try {
+        const sessionData = await getActiveUserSession()
+        if (sessionData && isMounted) {
+          setCurrentUser({
+            name: sessionData.user.name || "Administrador",
+            email: sessionData.user.email,
+            phone: sessionData.user.phone || "+54 11 4567-8901",
+            position: sessionData.user.position || "Administrador",
+            role: sessionData.user.role || "Administrador",
+          })
+
+          const activeBranch: TenantBranch = {
+            id: sessionData.tenant.id,
+            name: sessionData.tenant.name,
+            code: (sessionData.tenant.slug || "MATRIZ").toUpperCase(),
+            role: "Principal",
+            isCurrent: true,
+          }
+
+          setSelectedBranch(activeBranch)
+          setBranches((prev) => [
+            activeBranch,
+            ...prev.filter((b) => b.id !== activeBranch.id).slice(0, 3),
+          ])
+        }
+      } catch {
+        // Fallback to default state if error occurs
+      }
+    }
+
+    loadActiveSession()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -95,10 +133,11 @@ export function Header({ onMenuClick }: HeaderProps) {
     setIsTenantOpen(false)
   }
 
-  const handleLogout = () => {
-    document.cookie = "gestion_session=; path=/; max-age=0"
+  const handleLogout = async () => {
     setIsUserOpen(false)
+    await logoutAction()
     router.push("/login")
+    router.refresh()
   }
 
   return (
@@ -109,7 +148,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           type="button"
           onClick={onMenuClick}
           aria-label="Abrir menú de navegación"
-          className="lg:hidden rounded-lg p-2 text-foreground/70 hover:bg-muted transition-colors"
+          className="lg:hidden rounded-lg p-2 text-foreground/70 hover:bg-muted transition-colors cursor-pointer"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -123,7 +162,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsUserOpen(false)
               setIsNotificationsOpen(false)
             }}
-            className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-[var(--primary-light)]/40 hover:border-[var(--primary)] transition-all shadow-xs"
+            className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-[var(--primary-light)]/40 hover:border-[var(--primary)] transition-all shadow-xs cursor-pointer"
           >
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--primary-light)] text-[var(--primary-text)]">
               <Store className="h-3.5 w-3.5" />
@@ -147,7 +186,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   Seleccionar Sucursal / Tenant
                 </p>
                 <p className="text-[11px] text-foreground/60">
-                  Cambia de espacio de trabajo activo
+                  Espacio de trabajo y base de datos activa
                 </p>
               </div>
 
@@ -160,7 +199,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       type="button"
                       onClick={() => handleSelectBranch(branch)}
                       className={cn(
-                        "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors",
+                        "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors cursor-pointer",
                         isCurrent
                           ? "bg-[var(--primary-light)]/70 text-[var(--primary-text)] font-semibold"
                           : "text-foreground hover:bg-muted"
@@ -186,7 +225,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsTenantOpen(false)
                     router.push("/configuracion")
                   }}
-                  className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-[var(--primary-text)] hover:bg-[var(--primary-light)] font-medium transition-colors"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-[var(--primary-text)] hover:bg-[var(--primary-light)] font-medium transition-colors cursor-pointer"
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span>Gestionar Sucursales en Configuración</span>
@@ -226,7 +265,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsUserOpen(false)
             }}
             aria-label="Notificaciones del sistema"
-            className="relative rounded-xl p-2 text-foreground/70 hover:bg-muted transition-colors"
+            className="relative rounded-xl p-2 text-foreground/70 hover:bg-muted transition-colors cursor-pointer"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--primary)] ring-2 ring-card" />
@@ -247,7 +286,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 </div>
                 <div className="p-2 rounded-lg bg-muted">
                   <p className="font-semibold text-foreground">Venta POS Registrada</p>
-                  <p className="text-foreground/60 text-[11px]">Ticket #TK-2026-0004521 emitido por $229.670.</p>
+                  <p className="text-foreground/60 text-[11px]">Ticket emitido por el sistema.</p>
                 </div>
               </div>
             </div>
@@ -263,7 +302,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               setIsTenantOpen(false)
               setIsNotificationsOpen(false)
             }}
-            className="flex items-center gap-2.5 rounded-xl p-1.5 hover:bg-muted transition-colors"
+            className="flex items-center gap-2.5 rounded-xl p-1.5 hover:bg-muted transition-colors cursor-pointer"
           >
             <div
               className="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm"
@@ -313,7 +352,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     setIsProfileModalOpen(true)
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <User className="h-4 w-4 text-[var(--primary-text)]" />
                   <span>Mi Perfil de Usuario</span>
@@ -326,7 +365,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     router.push("/configuracion")
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <Settings className="h-4 w-4 text-foreground/50" />
                   <span>Configuración de Cuenta</span>
@@ -339,7 +378,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     setIsUserOpen(false)
                     setIsTenantOpen(true)
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <Store className="h-4 w-4 text-amber-500" />
                   <span>Cambiar Sucursal / Negocio</span>
@@ -351,7 +390,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs font-medium transition-colors"
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs font-medium transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Cerrar Sesión</span>

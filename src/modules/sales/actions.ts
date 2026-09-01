@@ -195,6 +195,9 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
     })
 
     // Paso F: Revalidar rutas
+    revalidatePath('/ventas')
+    revalidatePath('/stock')
+    revalidatePath('/dashboard')
     revalidatePath('/dashboard/sales')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
@@ -268,6 +271,7 @@ export async function getSales(filters?: SaleFilterInput): Promise<
             select: {
               id: true,
               name: true,
+              docType: true,
               docNumber: true,
             },
           },
@@ -275,6 +279,17 @@ export async function getSales(filters?: SaleFilterInput): Promise<
             select: {
               id: true,
               name: true,
+            },
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  code: true,
+                },
+              },
             },
           },
           _count: {
