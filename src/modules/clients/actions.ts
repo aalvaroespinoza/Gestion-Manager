@@ -21,10 +21,29 @@ import {
 /**
  * Creates a new client bound to the active tenant
  */
-export async function createClient(data: ClientInput): Promise<ApiResponse<any>> {
+export async function createClient(data: ClientInput | Record<string, any>): Promise<ApiResponse<any>> {
   try {
     const tenantId = await requireTenant()
-    const validated = clientSchema.parse(data)
+    const raw = data as Record<string, any>
+
+    // Normalize field names from dynamic forms or direct inputs
+    const normalizedData: ClientInput = {
+      name: (raw.name || raw.businessName || '').trim(),
+      docType: raw.docType || (raw.rut ? 'RUT' : 'DNI'),
+      docNumber: (raw.docNumber || raw.rut || '').trim() || null,
+      email: (raw.email || '').trim() || null,
+      phone: (raw.phone || '').trim() || null,
+      address: (raw.address || '').trim() || (raw.city ? String(raw.city).trim() : null),
+      creditLimit: raw.creditLimit !== undefined && raw.creditLimit !== null
+        ? Number(raw.creditLimit)
+        : raw.isCreditAllowed ? 1000000 : 0,
+      metadata: (raw.metadata || {
+        city: raw.city || null,
+        isCreditAllowed: Boolean(raw.isCreditAllowed),
+      }) as Record<string, any>,
+    }
+
+    const validated = clientSchema.parse(normalizedData)
 
     // Check unique docNumber per tenant if provided
     if (validated.docNumber) {
@@ -57,7 +76,10 @@ export async function createClient(data: ClientInput): Promise<ApiResponse<any>>
       },
     })
 
+    revalidatePath('/clientes')
     revalidatePath('/dashboard/clients')
+    revalidatePath('/ventas')
+    revalidatePath('/dashboard')
 
     return {
       success: true,
@@ -130,7 +152,10 @@ export async function updateClient(
       },
     })
 
+    revalidatePath('/clientes')
     revalidatePath('/dashboard/clients')
+    revalidatePath('/ventas')
+    revalidatePath('/dashboard')
 
     return {
       success: true,
@@ -154,24 +179,12 @@ export async function deleteClient(id: string): Promise<ApiResponse<{ id: string
 
     const client = await prisma.client.findFirst({
       where: { id, tenantId },
-      include: {
-        _count: {
-          select: { sales: true },
-        },
-      },
     })
 
     if (!client) {
       return {
         success: false,
-        error: 'Cliente no encontrado',
-      }
-    }
-
-    if (client._count.sales > 0) {
-      return {
-        success: false,
-        error: `No es posible eliminar el cliente porque tiene ${client._count.sales} venta(s) registrada(s).`,
+        error: 'Cliente no encontrado o no pertenece a tu organización',
       }
     }
 
@@ -179,7 +192,10 @@ export async function deleteClient(id: string): Promise<ApiResponse<{ id: string
       where: { id },
     })
 
+    revalidatePath('/clientes')
     revalidatePath('/dashboard/clients')
+    revalidatePath('/ventas')
+    revalidatePath('/dashboard')
 
     return {
       success: true,
@@ -231,7 +247,7 @@ export async function getClients(filters?: ClientFilterInput): Promise<
         where,
         skip,
         take,
-        orderBy: { name: 'asc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           sales: {
             where: {
