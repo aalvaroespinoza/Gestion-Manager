@@ -14,7 +14,7 @@ export default async function StockPage() {
       getCategories(),
     ])
 
-    if (categoriesRes.success && categoriesRes.data && categoriesRes.data.length > 0) {
+    if (categoriesRes.success && categoriesRes.data) {
       categories = categoriesRes.data.map((c: any) => {
         let dynamicFieldsConfig: DynamicFormFieldConfig[] = []
         if (c.dynamicFieldsConfig?.fields && Array.isArray(c.dynamicFieldsConfig.fields)) {
@@ -34,7 +34,7 @@ export default async function StockPage() {
       categories = mockCategories
     }
 
-    if (productsRes.success && productsRes.data && productsRes.data.products && productsRes.data.products.length > 0) {
+    if (productsRes.success && productsRes.data && Array.isArray(productsRes.data.products)) {
       products = productsRes.data.products.map((p: any) => {
         const stockNum = Number(p.currentStock ?? 0)
         const minStockNum = Number(p.minStock ?? 0)

@@ -11,6 +11,7 @@ export interface ExportColumn<T> {
 /**
  * Exports an array of objects to a CSV file and triggers a browser download.
  * Adds UTF-8 BOM so Microsoft Excel automatically opens accented characters correctly.
+ * Uses semicolon (;) as column delimiter for native Excel compatibility in Spanish / Latin America / Windows.
  */
 export function exportToCSV<T extends Record<string, any>>(
   filename: string,
@@ -29,10 +30,10 @@ export function exportToCSV<T extends Record<string, any>>(
 
   const csvRows: string[] = []
 
-  // Header row
-  csvRows.push(headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(","))
+  // Header row with semicolon delimiter
+  csvRows.push(headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(";"))
 
-  // Data rows
+  // Data rows with semicolon delimiter
   data.forEach((item) => {
     const rowValues = columns
       ? columns.map((col) => {
@@ -52,11 +53,12 @@ export function exportToCSV<T extends Record<string, any>>(
           return `"${String(val).replace(/"/g, '""')}"`
         })
 
-    csvRows.push(rowValues.join(","))
+    csvRows.push(rowValues.join(";"))
   })
 
-  // UTF-8 BOM (\uFEFF) ensures Excel reads UTF-8 correctly
-  const csvContent = "\uFEFF" + csvRows.join("\r\n")
+  // UTF-8 BOM (\uFEFF) ensures Excel reads UTF-8 characters (tildes, ñ) correctly
+  const BOM = "\uFEFF"
+  const csvContent = BOM + csvRows.join("\r\n")
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
   const url = URL.createObjectURL(blob)
 

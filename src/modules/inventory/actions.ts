@@ -468,7 +468,7 @@ export async function deleteProduct(id: string): Promise<ApiResponse<{ id: strin
       where: { id, tenantId },
       include: {
         _count: {
-          select: { saleItems: true },
+          select: { saleItems: true, purchaseOrderItems: true },
         },
       },
     })
@@ -480,8 +480,8 @@ export async function deleteProduct(id: string): Promise<ApiResponse<{ id: strin
       }
     }
 
-    // If product has historical sale items, soft delete / archive it to maintain database integrity
-    if (product._count.saleItems > 0) {
+    // If product has historical sale items or purchase orders, soft delete / archive it to maintain database integrity
+    if (product._count.saleItems > 0 || product._count.purchaseOrderItems > 0) {
       await prisma.product.update({
         where: { id },
         data: { status: 'ARCHIVED' },
@@ -496,11 +496,12 @@ export async function deleteProduct(id: string): Promise<ApiResponse<{ id: strin
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/inventory')
     revalidatePath('/dashboard/products')
+    revalidatePath('/ventas')
 
     return {
       success: true,
       data: { id },
-      message: 'Producto eliminado exitosamente',
+      message: 'Producto dado de baja exitosamente',
     }
   } catch (error: any) {
     return {
@@ -529,7 +530,7 @@ export async function getProducts(filters?: ProductFilterInput): Promise<
     const where: Prisma.ProductWhereInput = {
       tenantId,
       ...(categoryId && { categoryId }),
-      ...(status && { status }),
+      ...(status ? { status } : { status: { not: 'ARCHIVED' } }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },

@@ -20,6 +20,8 @@ import {
   KeyRound,
 } from "lucide-react"
 
+import { updateUserProfile } from "@/modules/settings/actions"
+
 export interface UserProfileData {
   name: string
   email: string
@@ -57,6 +59,11 @@ export function UserProfileModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  // Sync state if currentUser changes
+  React.useEffect(() => {
+    setFormData(currentUser)
+  }, [currentUser])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage(null)
@@ -74,13 +81,25 @@ export function UserProfileModal({
 
     try {
       setIsSubmitting(true)
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      const res = await updateUserProfile({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position,
+        currentPassword: currentPassword || undefined,
+        newPassword: newPassword || undefined,
+      })
+
+      if (!res.success) {
+        setErrorMessage(res.error || "No fue posible guardar los cambios de perfil.")
+        return
+      }
 
       if (onSave) {
         onSave(formData)
       }
 
-      setSuccessMessage("¡Perfil actualizado con éxito!")
+      setSuccessMessage("¡Perfil actualizado con éxito en la base de datos!")
       setTimeout(() => {
         setSuccessMessage(null)
         onClose()

@@ -381,17 +381,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
       "inventario_stock_gestion_manager",
       filteredProducts,
       [
-        { key: "code", label: "Código SKU" },
+        { key: "code", label: "Código" },
         { key: "name", label: "Producto" },
         { key: "categoryName", label: "Categoría" },
-        { key: "costPrice", label: "Costo Neto", format: (v) => `$${Number(v).toLocaleString("es-CL")}` },
         { key: "salePrice", label: "Precio Venta", format: (v) => `$${Number(v).toLocaleString("es-CL")}` },
+        { key: "costPrice", label: "Costo", format: (v) => `$${Number(v).toLocaleString("es-CL")}` },
         { key: "stock", label: "Stock Actual" },
         { key: "minStock", label: "Stock Mínimo" },
         { key: "status", label: "Estado", format: (v) => (v === "IN_STOCK" ? "En Stock" : v === "LOW_STOCK" ? "Stock Bajo" : "Agotado") },
       ]
     )
-    addToast("Exportación Completada", "Archivo CSV generado y descargado con éxito.", "info")
+    addToast("Exportación Completada", "Archivo CSV generado con BOM UTF-8 y delimitador ';' descargado con éxito.", "info")
   }
 
   const handleExportJSON = () => {
