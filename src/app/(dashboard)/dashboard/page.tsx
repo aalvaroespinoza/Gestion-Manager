@@ -101,13 +101,13 @@ const DASHBOARD_DATA_BY_RANGE: Record<"7D" | "30D" | "90D", TimeRangeConfig> = {
 
 // Weekly bars (Last 7 days ending today)
 const weeklyBarData = [
-  { day: "Sáb", date: "29 Ago", total: 590400, orders: 18, pctOfMax: 100 },
-  { day: "Dom", date: "30 Ago", total: 185000, orders: 6, pctOfMax: 31 },
-  { day: "Lun", date: "31 Ago", total: 340800, orders: 11, pctOfMax: 58 },
-  { day: "Mar", date: "01 Sep", total: 412500, orders: 13, pctOfMax: 70 },
-  { day: "Mié", date: "02 Sep", total: 368200, orders: 12, pctOfMax: 62 },
-  { day: "Jue", date: "03 Sep", total: 495600, orders: 16, pctOfMax: 84 },
-  { day: "Vie", date: "04 Sep (Hoy)", total: 476250, orders: 14, pctOfMax: 81 },
+  { day: "Sáb", date: "29 Ago", total: 590400, orders: 18, pctOfMax: 100, formattedShort: "$590K" },
+  { day: "Dom", date: "30 Ago", total: 185000, orders: 6, pctOfMax: 31, formattedShort: "$185K" },
+  { day: "Lun", date: "31 Ago", total: 340800, orders: 11, pctOfMax: 58, formattedShort: "$341K" },
+  { day: "Mar", date: "01 Sep", total: 412500, orders: 13, pctOfMax: 70, formattedShort: "$413K" },
+  { day: "Mié", date: "02 Sep", total: 368200, orders: 12, pctOfMax: 62, formattedShort: "$368K" },
+  { day: "Jue", date: "03 Sep", total: 495600, orders: 16, pctOfMax: 84, formattedShort: "$496K" },
+  { day: "Vie", date: "04 Sep (Hoy)", total: 476250, orders: 14, pctOfMax: 81, formattedShort: "$476K" },
 ]
 
 // Real critical products matching actual catalog in src/mocks/inventoryData.ts
@@ -843,14 +843,17 @@ export default function DashboardOverviewPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 mt-4">
+            <div className="grid grid-cols-1 gap-2 mt-3">
               <Link href="/ventas">
                 <div className="p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between cursor-pointer group">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 rounded-lg bg-primary/15 text-primary">
                       <ShoppingCart className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-bold text-foreground">Nueva Venta POS</span>
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">Nueva Venta POS</span>
+                      <span className="text-[10px] text-muted-foreground">Terminal de cobro y tickets</span>
+                    </div>
                   </div>
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
                     F9
@@ -869,7 +872,10 @@ export default function DashboardOverviewPage() {
                   <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-500">
                     <Search className="h-4 w-4" />
                   </div>
-                  <span className="text-xs font-bold text-foreground">Comandos & Búsqueda</span>
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">Comandos & Búsqueda</span>
+                    <span className="text-[10px] text-muted-foreground">Buscador global omnibox</span>
+                  </div>
                 </div>
                 <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
                   Ctrl+K
@@ -882,7 +888,10 @@ export default function DashboardOverviewPage() {
                     <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500">
                       <Boxes className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-bold text-foreground">Catálogo & Stock</span>
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">Catálogo & Stock</span>
+                      <span className="text-[10px] text-muted-foreground">Artículos, precios y Kardex</span>
+                    </div>
                   </div>
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
                     Alt+N
@@ -896,7 +905,10 @@ export default function DashboardOverviewPage() {
                     <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-500">
                       <Users className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-bold text-foreground">Directorio Clientes</span>
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">Directorio Clientes</span>
+                      <span className="text-[10px] text-muted-foreground">Padrón fiscal y cuentas corrientes</span>
+                    </div>
                   </div>
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
                     Shift+C
@@ -906,9 +918,17 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          <p className="text-[10px] text-muted-foreground mt-4 text-center">
-            Diseñado para operar a alta velocidad sin tocar el ratón.
-          </p>
+          {/* Hardware Device Status Banner (Industrial POS Touch - Fills vertical dead space) */}
+          <div className="mt-3 p-2.5 rounded-xl bg-muted/30 border border-border/60 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] font-bold text-foreground">Lector Barcode USB</span>
+            </div>
+            <span className="text-[10px] font-mono text-muted-foreground">Modo HID &lt;45ms Listo</span>
+          </div>
         </SpotlightCard>
 
         {/* ========================================================= */}
@@ -921,14 +941,37 @@ export default function DashboardOverviewPage() {
                 <TrendingUp className="h-4 w-4 text-primary" />
                 Ventas de la Semana
               </span>
-              <span className="text-xs font-mono font-bold text-muted-foreground">
-                Mayor: $590.400
+              <Badge variant="secondary" size="sm" className="font-mono text-[10px]">
+                Últimos 7 Días
+              </Badge>
+            </div>
+
+            {/* Weekly Total Metric Header (Fills upper space with actionable data) */}
+            <div className="mt-3 flex items-baseline justify-between">
+              <div>
+                <span className="text-2xl sm:text-3xl font-black font-mono tabular-nums text-foreground">
+                  $2.868.750
+                </span>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  90 tickets • Promedio: <strong className="font-mono text-foreground">$409.821</strong>/día
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-500 font-mono tabular-nums">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                +14.8%
               </span>
             </div>
 
-            {/* Interactive Bar Chart with Tooltip */}
-            <div className="pt-6 pb-2">
-              <div className="h-36 flex items-end justify-between gap-2">
+            {/* Interactive Bar Chart with Target Guideline and Value Labels */}
+            <div className="pt-4 pb-1">
+              <div className="relative h-44 flex items-end justify-between gap-1.5 sm:gap-2">
+                {/* Horizontal meta line */}
+                <div className="absolute inset-x-0 top-3 border-b border-dashed border-border/70 flex items-center justify-end">
+                  <span className="text-[9px] font-mono text-muted-foreground bg-card/90 px-1 -translate-y-1/2">
+                    Meta $500K
+                  </span>
+                </div>
+
                 {weeklyBarData.map((d, i) => (
                   <div
                     key={d.day}
@@ -941,24 +984,29 @@ export default function DashboardOverviewPage() {
                       <motion.div
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute -top-11 px-2.5 py-1 bg-card border border-border text-[10px] font-mono tabular-nums font-bold rounded-lg shadow-xl whitespace-nowrap z-20"
+                        className="absolute -top-12 px-2.5 py-1 bg-card border border-border text-[10px] font-mono tabular-nums font-bold rounded-lg shadow-xl whitespace-nowrap z-20"
                       >
-                        <div>${d.total.toLocaleString("es-CL")}</div>
+                        <div className="text-foreground">${d.total.toLocaleString("es-CL")}</div>
                         <div className="text-[9px] text-muted-foreground font-normal">
                           {d.date} • {d.orders} tickets
                         </div>
                       </motion.div>
                     )}
 
-                    {/* Bar */}
-                    <div className="w-full bg-muted/60 rounded-lg overflow-hidden flex flex-col justify-end h-full">
+                    {/* Numeric value label above bar */}
+                    <span className="text-[9px] font-mono tabular-nums text-muted-foreground group-hover:text-foreground mb-1 transition-colors">
+                      {d.formattedShort}
+                    </span>
+
+                    {/* Bar container */}
+                    <div className="w-full bg-muted/60 rounded-lg overflow-hidden flex flex-col justify-end h-[115px]">
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: `${d.pctOfMax}%` }}
                         transition={{ duration: 0.5, delay: i * 0.04 }}
                         className={`w-full rounded-lg transition-colors ${
                           hoveredWeeklyBar === i
-                            ? "bg-primary"
+                            ? "bg-primary shadow-sm shadow-primary/30"
                             : d.pctOfMax >= 90
                             ? "bg-primary/85"
                             : "bg-primary/50"
@@ -966,7 +1014,7 @@ export default function DashboardOverviewPage() {
                       />
                     </div>
 
-                    <span className="text-[11px] font-bold text-muted-foreground mt-2 group-hover:text-foreground transition-colors">
+                    <span className="text-[10px] font-bold text-muted-foreground mt-2 group-hover:text-foreground transition-colors">
                       {d.day}
                     </span>
                   </div>
@@ -977,7 +1025,7 @@ export default function DashboardOverviewPage() {
 
           <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
             <span>Mayor día: <strong className="text-foreground">Sábado ($590K)</strong></span>
-            <span>Promedio: <strong className="text-foreground font-mono">$409K</strong></span>
+            <span>Efectividad: <strong className="text-emerald-500 font-mono">94.2%</strong></span>
           </div>
         </SpotlightCard>
 
