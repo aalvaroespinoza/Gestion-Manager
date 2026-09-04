@@ -68,6 +68,13 @@ enum PurchaseOrderStatus {
   CANCELLED
 }
 
+enum ClientPaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  CHECK
+}
+
 model Tenant {
   id             String          @id @default(cuid())
   name           String
@@ -88,6 +95,7 @@ model Tenant {
   suppliers      Supplier[]
   purchaseOrders PurchaseOrder[]
   counters       TenantCounter[]
+  clientPayments ClientPayment[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -111,6 +119,7 @@ model User {
   cashMovements  CashMovement[]
   auditLogs      AuditLog[]
   purchaseOrders PurchaseOrder[]
+  clientPayments ClientPayment[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -180,6 +189,7 @@ model Client {
   metadata    Json?    // Stores ClientMetadata
 
   sales       Sale[]
+  payments    ClientPayment[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -261,6 +271,7 @@ model CashShift {
 
   movements      CashMovement[]
   sales          Sale[]
+  clientPayments ClientPayment[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -386,4 +397,36 @@ model TenantCounter {
   @@unique([tenantId, type])
   @@index([tenantId])
 }
+
+model ClientPayment {
+  id            String              @id @default(cuid())
+  tenantId      String
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  clientId      String
+  client        Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  cashShiftId   String?
+  cashShift     CashShift?          @relation(fields: [cashShiftId], references: [id], onDelete: SetNull)
+
+  receiptNumber String              // Sequential receipt folio (REC-00001)
+  amount        Decimal             @db.Decimal(12, 2)
+  paymentMethod ClientPaymentMethod @default(CASH)
+  reference     String?             // Transfer number, check number, voucher
+  notes         String?
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([tenantId, receiptNumber])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([userId])
+  @@index([cashShiftId])
+  @@index([createdAt])
+}
+
 
