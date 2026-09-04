@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import Decimal from "decimal.js"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,9 +78,33 @@ export function CheckoutModal({
     }
   }, [isOpen, initialInvoice, summary.total])
 
+  // Functional keyboard shortcuts: F9 to print ticket, ESC to cancel or start new sale
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F9") {
+        e.preventDefault()
+        handlePrint()
+      } else if (e.key === "Escape") {
+        e.preventDefault()
+        if (step === "RECEIPT") {
+          onNewSale()
+        }
+        onClose()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, step, onClose, onNewSale])
+
   const total = summary.total
   const paid = Number(amountPaid) || 0
-  const change = Math.max(0, paid - total)
+  const change = Math.max(
+    0,
+    new Decimal(paid).minus(new Decimal(total)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber()
+  )
   const isCash = paymentMethod === "EFECTIVO"
   const isInsufficientCash = isCash && paid < total
 
@@ -153,7 +178,7 @@ export function CheckoutModal({
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-white font-bold">Cobro y Cierre de Venta</span>
+            <span className="text-foreground font-bold">Cobro y Cierre de Venta</span>
           </div>
         ) : (
           <div className="flex items-center gap-2.5 text-emerald-400 font-bold">
@@ -165,7 +190,7 @@ export function CheckoutModal({
         )
       }
       description={
-        <span className="text-zinc-400 text-xs">
+        <span className="text-muted-foreground text-xs">
           {step === "PAYMENT"
             ? `Total a cobrar: $${summary.total.toLocaleString("es-CL")} • Cliente: ${client.name}`
             : `Comprobante digital correlativo para entrega al cliente.`}
@@ -189,14 +214,14 @@ export function CheckoutModal({
             </div>
             <div className="text-right">
               <span className="text-xs opacity-80">Cliente</span>
-              <div className="text-sm font-bold max-w-[180px] truncate text-white">{client.name}</div>
+              <div className="text-sm font-bold max-w-[180px] truncate text-primary-foreground">{client.name}</div>
               <span className="text-[11px] opacity-80">{client.taxCondition}</span>
             </div>
           </div>
 
           {/* Payment Method Selector Grid */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Seleccionar Medio de Pago
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -217,12 +242,12 @@ export function CheckoutModal({
                     className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold transition-all text-left cursor-pointer ${
                       isSelected
                         ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 font-bold"
-                        : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
+                        : "border-border bg-card text-foreground hover:bg-muted/80"
                     }`}
                   >
                     <Icon
                       className={`h-4 w-4 shrink-0 ${
-                        isSelected ? "text-primary" : "text-zinc-500"
+                        isSelected ? "text-primary" : "text-muted-foreground"
                       }`}
                     />
                     <span className="truncate">{pm.label}</span>
@@ -234,7 +259,7 @@ export function CheckoutModal({
 
           {/* Cash Payment Specific Inputs */}
           {isCash && (
-            <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3 animate-in fade-in">
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-3 animate-in fade-in">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="w-full sm:w-1/2">
                   <Input
@@ -278,28 +303,28 @@ export function CheckoutModal({
                 <button
                   type="button"
                   onClick={() => handleQuickCash(0)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   Exacto (${total.toLocaleString("es-CL")})
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(1000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$1.000
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(5000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$5.000
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(10000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$10.000
                 </button>
@@ -312,7 +337,7 @@ export function CheckoutModal({
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs text-amber-300">
-                <p className="font-bold text-white">Venta a Crédito en Cuenta Corriente</p>
+                <p className="font-bold text-foreground">Venta a Crédito en Cuenta Corriente</p>
                 <p className="mt-0.5 text-amber-300/80">
                   {client.hasCurrentAccount
                     ? `Cliente habilitado. Saldo disponible en cuenta: $${(
@@ -333,7 +358,7 @@ export function CheckoutModal({
           />
 
           {/* Modal Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Volver al Carrito
             </Button>
@@ -354,55 +379,55 @@ export function CheckoutModal({
           {/* Printable Ticket Container */}
           <div
             id="printable-ticket"
-            className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 font-mono text-xs text-zinc-200 space-y-4 shadow-sm"
+            className="p-6 rounded-2xl bg-card border border-border font-mono text-xs text-foreground space-y-4 shadow-sm"
           >
             {/* Ticket Header */}
-            <div className="text-center border-b border-dashed border-zinc-700 pb-3 space-y-1">
-              <h3 className="font-bold text-base tracking-tight text-white">
+            <div className="text-center border-b border-dashed border-border pb-3 space-y-1">
+              <h3 className="font-bold text-base tracking-tight text-foreground">
                 GESTIÓN MANAGER POS
               </h3>
-              <p className="text-[11px] text-zinc-400">RUT / CUIT: 30-77123456-0</p>
-              <p className="text-[11px] text-zinc-400">{generatedInvoice.branchName}</p>
-              <p className="text-[10px] text-zinc-500">Tel: +54 11 4000-0000 • www.gestionmanager.com</p>
+              <p className="text-[11px] text-muted-foreground">RUT / CUIT: 30-77123456-0</p>
+              <p className="text-[11px] text-muted-foreground">{generatedInvoice.branchName}</p>
+              <p className="text-[10px] text-muted-foreground">Tel: +54 11 4000-0000 • www.gestionmanager.com</p>
             </div>
 
             {/* Ticket Meta Info */}
-            <div className="space-y-1 text-[11px] border-b border-dashed border-zinc-700 pb-3">
+            <div className="space-y-1 text-[11px] border-b border-dashed border-border pb-3">
               <div className="flex justify-between">
-                <span className="text-zinc-400">N° COMPROBANTE:</span>
+                <span className="text-muted-foreground">N° COMPROBANTE:</span>
                 <span className="font-bold text-primary">{generatedInvoice.saleNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">FECHA & HORA:</span>
-                <span className="text-white">{generatedInvoice.date}</span>
+                <span className="text-muted-foreground">FECHA & HORA:</span>
+                <span className="text-foreground">{generatedInvoice.date}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">CLIENTE:</span>
-                <span className="font-semibold text-white truncate max-w-[200px]">{generatedInvoice.clientName}</span>
+                <span className="text-muted-foreground">CLIENTE:</span>
+                <span className="font-semibold text-foreground truncate max-w-[200px]">{generatedInvoice.clientName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">CONDICIÓN:</span>
-                <span className="text-white">{generatedInvoice.clientTaxCondition || "Consumidor Final"}</span>
+                <span className="text-muted-foreground">CONDICIÓN:</span>
+                <span className="text-foreground">{generatedInvoice.clientTaxCondition || "Consumidor Final"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">CAJERO:</span>
-                <span className="text-white">{generatedInvoice.cashierName}</span>
+                <span className="text-muted-foreground">CAJERO:</span>
+                <span className="text-foreground">{generatedInvoice.cashierName}</span>
               </div>
             </div>
 
             {/* Itemized List */}
-            <div className="space-y-2 border-b border-dashed border-zinc-700 pb-3">
-              <div className="flex justify-between font-bold text-[11px] text-zinc-400 uppercase">
+            <div className="space-y-2 border-b border-dashed border-border pb-3">
+              <div className="flex justify-between font-bold text-[11px] text-muted-foreground uppercase">
                 <span>Cant. x Detalle</span>
                 <span>Importe</span>
               </div>
               {generatedInvoice.items.map((item, index) => (
                 <div key={index} className="space-y-0.5">
                   <div className="flex justify-between">
-                    <span className="font-semibold text-white">{item.name}</span>
-                    <span className="text-white">${item.subtotal.toLocaleString("es-CL")}</span>
+                    <span className="font-semibold text-foreground">{item.name}</span>
+                    <span className="text-foreground">${item.subtotal.toLocaleString("es-CL")}</span>
                   </div>
-                  <div className="text-[10px] text-zinc-500">
+                  <div className="text-[10px] text-muted-foreground">
                     {item.quantity} un. x ${item.unitPrice.toLocaleString("es-CL")} (SKU: {item.code})
                   </div>
                 </div>
@@ -411,9 +436,9 @@ export function CheckoutModal({
 
             {/* Summary Totals */}
             <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-muted-foreground">
                 <span>SUBTOTAL NETO:</span>
-                <span className="text-white">${generatedInvoice.summary.subtotal.toLocaleString("es-CL")}</span>
+                <span className="text-foreground">${generatedInvoice.summary.subtotal.toLocaleString("es-CL")}</span>
               </div>
 
               {generatedInvoice.summary.discountAmount > 0 && (
@@ -423,28 +448,28 @@ export function CheckoutModal({
                 </div>
               )}
 
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-muted-foreground">
                 <span>IVA ESTIMADO (21%):</span>
-                <span className="text-white">${generatedInvoice.summary.taxAmount.toLocaleString("es-CL")}</span>
+                <span className="text-foreground">${generatedInvoice.summary.taxAmount.toLocaleString("es-CL")}</span>
               </div>
 
-              <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-zinc-700">
+              <div className="flex justify-between text-base font-extrabold text-foreground pt-2 border-t border-border">
                 <span>TOTAL A PAGAR:</span>
                 <span className="text-primary font-black">${generatedInvoice.summary.total.toLocaleString("es-CL")}</span>
               </div>
             </div>
 
             {/* Payment info */}
-            <div className="space-y-1 text-[11px] pt-2 border-t border-dashed border-zinc-700">
+            <div className="space-y-1 text-[11px] pt-2 border-t border-dashed border-border">
               <div className="flex justify-between">
-                <span className="text-zinc-400">FORMA DE PAGO:</span>
-                <span className="font-semibold text-white">{generatedInvoice.paymentMethod}</span>
+                <span className="text-muted-foreground">FORMA DE PAGO:</span>
+                <span className="font-semibold text-foreground">{generatedInvoice.paymentMethod}</span>
               </div>
               {generatedInvoice.paymentMethod === "EFECTIVO" && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-zinc-400">PAGÓ CON:</span>
-                    <span className="text-white">${generatedInvoice.amountPaid.toLocaleString("es-CL")}</span>
+                    <span className="text-muted-foreground">PAGÓ CON:</span>
+                    <span className="text-foreground">${generatedInvoice.amountPaid.toLocaleString("es-CL")}</span>
                   </div>
                   <div className="flex justify-between font-bold text-emerald-400">
                     <span>SU VUELTO:</span>
@@ -455,14 +480,14 @@ export function CheckoutModal({
             </div>
 
             {/* Footer Thank You */}
-            <div className="text-center pt-3 text-[10px] text-zinc-500 space-y-0.5">
-              <p className="font-semibold text-zinc-400">¡GRACIAS POR SU COMPRA!</p>
+            <div className="text-center pt-3 text-[10px] text-muted-foreground space-y-0.5">
+              <p className="font-semibold text-foreground">¡GRACIAS POR SU COMPRA!</p>
               <p>Comprobante no válido como factura fiscal electrónica oficial.</p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="secondary"

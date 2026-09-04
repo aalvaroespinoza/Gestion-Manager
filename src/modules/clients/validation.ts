@@ -25,9 +25,30 @@ export const clientFilterSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 })
 
+export const clientPaymentMethodSchema = z.enum(['CASH', 'TRANSFER', 'CARD', 'CHECK'])
+
+export const registerPaymentSchema = z.object({
+  clientId: z.string().min(1, 'El cliente es obligatorio'),
+  amount: z.coerce.number().positive('El monto del pago debe ser mayor a 0'),
+  paymentMethod: clientPaymentMethodSchema.default('CASH'),
+  reference: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+})
+
+export const clientPaymentFilterSchema = z.object({
+  clientId: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+})
+
 // ==========================================
 // Inferred Types
 // ==========================================
 export type ClientInput = z.infer<typeof clientSchema>
 export type UpdateClientInput = z.infer<typeof updateClientSchema>
 export type ClientFilterInput = z.infer<typeof clientFilterSchema>
+export type RegisterPaymentInput = z.infer<typeof registerPaymentSchema>
+export type ClientPaymentFilterInput = z.infer<typeof clientPaymentFilterSchema>
+

@@ -329,13 +329,24 @@ export async function closeCashShift(data: CloseShiftInput): Promise<ApiResponse
     const validated = closeShiftSchema.parse(data)
 
     const closedShift = await prisma.$transaction(async (tx) => {
-      // 1. Find active open shift
-      const shift = await tx.cashShift.findFirst({
-        where: {
-          tenantId,
-          userId,
-          status: 'OPEN',
-        },
+      // 1. Bloqueo exclusivo pesimista (FOR UPDATE) sobre el turno de caja abierto
+      // Impide que una venta concurrente se asocie a este turno mientras se computa el arqueo
+      const lockedRows = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "CashShift"
+        WHERE "tenantId" = ${tenantId}
+          AND "userId" = ${userId}
+          AND "status" = 'OPEN'
+        FOR UPDATE;
+      `
+
+      if (!lockedRows || lockedRows.length === 0) {
+        throw new Error('No tienes ningún turno de caja abierto para cerrar.')
+      }
+
+      const shiftId = lockedRows[0].id
+
+      const shift = await tx.cashShift.findUnique({
+        where: { id: shiftId },
         include: {
           movements: true,
           sales: {
@@ -351,37 +362,41 @@ export async function closeCashShift(data: CloseShiftInput): Promise<ApiResponse
       })
 
       if (!shift) {
-        throw new Error('No tienes ningún turno de caja abierto para cerrar.')
+        throw new Error('Error al cargar la información del turno de caja.')
       }
 
-      // 2. Compute expected cash amount
-      const initialAmount = shift.initialAmount.toNumber()
+      // 2. Calcular montos con precisión contable Prisma.Decimal
+      let cashSales = new Prisma.Decimal(0)
+      for (const s of shift.sales) {
+        if (s.paymentMethod === 'CASH') {
+          cashSales = cashSales.add(s.total)
+        }
+      }
 
-      const cashSales = shift.sales
-        .filter((s) => s.paymentMethod === 'CASH')
-        .reduce((sum, s) => sum + s.total.toNumber(), 0)
+      let manualIncome = new Prisma.Decimal(0)
+      let manualExpense = new Prisma.Decimal(0)
+      for (const m of shift.movements) {
+        if (m.type === 'INCOME') {
+          manualIncome = manualIncome.add(m.amount)
+        } else if (m.type === 'EXPENSE') {
+          manualExpense = manualExpense.add(m.amount)
+        }
+      }
 
-      const manualIncome = shift.movements
-        .filter((m) => m.type === 'INCOME')
-        .reduce((sum, m) => sum + m.amount.toNumber(), 0)
+      const initialAmount = shift.initialAmount
+      const expectedAmount = initialAmount.add(cashSales).add(manualIncome).sub(manualExpense)
+      const actualAmount = new Prisma.Decimal(validated.actualAmount)
+      const difference = actualAmount.sub(expectedAmount)
 
-      const manualExpense = shift.movements
-        .filter((m) => m.type === 'EXPENSE')
-        .reduce((sum, m) => sum + m.amount.toNumber(), 0)
-
-      const expectedAmount = initialAmount + cashSales + manualIncome - manualExpense
-      const actualAmount = validated.actualAmount
-      const difference = actualAmount - expectedAmount
-
-      // 3. Update shift to CLOSED
+      // 3. Actualizar el turno a CLOSED
       const updated = await tx.cashShift.update({
         where: { id: shift.id },
         data: {
           status: 'CLOSED',
           closedAt: new Date(),
-          expectedAmount: new Prisma.Decimal(expectedAmount),
-          actualAmount: new Prisma.Decimal(actualAmount),
-          difference: new Prisma.Decimal(difference),
+          expectedAmount,
+          actualAmount,
+          difference,
           notes: validated.notes || shift.notes,
         },
       })
@@ -389,13 +404,13 @@ export async function closeCashShift(data: CloseShiftInput): Promise<ApiResponse
       return {
         ...updated,
         summary: {
-          initialAmount,
-          cashSales,
-          manualIncome,
-          manualExpense,
-          expectedAmount,
-          actualAmount,
-          difference,
+          initialAmount: initialAmount.toNumber(),
+          cashSales: cashSales.toNumber(),
+          manualIncome: manualIncome.toNumber(),
+          manualExpense: manualExpense.toNumber(),
+          expectedAmount: expectedAmount.toNumber(),
+          actualAmount: actualAmount.toNumber(),
+          difference: difference.toNumber(),
         },
       }
     })

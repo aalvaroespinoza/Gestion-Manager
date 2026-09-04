@@ -106,7 +106,7 @@ export function Sidebar({
             onClick={() => setIsMobileOpen(false)}
           >
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-transform group-hover:scale-105"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-foreground shadow-md transition-transform group-hover:scale-105"
               style={{ backgroundColor: "var(--primary)" }}
             >
               <Sparkles className="h-5 w-5" />
@@ -152,8 +152,8 @@ export function Sidebar({
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 group relative",
                   active
-                    ? "text-white font-semibold shadow-sm"
-                    : "text-sidebar-foreground/80 hover:bg-[var(--sidebar-hover)] hover:text-white"
+                    ? "font-semibold shadow-sm"
+                    : "text-sidebar-foreground/80 hover:bg-[var(--sidebar-hover)] hover:text-sidebar-foreground"
                 )}
                 style={active ? { backgroundColor: "var(--sidebar-active)", color: "var(--sidebar-active-text)" } : undefined}
                 title={isCollapsed && !isMobileOpen ? item.title : undefined}
@@ -161,7 +161,7 @@ export function Sidebar({
                 <Icon
                   className={cn(
                     "h-5 w-5 shrink-0 transition-transform group-hover:scale-110",
-                    active ? "text-white" : "text-[var(--sidebar-muted)] group-hover:text-white"
+                    active ? "text-current" : "text-[var(--sidebar-muted)] group-hover:text-sidebar-foreground"
                   )}
                 />
 
@@ -174,7 +174,7 @@ export function Sidebar({
                     className={cn(
                       "px-2 py-0.5 text-[10px] font-bold rounded-full ml-auto",
                       active
-                        ? "bg-black/20 text-white"
+                        ? "bg-black/15 text-current"
                         : "bg-[var(--sidebar-hover)] text-sidebar-foreground border border-sidebar"
                     )}
                   >

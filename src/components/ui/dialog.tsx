@@ -116,7 +116,7 @@ export function DialogContent({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 w-full rounded-2xl bg-[#18181b] text-zinc-100 border border-zinc-800 p-6 shadow-2xl transition-all duration-200 animate-in zoom-in-95",
+          "relative z-50 w-full rounded-2xl bg-card text-card-foreground border border-border p-6 shadow-2xl transition-all duration-200 animate-in zoom-in-95",
           sizeStyles[size],
           className
         )}
@@ -127,7 +127,7 @@ export function DialogContent({
             type="button"
             onClick={() => context.setOpen(false)}
             aria-label="Cerrar modal"
-            className="absolute right-4 top-4 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            className="absolute right-4 top-4 rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <X className="h-4 w-4" />
           </button>
@@ -146,20 +146,20 @@ export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLD
 export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn("text-lg font-bold leading-none tracking-tight text-white", className)}
+      className={cn("text-lg font-bold leading-none tracking-tight text-foreground", className)}
       {...props}
     />
   )
 }
 
 export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-zinc-400 mt-1", className)} {...props} />
+  return <p className={cn("text-sm text-muted-foreground mt-1", className)} {...props} />
 }
 
 export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6 pt-4 border-t border-zinc-800", className)}
+      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6 pt-4 border-t border-border", className)}
       {...props}
     />
   )

@@ -168,11 +168,11 @@ export function ProductModal({
           <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Package className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold">{isEditing ? "Editar Producto en Stock" : "Nuevo Producto en Stock"}</span>
+          <span className="text-foreground font-bold">{isEditing ? "Editar Producto en Stock" : "Nuevo Producto en Stock"}</span>
         </div>
       }
       description={
-        <span className="text-zinc-400 text-xs">
+        <span className="text-muted-foreground text-xs">
           {isEditing
             ? `Modificando características y existencias para: ${activeProduct?.name}`
             : "Completa la información base y los atributos específicos del rubro."}
@@ -182,8 +182,8 @@ export function ProductModal({
       <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto pr-1">
         {/* Section 1: Fixed Base Fields */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <Barcode className="h-4 w-4 text-primary" />
               1. Identificación del Producto
             </h4>
@@ -246,8 +246,8 @@ export function ProductModal({
 
         {/* Section 2: Pricing & Stock */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-emerald-400" />
               2. Precios & Existencias
             </h4>
@@ -299,18 +299,18 @@ export function ProductModal({
 
         {/* Section 3: Dynamic Category-Specific Extra Fields */}
         {activeCategory && activeCategory.dynamicFieldsConfig?.length > 0 && (
-          <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <div className="space-y-4 rounded-2xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center justify-between border-b border-border pb-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                   3. Atributos Específicos: {activeCategory.name}
                 </h4>
               </div>
               <Badge variant="default" size="sm">Dynamic Form Engine</Badge>
             </div>
 
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-muted-foreground">
               Campos autogenerados dinámicamente según la categoría seleccionada (espesor, medidas, talles, voltajes, etc.).
             </p>
 
@@ -327,7 +327,7 @@ export function ProductModal({
         )}
 
         {/* Modal Action Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>

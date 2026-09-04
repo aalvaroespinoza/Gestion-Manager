@@ -15,25 +15,30 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table"
-import { ToastContainer, ToastMessage } from "@/components/ui/toast"
+import { toast } from "sonner"
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner"
 import {
   ProductModal,
   StockAdjustmentModal,
   DeleteProductDialog,
+  KardexModal,
 } from "@/components/modules/inventory"
 import {
   createProduct,
   updateProduct,
   adjustStock,
   deleteProduct,
+  getProductKardex,
 } from "@/modules/inventory/actions"
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
+import { getMockProductKardex } from "@/mocks/inventoryData"
 import {
   Category,
   Product,
   ProductFormData,
   StockAdjustmentType,
   StockStatus,
+  KardexEntry,
 } from "@/types/inventory"
 import {
   Boxes,
@@ -45,6 +50,7 @@ import {
   AlertTriangle,
   DollarSign,
   RefreshCw,
+  History,
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
@@ -94,26 +100,19 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [isKardexOpen, setIsKardexOpen] = useState(false)
+  const [kardexProduct, setKardexProduct] = useState<Product | null>(null)
+  const [kardexMovements, setKardexMovements] = useState<KardexEntry[]>([])
 
-  // Rich Toasts Stack
-  const [toasts, setToasts] = useState<ToastMessage[]>([])
-
-  const addToast = useCallback(
-    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
-      const newToast: ToastMessage = {
-        id: `toast-${Date.now()}-${Math.random()}`,
-        title,
-        description,
-        type,
-      }
-      setToasts((prev) => [...prev, newToast])
+  // Hardware Barcode Scanner integration
+  useBarcodeScanner({
+    onScan: (scannedCode) => {
+      setSearchQuery(scannedCode)
+      toast.info(`Búsqueda por escáner: "${scannedCode}"`, {
+        description: "Filtrando catálogo por código detectado.",
+      })
     },
-    []
-  )
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
+  })
 
   // Keyboard Shortcuts (N / Alt+N -> New Product, Escape -> Close Modals)
   useEffect(() => {
@@ -173,7 +172,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
       })
 
       if (!res.success) {
-        addToast("Error al Actualizar", res.error || "No fue posible guardar los cambios.", "destructive")
+        toast.error("Error al Actualizar", {
+          description: res.error || "No fue posible guardar los cambios.",
+        })
         return
       }
 
@@ -189,11 +190,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
             : p
         )
       )
-      addToast(
-        "Producto Actualizado",
-        `Se guardaron los cambios en base de datos para "${productData.name}".`,
-        "success"
-      )
+      toast.success("Producto Actualizado", {
+        description: `Se guardaron los cambios en base de datos para "${productData.name}".`,
+      })
       router.refresh()
     } else {
       const res = await createProduct({
@@ -209,7 +208,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
       })
 
       if (!res.success) {
-        addToast("Error al Crear Producto", res.error || "No fue posible registrar el producto.", "destructive")
+        toast.error("Error al Crear Producto", {
+          description: res.error || "No fue posible registrar el producto.",
+        })
         return
       }
 
@@ -224,11 +225,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
       }
 
       setProducts((prev) => [newProd, ...prev])
-      addToast(
-        "Producto Creado",
-        `"${productData.name}" ha sido guardado exitosamente con ${productData.stock} unidades.`,
-        "success"
-      )
+      toast.success("Producto Creado", {
+        description: `"${productData.name}" ha sido guardado exitosamente con ${productData.stock} unidades.`,
+      })
       router.refresh()
     }
   }
@@ -257,7 +256,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
     })
 
     if (!res.success) {
-      addToast("Error de Re-Stock", res.error || "No fue posible realizar el ajuste de inventario.", "destructive")
+      toast.error("Error de Re-Stock", {
+        description: res.error || "No fue posible realizar el ajuste de inventario.",
+      })
       return
     }
 
@@ -287,23 +288,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         : `Stock fijado en ${newStock} un.`
 
     if (newStock === 0) {
-      addToast(
-        "⚠️ Producto Agotado",
-        `${affectedProd?.name || "Producto"}: stock en 0 un. tras ajuste (${movement.reason}).`,
-        "destructive"
-      )
+      toast.error("⚠️ Producto Agotado", {
+        description: `${affectedProd?.name || "Producto"}: stock en 0 un. tras ajuste (${movement.reason}).`,
+      })
     } else if (affectedProd && newStock <= affectedProd.minStock) {
-      addToast(
-        "⚠️ Alerta de Stock Bajo",
-        `${affectedProd.name}: ${newStock} un. restantes (Bajo umbral mínimo de ${affectedProd.minStock} un.).`,
-        "warning"
-      )
+      toast.warning("⚠️ Alerta de Stock Bajo", {
+        description: `${affectedProd.name}: ${newStock} un. restantes (Bajo umbral mínimo de ${affectedProd.minStock} un.).`,
+      })
     } else {
-      addToast(
-        "Re-Stock Aplicado con Éxito",
-        `${affectedProd?.name || "Producto"}: ${opLabel}. Nuevo total: ${newStock} un.`,
-        "success"
-      )
+      toast.success("Re-Stock Aplicado con Éxito", {
+        description: `${affectedProd?.name || "Producto"}: ${opLabel}. Nuevo total: ${newStock} un.`,
+      })
     }
 
     router.refresh()
@@ -315,18 +310,34 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
 
     const res = await deleteProduct(productId)
     if (!res.success) {
-      addToast("Error al Eliminar", res.error || "No se pudo eliminar el producto.", "destructive")
+      toast.error("Error al Eliminar", {
+        description: res.error || "No se pudo eliminar el producto.",
+      })
       return
     }
 
     setProducts((prev) => prev.filter((p) => p.id !== productId))
     setDeletingProduct(null)
-    addToast(
-      "Producto Eliminado",
-      `"${prod?.name || productId}" fue removido del catálogo de la base de datos.`,
-      "destructive"
-    )
+    toast.error("Producto Eliminado", {
+      description: `"${prod?.name || productId}" fue removido del catálogo de la base de datos.`,
+    })
     router.refresh()
+  }
+
+  // 4. Open Kardex Traceability Modal
+  const handleOpenKardex = async (prod: Product) => {
+    setKardexProduct(prod)
+    try {
+      const res = await getProductKardex(prod.id)
+      if (res.success && res.data && res.data.length > 0) {
+        setKardexMovements(res.data)
+      } else {
+        setKardexMovements(getMockProductKardex(prod))
+      }
+    } catch {
+      setKardexMovements(getMockProductKardex(prod))
+    }
+    setIsKardexOpen(true)
   }
 
   // --- Reset All Filters ---
@@ -391,12 +402,16 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         { key: "status", label: "Estado", format: (v) => (v === "IN_STOCK" ? "En Stock" : v === "LOW_STOCK" ? "Stock Bajo" : "Agotado") },
       ]
     )
-    addToast("Exportación Completada", "Archivo CSV generado con BOM UTF-8 y delimitador ';' descargado con éxito.", "info")
+    toast.info("Exportación Completada", {
+      description: "Archivo CSV generado con BOM UTF-8 y delimitador ';' descargado con éxito.",
+    })
   }
 
   const handleExportJSON = () => {
     exportToJSON("inventario_stock_gestion_manager", filteredProducts)
-    addToast("Exportación JSON", "Catálogo exportado en formato estructurado JSON.", "info")
+    toast.info("Exportación JSON", {
+      description: "Catálogo exportado en formato estructurado JSON.",
+    })
   }
 
   // --- Pagination Slice ---
@@ -416,30 +431,29 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Rich Toasts Floating Stack */}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      {/* Header & New Product Action */}
 
       {/* Header & New Product Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
             <Boxes className="h-8 w-8 text-primary" />
             Control de Stock & Inventario
           </h1>
-          <p className="text-sm text-zinc-400 mt-1 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Gestión completa de existencias, atributos técnicos, re-stock rápido y base de datos en tiempo real.
           </p>
         </div>
 
         {/* Actions: Export & New Product */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-[#18181b] border border-zinc-800 rounded-xl p-1 shadow-xs">
+          <div className="flex items-center gap-1 bg-card border border-border rounded-xl p-1 shadow-xs">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleExportCSV}
-              leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />}
-              className="h-8 text-xs font-semibold text-zinc-300 hover:text-white cursor-pointer"
+              leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />}
+              className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
               title="Descargar tabla en formato Excel CSV"
             >
               CSV
@@ -449,7 +463,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
               size="sm"
               onClick={handleExportJSON}
               leftIcon={<FileJson className="h-3.5 w-3.5 text-primary" />}
-              className="h-8 text-xs font-semibold text-zinc-300 hover:text-white cursor-pointer"
+              className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
               title="Descargar catálogo en formato JSON"
             >
               JSON
@@ -475,9 +489,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
 
       {/* KPI Cards Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-primary/40 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Total de Productos
             </CardTitle>
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
@@ -485,67 +499,67 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
-              {totalItemsCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
+            <div className="text-2xl font-black font-mono tabular-nums text-foreground">
+              {totalItemsCount} <span className="text-sm font-sans font-medium text-muted-foreground">ítems</span>
             </div>
-            <p className="text-xs text-zinc-400 font-medium mt-1">
+            <p className="text-xs text-muted-foreground font-medium mt-1">
               {totalUnitsInStock} unidades físicas en bodega
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-primary/40 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Valor Total Estimado
             </CardTitle>
-            <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
               <DollarSign className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black font-mono tabular-nums text-foreground">
               ${totalValuationEstimated.toLocaleString("es-CL")}
             </div>
-            <p className="text-xs text-emerald-400 font-bold mt-1">
+            <p className="text-xs text-emerald-500 font-bold mt-1 font-mono tabular-nums">
               Venta est.: ${totalSaleValuation.toLocaleString("es-CL")}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-primary/40 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Stock Crítico / Bajo
             </CardTitle>
-            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30">
               <AlertTriangle className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-amber-400">
-              {lowStockCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
+            <div className="text-2xl font-black font-mono tabular-nums text-amber-500">
+              {lowStockCount} <span className="text-sm font-sans font-medium text-muted-foreground">ítems</span>
             </div>
-            <p className="text-xs text-zinc-400 font-medium mt-1">
+            <p className="text-xs text-muted-foreground font-medium mt-1">
               Bajo el umbral mínimo de seguridad
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-primary/40 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Productos Agotados
             </CardTitle>
-            <div className="p-2 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30">
+            <div className="p-2 rounded-xl bg-red-500/15 text-red-500 border border-red-500/30">
               <Boxes className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-red-400">
-              {outOfStockCount} <span className="text-sm font-medium text-zinc-400">ítems</span>
+            <div className="text-2xl font-black font-mono tabular-nums text-red-500">
+              {outOfStockCount} <span className="text-sm font-sans font-medium text-muted-foreground">ítems</span>
             </div>
-            <p className="text-xs text-zinc-400 font-medium mt-1">
+            <p className="text-xs text-muted-foreground font-medium mt-1">
               Existencias en 0 un. (Sin stock)
             </p>
           </CardContent>
@@ -621,7 +635,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         <CardContent className="p-0">
           <Table className="border-0 rounded-none">
             <TableHeader>
-              <TableRow>
+              <TableRow className="divide-x divide-border/80 border-b-2 border-border bg-muted/60">
                 {/* Sortable Column: Código */}
                 <TableHead
                   onClick={() => handleSort("code")}
@@ -709,13 +723,13 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                 <TableRow>
                   <TableCell colSpan={8} className="py-16 text-center">
                     <div className="max-w-sm mx-auto space-y-3">
-                      <div className="h-12 w-12 rounded-2xl bg-zinc-900 text-zinc-400 mx-auto flex items-center justify-center border border-zinc-800">
+                      <div className="h-12 w-12 rounded-2xl bg-muted text-muted-foreground mx-auto flex items-center justify-center border border-border">
                         <Search className="h-6 w-6" />
                       </div>
-                      <h4 className="font-bold text-white text-sm">
+                      <h4 className="font-bold text-foreground text-sm">
                         No se encontraron productos coincidentes
                       </h4>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-muted-foreground">
                         No hay registros que cumplan con los criterios de búsqueda o filtros seleccionados.
                       </p>
                       <Button
@@ -737,19 +751,19 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                   const isOut = product.status === "OUT_OF_STOCK"
 
                   return (
-                    <TableRow key={product.id} className="hover:bg-zinc-800/60 transition-colors">
+                    <TableRow key={product.id} className="hover:bg-muted/50 transition-colors divide-x divide-border/60 even:bg-muted/15">
                       {/* Código */}
-                      <TableCell className="font-mono text-xs font-medium text-primary">
+                      <TableCell className="font-mono tabular-nums text-xs font-medium text-primary">
                         {product.code}
                       </TableCell>
 
                       {/* Producto */}
                       <TableCell className="max-w-xs">
-                        <div className="font-bold text-sm text-white line-clamp-1">
+                        <div className="font-bold text-sm text-foreground line-clamp-1">
                           {product.name}
                         </div>
                         {product.description && (
-                          <div className="text-[11px] text-zinc-400 line-clamp-1 font-normal">
+                          <div className="text-[11px] text-muted-foreground line-clamp-1 font-normal">
                             {product.description}
                           </div>
                         )}
@@ -757,7 +771,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
 
                       {/* Categoría */}
                       <TableCell>
-                        <span className="text-xs text-zinc-300 font-medium">
+                        <span className="text-xs text-muted-foreground font-medium">
                           {category?.name || product.categoryName || "General"}
                         </span>
                       </TableCell>
@@ -777,9 +791,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                             return (
                               <span
                                 key={key}
-                                className="inline-flex items-center text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 font-medium"
+                                className="inline-flex items-center text-[10px] bg-muted/60 border border-border px-1.5 py-0.5 rounded text-foreground/80 font-medium"
                               >
-                                <strong className="capitalize mr-1 text-zinc-400">{key}:</strong>
+                                <strong className="capitalize mr-1 text-muted-foreground">{key}:</strong>
                                 {String(val)}
                               </span>
                             )
@@ -788,30 +802,30 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                       </TableCell>
 
                       {/* Precio Venta */}
-                      <TableCell className="text-right">
-                        <div className="font-extrabold text-sm text-white">
+                      <TableCell className="text-right font-mono tabular-nums">
+                        <div className="font-extrabold text-sm text-foreground">
                           ${product.salePrice.toLocaleString("es-CL")}
                         </div>
-                        <div className="text-[10px] text-zinc-500 font-medium">
+                        <div className="text-[10px] text-muted-foreground font-medium">
                           Costo: ${product.costPrice.toLocaleString("es-CL")}
                         </div>
                       </TableCell>
 
                       {/* Stock */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center font-mono tabular-nums">
                         <div className="flex flex-col items-center">
                           <span
                             className={`font-black text-sm ${
                               isOut
-                                ? "text-red-400"
+                                ? "text-red-500"
                                 : isLow
-                                ? "text-amber-400"
-                                : "text-white"
+                                ? "text-amber-500"
+                                : "text-foreground"
                             }`}
                           >
                             {product.stock} un.
                           </span>
-                          <span className="text-[10px] text-zinc-500 font-medium">Mín: {product.minStock}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">Mín: {product.minStock}</span>
                         </div>
                       </TableCell>
 
@@ -839,6 +853,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                       {/* Acciones */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Kardex Inmutable Button */}
+                          <button
+                            type="button"
+                            title="Ver Kardex y Trazabilidad Inmutable"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 border border-sky-500/30 transition-colors cursor-pointer"
+                            onClick={() => handleOpenKardex(product)}
+                          >
+                            <History className="h-3.5 w-3.5" />
+                            <span>Kardex</span>
+                          </button>
+
                           {/* Re-stock Button */}
                           <button
                             type="button"
@@ -857,7 +882,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                           <button
                             type="button"
                             title="Editar Producto Completo"
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                             onClick={() => {
                               setEditingProduct(product)
                               setIsProductModalOpen(true)
@@ -870,7 +895,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                           <button
                             type="button"
                             title="Eliminar del Catálogo"
-                            className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors cursor-pointer"
                             onClick={() => setDeletingProduct(product)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -885,18 +910,18 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
           </Table>
 
           {/* Pagination Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-zinc-800 text-xs text-zinc-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-border text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <span>Mostrando</span>
-              <span className="font-bold text-white">
+              <span className="font-bold text-foreground font-mono tabular-nums">
                 {filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
               </span>
               <span>a</span>
-              <span className="font-bold text-white">
+              <span className="font-bold text-foreground font-mono tabular-nums">
                 {Math.min(currentPage * itemsPerPage, filteredProducts.length)}
               </span>
               <span>de</span>
-              <span className="font-bold text-white">
+              <span className="font-bold text-foreground font-mono tabular-nums">
                 {filteredProducts.length}
               </span>
               <span>productos</span>
@@ -914,7 +939,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                 Anterior
               </Button>
 
-              <span className="px-3 py-1 font-bold text-white">
+              <span className="px-3 py-1 font-bold text-foreground font-mono tabular-nums">
                 Página {currentPage} de {totalPages}
               </span>
 
@@ -954,6 +979,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         }}
         product={adjustingProduct}
         onConfirm={handleConfirmStockAdjustment}
+      />
+
+      {/* Kardex Traceability Modal */}
+      <KardexModal
+        isOpen={isKardexOpen}
+        onClose={() => {
+          setIsKardexOpen(false)
+          setKardexProduct(null)
+        }}
+        product={kardexProduct}
+        movements={kardexMovements}
       />
 
       {/* Delete Confirmation Modal */}

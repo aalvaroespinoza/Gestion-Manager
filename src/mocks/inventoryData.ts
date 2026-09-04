@@ -368,3 +368,166 @@ export const mockProducts: Product[] = [
     createdAt: "2026-08-11T12:00:00Z",
   },
 ]
+
+import { KardexEntry } from "@/types/inventory"
+
+export const mockKardexMovements: Record<string, KardexEntry[]> = {
+  "prod-1": [
+    {
+      id: "kardex-1-1",
+      productId: "prod-1",
+      productName: "Perfil Metalcom Montante 60x38x0.85mm 6m",
+      productCode: "PER-MET-6038",
+      type: "INITIAL_BALANCE",
+      quantity: 100,
+      previousStock: 0,
+      newStock: 100,
+      unitCost: 2850,
+      totalCost: 285000,
+      referenceType: "INITIAL_BALANCE",
+      referenceId: "APERTURA-2026",
+      reason: "Inventario físico de apertura de sucursal",
+      userName: "Administrador Central",
+      createdAt: "2026-08-01T08:00:00Z",
+    },
+    {
+      id: "kardex-1-2",
+      productId: "prod-1",
+      productName: "Perfil Metalcom Montante 60x38x0.85mm 6m",
+      productCode: "PER-MET-6038",
+      type: "PURCHASE_IN",
+      quantity: 50,
+      previousStock: 100,
+      newStock: 150,
+      unitCost: 2850,
+      totalCost: 142500,
+      referenceType: "PURCHASE_ORDER",
+      referenceId: "OC-2026-0089",
+      reason: "Recepción de mercadería Proveedor Cintac",
+      userName: "Jefe de Depósito",
+      createdAt: "2026-08-15T10:30:00Z",
+    },
+    {
+      id: "kardex-1-3",
+      productId: "prod-1",
+      productName: "Perfil Metalcom Montante 60x38x0.85mm 6m",
+      productCode: "PER-MET-6038",
+      type: "SALE_OUT",
+      quantity: -80,
+      previousStock: 150,
+      newStock: 70,
+      unitCost: 2850,
+      totalCost: 228000,
+      referenceType: "SALE",
+      referenceId: "INV-000185",
+      reason: "Venta Mayorista Constructora Andina",
+      userName: "Cajero Mostrador 01",
+      createdAt: "2026-08-28T16:15:00Z",
+    },
+    {
+      id: "kardex-1-4",
+      productId: "prod-1",
+      productName: "Perfil Metalcom Montante 60x38x0.85mm 6m",
+      productCode: "PER-MET-6038",
+      type: "SALE_OUT",
+      quantity: -25,
+      previousStock: 70,
+      newStock: 45,
+      unitCost: 2850,
+      totalCost: 71250,
+      referenceType: "SALE",
+      referenceId: "INV-000234",
+      reason: "Venta mostrador ticket rápido",
+      userName: "Cajero Mostrador 01",
+      createdAt: "2026-09-02T11:45:00Z",
+    },
+  ],
+  "prod-7": [
+    {
+      id: "kardex-7-1",
+      productId: "prod-7",
+      productName: "Cemento Especial Bío Bío 25kg",
+      productCode: "CEM-BIO-25KG",
+      type: "INITIAL_BALANCE",
+      quantity: 80,
+      previousStock: 0,
+      newStock: 80,
+      unitCost: 3800,
+      totalCost: 304000,
+      referenceType: "INITIAL_BALANCE",
+      referenceId: "APERTURA-2026",
+      reason: "Inventario inicial de bodega",
+      userName: "Administrador Central",
+      createdAt: "2026-08-01T08:00:00Z",
+    },
+    {
+      id: "kardex-7-2",
+      productId: "prod-7",
+      productName: "Cemento Especial Bío Bío 25kg",
+      productCode: "CEM-BIO-25KG",
+      type: "SALE_OUT",
+      quantity: -80,
+      previousStock: 80,
+      newStock: 0,
+      unitCost: 3800,
+      totalCost: 304000,
+      referenceType: "SALE",
+      referenceId: "INV-000192",
+      reason: "Despacho de pallet completo a obra",
+      userName: "Cajero Mostrador 02",
+      createdAt: "2026-08-25T14:20:00Z",
+    },
+  ],
+}
+
+export function getMockProductKardex(product: Product): KardexEntry[] {
+  if (mockKardexMovements[product.id]) {
+    return mockKardexMovements[product.id]
+  }
+
+  // Generador dinámico verosímil para cualquier producto
+  const initialQty = Math.max(product.stock + 10, product.minStock * 2, 20)
+  const soldQty = initialQty - product.stock
+
+  const list: KardexEntry[] = [
+    {
+      id: `kardex-${product.id}-init`,
+      productId: product.id,
+      productName: product.name,
+      productCode: product.code,
+      type: "INITIAL_BALANCE",
+      quantity: initialQty,
+      previousStock: 0,
+      newStock: initialQty,
+      unitCost: product.costPrice,
+      totalCost: initialQty * product.costPrice,
+      referenceType: "INITIAL_BALANCE",
+      referenceId: "APERTURA-2026",
+      reason: "Saldo inicial certificado de inventario",
+      userName: "Administrador",
+      createdAt: product.createdAt || "2026-08-01T08:00:00Z",
+    },
+  ]
+
+  if (soldQty > 0) {
+    list.push({
+      id: `kardex-${product.id}-sale`,
+      productId: product.id,
+      productName: product.name,
+      productCode: product.code,
+      type: "SALE_OUT",
+      quantity: -soldQty,
+      previousStock: initialQty,
+      newStock: product.stock,
+      unitCost: product.costPrice,
+      totalCost: soldQty * product.costPrice,
+      referenceType: "SALE",
+      referenceId: "INV-000210",
+      reason: "Ventas acumuladas en mostrador",
+      userName: "Cajero de Turno",
+      createdAt: "2026-09-01T15:30:00Z",
+    })
+  }
+
+  return list
+}

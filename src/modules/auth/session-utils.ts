@@ -3,9 +3,14 @@ import { getSession } from '@/lib/session'
 import { AuthUser, SessionPayload, UserRole } from './types'
 
 /**
- * Returns the current authenticated session payload (from headers or session cookie)
+ * Returns the current authenticated session payload (prioritizing cryptographically verified JWT cookie)
  */
 export async function getCurrentSession(): Promise<SessionPayload | null> {
+  const cookieSession = await getSession()
+  if (cookieSession && cookieSession.tenantId && cookieSession.userId) {
+    return cookieSession
+  }
+
   try {
     const headerList = await headers()
     const tenantId = headerList.get('x-tenant-id')
@@ -22,10 +27,10 @@ export async function getCurrentSession(): Promise<SessionPayload | null> {
       }
     }
   } catch {
-    // headers() might not be available in all contexts, fallback to cookie
+    // headers() might not be available in all contexts
   }
 
-  return await getSession()
+  return null
 }
 
 /**

@@ -121,7 +121,7 @@ export function UserProfileModal({
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/30">
             <User className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold">Mi Perfil de Usuario</span>
+          <span className="text-foreground font-bold">Mi Perfil de Usuario</span>
         </div>
       }
       description="Gestiona tu información personal, datos de contacto y credenciales de acceso."
@@ -144,7 +144,7 @@ export function UserProfileModal({
         )}
 
         {/* User Avatar Card Header */}
-        <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center gap-4">
+        <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center gap-4">
           <div className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shadow-md">
             {formData.name
               .split(" ")
@@ -155,14 +155,14 @@ export function UserProfileModal({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h4 className="font-bold text-white text-sm">
+              <h4 className="font-bold text-foreground text-sm">
                 {formData.name}
               </h4>
               <Badge variant="success" size="sm" dot>
                 {formData.role}
               </Badge>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+            <p className="text-xs text-muted-foreground mt-0.5 font-medium">
               {formData.email} • {formData.position}
             </p>
           </div>
@@ -170,7 +170,7 @@ export function UserProfileModal({
 
         {/* Personal Details Section */}
         <div className="space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center gap-1.5">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1.5 flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-primary" />
             Información Personal & Contacto
           </h4>
@@ -212,8 +212,8 @@ export function UserProfileModal({
 
         {/* Change Password Section */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+          <div className="flex items-center justify-between border-b border-border pb-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <KeyRound className="h-4 w-4 text-primary" />
               Cambio de Contraseña (Opcional)
             </h4>
@@ -258,7 +258,7 @@ export function UserProfileModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>

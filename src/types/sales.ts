@@ -14,6 +14,10 @@ export interface CartItem {
   costPrice: number
   quantity: number
   stock: number
+  discountRate?: number
+  discountAmount?: number
+  taxRate?: number
+  taxAmount?: number
   subtotal: number
   customAttributes?: Record<string, any>
 }
@@ -60,4 +64,45 @@ export interface InvoiceData {
   cashierName: string
   branchName: string
   notes?: string
+}
+
+export type QuoteStatus =
+  | "DRAFT"
+  | "SENT"
+  | "APPROVED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "CONVERTED_TO_SALE"
+
+export interface QuoteItemData {
+  id?: string
+  productId: string
+  productCode?: string
+  productName: string
+  quantity: number
+  unitPrice: number
+  unitCost?: number
+  discountPercent?: number
+  taxRatePercent?: number
+  subtotal: number
+}
+
+export interface QuoteData {
+  id: string
+  quoteNumber: string
+  date: string
+  validUntil?: string
+  clientId?: string
+  clientName?: string
+  clientDoc?: string
+  clientTaxCondition?: string
+  items: QuoteItemData[]
+  subtotal: number
+  tax: number
+  discount: number
+  total: number
+  status: QuoteStatus
+  notes?: string
+  saleId?: string | null
+  creatorName?: string
 }

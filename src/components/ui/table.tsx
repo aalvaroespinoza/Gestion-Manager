@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-x-auto rounded-2xl border border-zinc-800 bg-[#18181b] shadow-sm">
+    <div className="relative w-full overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
       <table
         ref={ref}
         className={cn("w-full caption-bottom text-sm text-left border-collapse", className)}
@@ -18,7 +18,7 @@ export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLA
   ({ className, ...props }, ref) => (
     <thead
       ref={ref}
-      className={cn("bg-[#18181b] border-b border-zinc-800 text-xs uppercase tracking-wider font-semibold text-zinc-400", className)}
+      className={cn("bg-card border-b border-border text-xs uppercase tracking-wider font-semibold text-muted-foreground", className)}
       {...props}
     />
   )
@@ -29,7 +29,7 @@ export const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAtt
   ({ className, ...props }, ref) => (
     <tbody
       ref={ref}
-      className={cn("divide-y divide-zinc-800/80 bg-[#18181b]", className)}
+      className={cn("divide-y divide-border/80 bg-card", className)}
       {...props}
     />
   )
@@ -40,7 +40,7 @@ export const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLA
   ({ className, ...props }, ref) => (
     <tfoot
       ref={ref}
-      className={cn("bg-zinc-900/90 font-medium text-zinc-200 border-t border-zinc-800", className)}
+      className={cn("bg-muted/50 font-medium text-foreground border-t border-border", className)}
       {...props}
     />
   )
@@ -52,7 +52,7 @@ export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttribut
     <tr
       ref={ref}
       className={cn(
-        "transition-colors duration-150 text-zinc-200 hover:bg-zinc-800/60 border-b border-zinc-800/80 data-[state=selected]:bg-primary/10",
+        "transition-colors duration-150 text-foreground hover:bg-muted/50 border-b border-border/80 data-[state=selected]:bg-primary/10",
         className
       )}
       {...props}
@@ -66,7 +66,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
     <th
       ref={ref}
       className={cn(
-        "h-11 px-4 text-left align-middle font-semibold text-zinc-400 text-xs uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
+        "h-10 px-3 text-left align-middle font-semibold text-muted-foreground text-xs uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -75,11 +75,19 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
 )
 TableHead.displayName = "TableHead"
 
-export const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => (
+export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  compact?: boolean
+}
+
+export const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
+  ({ className, compact = false, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn("p-4 align-middle text-zinc-200 [&:has([role=checkbox])]:pr-0", className)}
+      className={cn(
+        compact ? "py-1.5 px-3 text-xs" : "p-3.5",
+        "align-middle text-foreground [&:has([role=checkbox])]:pr-0",
+        className
+      )}
       {...props}
     />
   )
@@ -90,7 +98,7 @@ export const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTML
   ({ className, ...props }, ref) => (
     <caption
       ref={ref}
-      className={cn("mt-4 text-xs text-zinc-500 italic text-center p-2", className)}
+      className={cn("mt-4 text-xs text-muted-foreground italic text-center p-2", className)}
       {...props}
     />
   )
@@ -100,7 +108,7 @@ TableCaption.displayName = "TableCaption"
 export function TableEmpty({ colSpan, message = "No se encontraron registros." }: { colSpan: number; message?: string }) {
   return (
     <TableRow>
-      <TableCell colSpan={colSpan} className="h-32 text-center text-zinc-400">
+      <TableCell colSpan={colSpan} className="h-32 text-center text-muted-foreground">
         <div className="flex flex-col items-center justify-center gap-2">
           <p className="text-sm font-medium">{message}</p>
         </div>
