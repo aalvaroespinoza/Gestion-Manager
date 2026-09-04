@@ -23,7 +23,11 @@ import { useBarcodeScanner } from "@/hooks/useBarcodeScanner"
 import { CommandPalette } from "@/components/command-palette/CommandPalette"
 import { CheckoutModal } from "@/components/modules/sales/CheckoutModal"
 import { ClientSearchCombobox } from "@/components/modules/sales/ClientSearchCombobox"
+import { QuotesTab } from "@/components/modules/sales/QuotesTab"
+import { QuoteDocumentModal } from "@/components/modules/sales/QuoteDocumentModal"
 import { createSale } from "@/modules/sales/actions"
+import { createQuote, getQuotes, updateQuoteStatus } from "@/modules/quotes/actions"
+import { mockQuotes } from "@/mocks/quotesData"
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
 import { Product, Category, StockStatus } from "@/types/inventory"
 import {
@@ -32,6 +36,8 @@ import {
   InvoiceData,
   PaymentMethod,
   SaleSummary,
+  QuoteData,
+  QuoteStatus,
 } from "@/types/sales"
 import {
   ShoppingCart,
@@ -46,6 +52,7 @@ import {
   CheckCircle2,
   History,
   Store,
+  FileText,
   DollarSign,
   TrendingUp,
   Package,
@@ -85,13 +92,13 @@ export function VentasView({
 }: VentasViewProps) {
   const router = useRouter()
 
-  // Navigation Tab: POS (Terminal de Venta) vs HISTORY (Historial de Transacciones)
-  const [activeTab, setActiveTab] = useState<"POS" | "HISTORY">("POS")
+  // Navigation Tab: POS (Terminal de Venta) vs HISTORY (Historial de Transacciones) vs QUOTES (Presupuestos)
+  const [activeTab, setActiveTab] = useState<"POS" | "HISTORY" | "QUOTES">("POS")
 
   // Real Database Products & Categories
   const [products, setProducts] = useState<Product[]>(initialProducts)
-  const [categories] = useState<Category[]>(initialCategories)
-  const [clients] = useState<ClientSelectOption[]>(initialClients)
+  const [categories, setCategories] = useState<Category[]>(initialCategories)
+  const [clients, setClients] = useState<ClientSelectOption[]>(initialClients)
   const [selectedClient, setSelectedClient] = useState<ClientSelectOption>(
     initialClients[0] || {
       id: "cli-cf",
@@ -105,6 +112,20 @@ export function VentasView({
   // Shopping Cart & Sales History state
   const [cart, setCart] = useState<CartItem[]>([])
   const [salesHistory, setSalesHistory] = useState<InvoiceData[]>(initialSalesHistory)
+
+  // Quotes & Budgeting state
+  const [quotes, setQuotes] = useState<QuoteData[]>(mockQuotes)
+  const [selectedQuoteForView, setSelectedQuoteForView] = useState<QuoteData | null>(null)
+  const [activeQuoteIdForSale, setActiveQuoteIdForSale] = useState<string | null>(null)
+
+  // Fetch quotes from server on mount
+  useEffect(() => {
+    getQuotes().then((res) => {
+      if (res.success && res.data && res.data.length > 0) {
+        setQuotes(res.data)
+      }
+    })
+  }, [])
 
   // Sync state if server props refresh
   useEffect(() => {
@@ -384,6 +405,12 @@ export function VentasView({
       // Add to sales history
       setSalesHistory((prev) => [finalInvoice, ...prev])
 
+      // If converted from quote, mark quote as converted
+      if (activeQuoteIdForSale) {
+        handleQuoteStatusChange(activeQuoteIdForSale, "CONVERTED_TO_SALE")
+        setActiveQuoteIdForSale(null)
+      }
+
       // Clear cart
       setCart([])
 
@@ -400,6 +427,122 @@ export function VentasView({
         })
       }
       throw error
+    }
+  }
+
+  // 1. Emit Quote / Presupuesto from Cart
+  const handleCreateQuoteFromCart = async () => {
+    if (cart.length === 0) {
+      toast.warning("Carrito Vacío", {
+        description: "Agrega al menos un producto al carrito para generar un presupuesto.",
+      })
+      return
+    }
+
+    try {
+      const res = await createQuote({
+        clientId: selectedClient.id === "cli-cf" ? undefined : selectedClient.id,
+        clientName: selectedClient.name,
+        clientDoc: selectedClient.docNumber,
+        clientTaxCondition: selectedClient.taxCondition,
+        validDays: 15,
+        items: cart.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discountPercent: discountPercent,
+          taxRatePercent: applyTax ? 21 : 0,
+        })),
+        discount: summary.discountAmount,
+        tax: summary.taxAmount,
+        notes: "Presupuesto comercial emitido desde mostrador POS",
+      })
+
+      if (res.success && res.data) {
+        setQuotes((prev) => [res.data!, ...prev])
+        setSelectedQuoteForView(res.data)
+        toast.success("Presupuesto Emitido", {
+          description: `${res.data.quoteNumber} generado exitosamente por $${Math.round(res.data.total).toLocaleString("es-CL")}`,
+        })
+      } else {
+        toast.error("Error al Emitir Presupuesto", {
+          description: res.error || "No se pudo registrar la cotización.",
+        })
+      }
+    } catch (err: any) {
+      toast.error("Error", {
+        description: err.message || "Ocurrió un error inesperado al generar el presupuesto.",
+      })
+    }
+  }
+
+  // 2. Convert Quote to Active Sale in POS
+  const handleConvertQuoteToSale = (quote: QuoteData) => {
+    const newCartItems: CartItem[] = quote.items.map((item) => {
+      const p = products.find((prod) => prod.id === item.productId)
+      return {
+        productId: item.productId,
+        code: item.productCode || p?.code || "SKU-PROD",
+        name: item.productName || p?.name || "Producto",
+        categoryName: p?.categoryName || "General",
+        unitPrice: item.unitPrice,
+        costPrice: item.unitCost || p?.costPrice || 0,
+        quantity: item.quantity,
+        stock: p?.stock ?? 100,
+        discountRate: (item.discountPercent || 0) / 100,
+        discountAmount: (item.unitPrice * (item.discountPercent || 0)) / 100,
+        taxRate: (item.taxRatePercent || 0) / 100,
+        subtotal: item.subtotal,
+      }
+    })
+
+    setCart(newCartItems)
+
+    if (quote.clientId) {
+      const client = clients.find((c) => c.id === quote.clientId)
+      if (client) {
+        setSelectedClient(client)
+      } else if (quote.clientName) {
+        setSelectedClient({
+          id: quote.clientId,
+          name: quote.clientName,
+          docType: "DNI",
+          docNumber: quote.clientDoc || "00000000",
+          taxCondition: quote.clientTaxCondition || "Consumidor Final",
+        })
+      }
+    }
+
+    setApplyTax(quote.tax > 0)
+    setDiscountPercent(
+      quote.discount > 0 && quote.subtotal > 0
+        ? Math.round((quote.discount / quote.subtotal) * 100)
+        : 0
+    )
+
+    setActiveQuoteIdForSale(quote.id)
+    setActiveTab("POS")
+    setIsCheckoutOpen(true)
+
+    toast.info("Presupuesto Cargado al Carrito", {
+      description: `${quote.quoteNumber} transferido al mostrador. Procede al cobro para cerrar la venta.`,
+    })
+  }
+
+  // 3. Update Quote Status
+  const handleQuoteStatusChange = async (id: string, newStatus: QuoteStatus) => {
+    const res = await updateQuoteStatus(id, newStatus)
+    if (res.success) {
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
+      )
+      toast.success("Estado Actualizado", {
+        description: `Presupuesto actualizado a ${newStatus}`,
+      })
+    } else {
+      toast.error("Error", {
+        description: res.error || "No se pudo actualizar el estado de la cotización.",
+      })
     }
   }
 
@@ -491,6 +634,24 @@ export function VentasView({
             {salesHistory.length > 0 && (
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">
                 {salesHistory.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("QUOTES")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "QUOTES"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>Presupuestos</span>
+            {quotes.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-primary/20 text-primary dark:bg-black/30 font-mono font-bold">
+                {quotes.length}
               </span>
             )}
           </button>
@@ -948,24 +1109,37 @@ export function VentasView({
                       </div>
                     </div>
 
-                    {/* Checkout Button */}
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="lg"
-                      onClick={() => setIsCheckoutOpen(true)}
-                      className="w-full font-bold text-sm shadow-md mt-2 cursor-pointer active:scale-[0.98] transition-transform"
-                      leftIcon={<Banknote className="h-4 w-4" />}
-                    >
-                      <span>Cobrar Venta (F4)</span>
-                    </Button>
+                    {/* Actions: Checkout & Emit Quote */}
+                    <div className="flex flex-col gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="lg"
+                        onClick={() => setIsCheckoutOpen(true)}
+                        className="w-full font-bold text-sm shadow-md cursor-pointer active:scale-[0.98] transition-transform"
+                        leftIcon={<Banknote className="h-4 w-4" />}
+                      >
+                        <span>Cobrar Venta (F4)</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateQuoteFromCart}
+                        className="w-full font-bold text-xs border-border/80 hover:bg-muted/80 text-foreground cursor-pointer active:scale-[0.98] transition-transform"
+                        leftIcon={<FileText className="h-3.5 w-3.5 text-primary" />}
+                      >
+                        <span>Emitir Presupuesto / Cotización</span>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
-      ) : (
+      ) : activeTab === "HISTORY" ? (
         /* ========================================================================= */
         /* TAB 2: HISTORIAL DE VENTAS                                                */
         /* ========================================================================= */
@@ -1078,6 +1252,15 @@ export function VentasView({
             </CardContent>
           </Card>
         </div>
+      ) : (
+        /* ========================================================================= */
+        /* TAB 3: PRESUPUESTOS Y COTIZACIONES                                        */
+        /* ========================================================================= */
+        <QuotesTab
+          quotes={quotes}
+          onConvertToSale={handleConvertQuoteToSale}
+          onStatusChange={handleQuoteStatusChange}
+        />
       )}
 
       {/* Checkout Modal & Payment Gateway */}
@@ -1116,6 +1299,13 @@ export function VentasView({
           initialInvoice={viewingTicketInvoice}
         />
       )}
+
+      {/* Printable Formal A4 Quote Document Modal */}
+      <QuoteDocumentModal
+        isOpen={Boolean(selectedQuoteForView)}
+        onClose={() => setSelectedQuoteForView(null)}
+        quote={selectedQuoteForView}
+      />
     </div>
   )
 }

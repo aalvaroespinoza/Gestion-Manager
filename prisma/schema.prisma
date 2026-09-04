@@ -75,6 +75,27 @@ enum ClientPaymentMethod {
   CHECK
 }
 
+enum StockMovementType {
+  INITIAL_BALANCE
+  PURCHASE_IN
+  SALE_OUT
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT_ADD
+  ADJUSTMENT_SUB
+  RETURN_IN
+  RETURN_OUT
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+  CONVERTED_TO_SALE
+}
+
 model Tenant {
   id             String          @id @default(cuid())
   name           String
@@ -96,6 +117,8 @@ model Tenant {
   purchaseOrders PurchaseOrder[]
   counters       TenantCounter[]
   clientPayments ClientPayment[]
+  stockMovements StockMovement[]
+  quotes         Quote[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -120,6 +143,7 @@ model User {
   auditLogs      AuditLog[]
   purchaseOrders PurchaseOrder[]
   clientPayments ClientPayment[]
+  quotes         Quote[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -165,6 +189,8 @@ model Product {
 
   saleItems          SaleItem[]
   purchaseOrderItems PurchaseOrderItem[]
+  stockMovements     StockMovement[]
+  quoteItems         QuoteItem[]
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -190,6 +216,7 @@ model Client {
 
   sales       Sale[]
   payments    ClientPayment[]
+  quotes      Quote[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -211,6 +238,8 @@ model Sale {
 
   cashShiftId   String?
   cashShift     CashShift?    @relation(fields: [cashShiftId], references: [id], onDelete: SetNull)
+
+  quote         Quote?
 
   invoiceNumber String        // Sequential receipt/invoice folio
   subtotal      Decimal       @db.Decimal(12, 2)
@@ -427,6 +456,93 @@ model ClientPayment {
   @@index([userId])
   @@index([cashShiftId])
   @@index([createdAt])
+}
+
+// Kardex / Libro Mayor Inmutable de Inventario (Append-Only)
+model StockMovement {
+  id            String            @id @default(cuid())
+  tenantId      String
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  productId     String
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  type          StockMovementType
+  quantity      Decimal           @db.Decimal(12, 3) // Positivo (Entrada/Ajuste +) o Negativo (Salida/Venta -)
+  previousStock Decimal           @db.Decimal(12, 3)
+  newStock      Decimal           @db.Decimal(12, 3)
+  unitCost      Decimal           @db.Decimal(12, 2)
+  totalCost     Decimal           @db.Decimal(12, 2)
+
+  referenceType String?           // "SALE", "PURCHASE_ORDER", "MANUAL_ADJUSTMENT", "INITIAL_BALANCE"
+  referenceId   String?           // invoiceNumber, orderNumber, adjustRef
+  reason        String?
+  userId        String?
+
+  createdAt     DateTime          @default(now())
+
+  @@index([tenantId])
+  @@index([productId])
+  @@index([tenantId, createdAt])
+}
+
+// Presupuestos y Cotizaciones
+model Quote {
+  id          String       @id @default(cuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  clientId    String?
+  client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  quoteNumber String       // Folio secuencial (ej. PRES-00001)
+  validUntil  DateTime?
+  subtotal    Decimal      @db.Decimal(12, 2)
+  tax         Decimal      @default(0) @db.Decimal(12, 2)
+  discount    Decimal      @default(0) @db.Decimal(12, 2)
+  total       Decimal      @db.Decimal(12, 2)
+  status      QuoteStatus  @default(DRAFT)
+  notes       String?
+
+  saleId      String?      @unique // Vinculación si se convierte en venta
+  sale        Sale?        @relation(fields: [saleId], references: [id], onDelete: SetNull)
+
+  items       QuoteItem[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([tenantId, quoteNumber])
+  @@index([tenantId])
+  @@index([tenantId, clientId])
+  @@index([tenantId, status])
+}
+
+// Líneas de Presupuesto con Snapshotting de Datos Comerciales
+model QuoteItem {
+  id              String   @id @default(cuid())
+  quoteId         String
+  quote           Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  productCode     String?  // Snapshot SKU
+  productName     String   // Snapshot Nombre
+  quantity        Decimal  @db.Decimal(12, 3)
+  unitPrice       Decimal  @db.Decimal(12, 2)
+  unitCost        Decimal  @default(0) @db.Decimal(12, 2)
+  discountPercent Decimal  @default(0) @db.Decimal(5, 2)
+  taxRatePercent  Decimal  @default(0) @db.Decimal(5, 2)
+  subtotal        Decimal  @db.Decimal(12, 2)
+
+  createdAt       DateTime @default(now())
+
+  @@index([quoteId])
+  @@index([productId])
 }
 
 

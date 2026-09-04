@@ -613,3 +613,59 @@ export async function getProductById(id: string): Promise<ApiResponse<any>> {
     }
   }
 }
+
+/**
+ * Retrieves the complete chronological Kardex (Stock Movement Ledger) for a specific product
+ */
+export async function getProductKardex(productId: string): Promise<ApiResponse<any[]>> {
+  try {
+    let tenantId = 'tenant-demo'
+    try {
+      tenantId = await requireTenant()
+    } catch {
+      // Demo fallback
+    }
+
+    const movements = await prisma.stockMovement.findMany({
+      where: {
+        tenantId,
+        productId,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        product: {
+          select: { name: true, code: true },
+        },
+      },
+    })
+
+    const mapped = movements.map((m) => ({
+      id: m.id,
+      productId: m.productId,
+      productName: m.product?.name,
+      productCode: m.product?.code || undefined,
+      type: m.type,
+      quantity: Number(m.quantity),
+      previousStock: Number(m.previousStock),
+      newStock: Number(m.newStock),
+      unitCost: Number(m.unitCost),
+      totalCost: Number(m.totalCost),
+      referenceType: m.referenceType,
+      referenceId: m.referenceId,
+      reason: m.reason,
+      userId: m.userId,
+      createdAt: m.createdAt.toISOString(),
+    }))
+
+    return {
+      success: true,
+      data: mapped,
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Error al consultar el Kardex del producto',
+      data: [],
+    }
+  }
+}

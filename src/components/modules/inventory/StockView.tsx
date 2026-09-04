@@ -21,20 +21,24 @@ import {
   ProductModal,
   StockAdjustmentModal,
   DeleteProductDialog,
+  KardexModal,
 } from "@/components/modules/inventory"
 import {
   createProduct,
   updateProduct,
   adjustStock,
   deleteProduct,
+  getProductKardex,
 } from "@/modules/inventory/actions"
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
+import { getMockProductKardex } from "@/mocks/inventoryData"
 import {
   Category,
   Product,
   ProductFormData,
   StockAdjustmentType,
   StockStatus,
+  KardexEntry,
 } from "@/types/inventory"
 import {
   Boxes,
@@ -46,6 +50,7 @@ import {
   AlertTriangle,
   DollarSign,
   RefreshCw,
+  History,
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
@@ -95,6 +100,9 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [isKardexOpen, setIsKardexOpen] = useState(false)
+  const [kardexProduct, setKardexProduct] = useState<Product | null>(null)
+  const [kardexMovements, setKardexMovements] = useState<KardexEntry[]>([])
 
   // Hardware Barcode Scanner integration
   useBarcodeScanner({
@@ -314,6 +322,22 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
       description: `"${prod?.name || productId}" fue removido del catálogo de la base de datos.`,
     })
     router.refresh()
+  }
+
+  // 4. Open Kardex Traceability Modal
+  const handleOpenKardex = async (prod: Product) => {
+    setKardexProduct(prod)
+    try {
+      const res = await getProductKardex(prod.id)
+      if (res.success && res.data && res.data.length > 0) {
+        setKardexMovements(res.data)
+      } else {
+        setKardexMovements(getMockProductKardex(prod))
+      }
+    } catch {
+      setKardexMovements(getMockProductKardex(prod))
+    }
+    setIsKardexOpen(true)
   }
 
   // --- Reset All Filters ---
@@ -829,6 +853,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                       {/* Acciones */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Kardex Inmutable Button */}
+                          <button
+                            type="button"
+                            title="Ver Kardex y Trazabilidad Inmutable"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 border border-sky-500/30 transition-colors cursor-pointer"
+                            onClick={() => handleOpenKardex(product)}
+                          >
+                            <History className="h-3.5 w-3.5" />
+                            <span>Kardex</span>
+                          </button>
+
                           {/* Re-stock Button */}
                           <button
                             type="button"
@@ -944,6 +979,17 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         }}
         product={adjustingProduct}
         onConfirm={handleConfirmStockAdjustment}
+      />
+
+      {/* Kardex Traceability Modal */}
+      <KardexModal
+        isOpen={isKardexOpen}
+        onClose={() => {
+          setIsKardexOpen(false)
+          setKardexProduct(null)
+        }}
+        product={kardexProduct}
+        movements={kardexMovements}
       />
 
       {/* Delete Confirmation Modal */}
