@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 
+import { flushSync } from "react-dom"
+
 export type ThemePalette =
   | "orange"
   | "blue"
@@ -230,7 +232,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const transition = (document as any).startViewTransition(() => {
-          updateTheme()
+          flushSync(() => {
+            updateTheme()
+          })
         })
 
         transition.ready.then(() => {
@@ -244,8 +248,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
               clipPath: clipPath,
             },
             {
-              duration: 550,
-              easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+              duration: 420,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
               pseudoElement: "::view-transition-new(root)",
             }
           )

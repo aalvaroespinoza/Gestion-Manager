@@ -14,7 +14,7 @@ export default function DashboardLayout({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-200 relative bg-grid-ambient">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-[var(--primary)] selection:text-white relative bg-grid-ambient">
       {/* Top Ambient Studio Lighting */}
       <div
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,color-mix(in_srgb,var(--primary)_14%,transparent),transparent_70%)]"

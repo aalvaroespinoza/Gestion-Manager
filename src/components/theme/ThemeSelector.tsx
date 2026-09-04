@@ -63,7 +63,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <button
                   key={item.id}
                   type="button"
-                  onClick={(e) => setTheme(item.id, e)}
+                  onClick={(e) => setTheme(item.id, { clientX: e.clientX, clientY: e.clientY })}
                   className={cn(
                     "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none cursor-pointer",
                     isActive
@@ -126,7 +126,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <button
                   key={item.id}
                   type="button"
-                  onClick={(e) => setTheme(item.id, e)}
+                  onClick={(e) => setTheme(item.id, { clientX: e.clientX, clientY: e.clientY })}
                   className={cn(
                     "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none cursor-pointer",
                     isActive
@@ -216,9 +216,10 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
               <button
                 type="button"
                 onClick={(e) => {
+                  const origin = { clientX: e.clientX, clientY: e.clientY }
                   setSelectedTab("light")
                   if (currentConfig.mode === "dark") {
-                    setTheme("light-orange", e)
+                    setTheme("light-orange", origin)
                   }
                 }}
                 className={cn(
@@ -235,9 +236,10 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
               <button
                 type="button"
                 onClick={(e) => {
+                  const origin = { clientX: e.clientX, clientY: e.clientY }
                   setSelectedTab("dark")
                   if (currentConfig.mode === "light") {
-                    setTheme("orange", e)
+                    setTheme("orange", origin)
                   }
                 }}
                 className={cn(
@@ -263,8 +265,9 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                   key={item.id}
                   type="button"
                   onClick={(e) => {
-                    setTheme(item.id, e)
+                    const origin = { clientX: e.clientX, clientY: e.clientY }
                     setIsOpen(false)
+                    setTheme(item.id, origin)
                   }}
                   className={cn(
                     "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-all cursor-pointer",

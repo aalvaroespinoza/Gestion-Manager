@@ -5,7 +5,7 @@ import React from "react"
 export function NoiseOverlay() {
   return (
     <svg
-      className="pointer-events-none fixed inset-0 z-50 h-full w-full opacity-[0.025] mix-blend-overlay"
+      className="pointer-events-none fixed inset-0 z-50 h-full w-full opacity-[0.025] mix-blend-overlay transform-gpu"
       aria-hidden="true"
     >
       <filter id="procedural-noise">
