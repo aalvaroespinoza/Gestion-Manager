@@ -495,9 +495,9 @@ export function VentasView({
         /* ========================================================================= */
         /* TAB 1: POS TERMINAL - ALTA DENSIDAD INDUSTRIAL                            */
         /* ========================================================================= */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Product Catalog & Search (7 Cols) */}
-          <div className="lg:col-span-7 space-y-4">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Left Column: Product Catalog & Search (Expanded to fill available space) */}
+          <div className="flex-1 min-w-0 space-y-4">
             {/* Search, Shortcuts & Category Pills */}
             <Card>
               <CardContent className="p-4 space-y-3">
@@ -587,18 +587,18 @@ export function VentasView({
               </CardContent>
             </Card>
 
-            {/* Industrial High-Density Products Table */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-              <div className="overflow-x-auto max-h-[580px] overflow-y-auto">
+            {/* Industrial High-Density Products Table with Notable Column Dividers */}
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm card-specular">
+              <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="sticky top-0 z-10 bg-card border-b border-border text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
-                    <tr>
-                      <th className="py-2.5 px-3">SKU / Código</th>
-                      <th className="py-2.5 px-3">Producto / Descripción</th>
-                      <th className="py-2.5 px-3">Rubro</th>
-                      <th className="py-2.5 px-3 text-center">Stock</th>
-                      <th className="py-2.5 px-3 text-right">Precio Unitario</th>
-                      <th className="py-2.5 px-3 text-center">Acción</th>
+                  <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md border-b-2 border-border text-[11px] uppercase tracking-wider font-extrabold text-foreground">
+                    <tr className="divide-x divide-border/80">
+                      <th className="py-3 px-4 w-36 min-w-[120px]">SKU / Código</th>
+                      <th className="py-3 px-4 min-w-[260px]">Producto / Descripción</th>
+                      <th className="py-3 px-4 w-44 min-w-[150px]">Rubro</th>
+                      <th className="py-3 px-4 w-28 min-w-[95px] text-center">Stock</th>
+                      <th className="py-3 px-4 w-36 min-w-[130px] text-right">Precio Unitario</th>
+                      <th className="py-3 px-4 w-24 min-w-[85px] text-center">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -625,38 +625,41 @@ export function VentasView({
                               if (!isOutOfStock) handleAddToCart(product)
                             }}
                             className={cn(
-                              "transition-colors duration-75 select-none cursor-pointer group",
-                              isSelected ? "bg-primary/15" : "hover:bg-muted/50",
+                              "transition-colors duration-75 select-none cursor-pointer group divide-x divide-border/60",
+                              isSelected ? "bg-primary/15" : "hover:bg-muted/50 even:bg-muted/15",
                               isOutOfStock && "opacity-50 cursor-not-allowed bg-muted/20"
                             )}
                           >
-                            <td className="py-2 px-3 font-mono font-bold text-xs text-primary whitespace-nowrap">
+                            <td className="py-2.5 px-4 font-mono font-bold text-xs text-primary whitespace-nowrap">
                               {product.code}
                             </td>
-                            <td className="py-2 px-3">
+                            <td className="py-2.5 px-4">
                               <div className="font-bold text-foreground text-xs">{product.name}</div>
                               {product.description && (
-                                <div className="text-[10px] text-muted-foreground truncate max-w-[220px]">
+                                <div className="text-[10px] text-muted-foreground truncate max-w-md mt-0.5">
                                   {product.description}
                                 </div>
                               )}
                             </td>
-                            <td className="py-2 px-3 text-muted-foreground whitespace-nowrap text-xs">
-                              {category?.name || product.categoryName || "General"}
+                            <td className="py-2.5 px-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50 text-foreground/80 font-medium text-[11px]">
+                                {category?.name || product.categoryName || "General"}
+                              </span>
                             </td>
-                            <td className="py-2 px-3 text-center whitespace-nowrap">
+                            <td className="py-2.5 px-4 text-center whitespace-nowrap">
                               <Badge
                                 size="sm"
                                 variant={isOutOfStock ? "destructive" : isLowStock ? "warning" : "success"}
                                 dot
+                                className="font-mono tabular-nums"
                               >
                                 {isOutOfStock ? "0 un." : `${product.stock} un.`}
                               </Badge>
                             </td>
-                            <td className="py-2 px-3 text-right font-mono tabular-nums font-black text-sm text-foreground whitespace-nowrap">
+                            <td className="py-2.5 px-4 text-right font-mono tabular-nums font-black text-sm text-foreground whitespace-nowrap bg-muted/5">
                               ${product.salePrice.toLocaleString("es-CL")}
                             </td>
-                            <td className="py-2 px-3 text-center whitespace-nowrap">
+                            <td className="py-2.5 px-4 text-center whitespace-nowrap">
                               <Button
                                 type="button"
                                 size="sm"
@@ -666,7 +669,7 @@ export function VentasView({
                                   e.stopPropagation()
                                   handleAddToCart(product)
                                 }}
-                                className="h-7 px-2.5 text-xs cursor-pointer active:scale-[0.98]"
+                                className="h-7 px-3 text-xs cursor-pointer active:scale-[0.98]"
                               >
                                 <Plus className="h-3.5 w-3.5 mr-1" />
                                 <span>Agregar</span>
@@ -682,8 +685,8 @@ export function VentasView({
             </div>
           </div>
 
-          {/* Right Column: Interactive Cart & Totals (5 Cols) */}
-          <div className="lg:col-span-5 space-y-4">
+          {/* Right Column: Interactive Cart & Totals (Fixed Width & Sticky) */}
+          <div className="w-full lg:w-[410px] xl:w-[440px] shrink-0 space-y-4 sticky top-20">
             <Card>
               {/* Client Selection Header */}
               <CardHeader className="pb-3 border-b border-border">

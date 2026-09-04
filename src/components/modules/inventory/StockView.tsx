@@ -611,7 +611,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
         <CardContent className="p-0">
           <Table className="border-0 rounded-none">
             <TableHeader>
-              <TableRow>
+              <TableRow className="divide-x divide-border/80 border-b-2 border-border bg-muted/60">
                 {/* Sortable Column: Código */}
                 <TableHead
                   onClick={() => handleSort("code")}
@@ -727,7 +727,7 @@ export function StockView({ initialProducts, initialCategories }: StockViewProps
                   const isOut = product.status === "OUT_OF_STOCK"
 
                   return (
-                    <TableRow key={product.id} className="hover:bg-muted/50 transition-colors">
+                    <TableRow key={product.id} className="hover:bg-muted/50 transition-colors divide-x divide-border/60 even:bg-muted/15">
                       {/* Código */}
                       <TableCell className="font-mono tabular-nums text-xs font-medium text-primary">
                         {product.code}
