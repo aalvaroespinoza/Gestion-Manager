@@ -6,6 +6,8 @@ const SECRET_KEY = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'sup
 const encodedKey = new TextEncoder().encode(SECRET_KEY)
 const SESSION_COOKIE_NAME = 'gestion_session'
 
+import { createClient as updateSupabaseSession } from '@/utils/supabase/middleware'
+
 // Auth entry routes
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password']
 
@@ -41,12 +43,11 @@ export async function middleware(request: NextRequest) {
     if (session && session.userId && session.tenantId) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
-    return NextResponse.next()
+    return updateSupabaseSession(request)
   }
 
-  // 2. Determine if route is protected (dashboard, business modules, or root)
+  // 2. Determine if route is protected (dashboard, business modules)
   const isProtectedPath =
-    pathname === '/' ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/stock') ||
     pathname.startsWith('/ventas') ||
@@ -62,7 +63,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/protected')
 
   if (!isProtectedPath) {
-    return NextResponse.next()
+    return updateSupabaseSession(request)
   }
 
   // 3. If unauthenticated on protected route -> redirect to /login
