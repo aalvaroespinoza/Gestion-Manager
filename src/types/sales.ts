@@ -14,6 +14,10 @@ export interface CartItem {
   costPrice: number
   quantity: number
   stock: number
+  discountRate?: number
+  discountAmount?: number
+  taxRate?: number
+  taxAmount?: number
   subtotal: number
   customAttributes?: Record<string, any>
 }

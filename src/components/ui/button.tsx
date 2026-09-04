@@ -12,21 +12,21 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-black/20 border border-primary/20 active:scale-[0.99] focus-visible:ring-primary",
+    "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-black/20 border border-primary/20 active:scale-[0.98] focus-visible:ring-primary",
   secondary:
-    "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 active:scale-[0.99] focus-visible:ring-zinc-600",
+    "bg-muted hover:bg-muted/80 text-foreground border border-border active:scale-[0.98] focus-visible:ring-border",
   accent:
-    "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 active:scale-[0.99] focus-visible:ring-primary/50 font-semibold",
+    "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 active:scale-[0.98] focus-visible:ring-primary/50 font-semibold",
   destructive:
-    "bg-red-600 hover:bg-red-500 text-white font-semibold shadow-md shadow-red-950/40 border border-red-500/20 active:scale-[0.99] focus-visible:ring-red-500",
+    "bg-red-600 hover:bg-red-500 text-white font-semibold shadow-md shadow-red-950/40 border border-red-500/20 active:scale-[0.98] focus-visible:ring-red-500",
   outline:
-    "border border-zinc-700 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white active:bg-zinc-800/80 focus-visible:ring-zinc-600",
+    "border border-border bg-transparent text-foreground hover:bg-muted active:scale-[0.98] focus-visible:ring-ring",
   ghost:
-    "bg-transparent text-zinc-400 hover:text-white hover:bg-zinc-800 active:bg-zinc-800/80 focus-visible:ring-zinc-600",
+    "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.98] focus-visible:ring-ring",
   link:
     "bg-transparent text-primary hover:underline p-0 h-auto shadow-none focus-visible:ring-primary",
   success:
-    "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-950/40 border border-emerald-500/20 active:scale-[0.99] focus-visible:ring-emerald-500",
+    "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-950/40 border border-emerald-500/20 active:scale-[0.98] focus-visible:ring-emerald-500",
 }
 
 const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {

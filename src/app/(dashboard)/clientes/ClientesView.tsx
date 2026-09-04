@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
 import { DynamicFormRenderer, DynamicFormSchemaConfig } from "@/components/dynamic-forms"
-import { ToastContainer, ToastMessage } from "@/components/ui/toast"
+import { toast } from "sonner"
 import { createClient, deleteClient } from "@/modules/clients/actions"
 import { Users, Plus, Search, Trash2, AlertTriangle, RotateCcw } from "lucide-react"
 
@@ -54,26 +54,6 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
   const [deletingClient, setDeletingClient] = useState<ClientItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Toasts
-  const [toasts, setToasts] = useState<ToastMessage[]>([])
-
-  const addToast = useCallback(
-    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
-      const newToast: ToastMessage = {
-        id: `toast-${Date.now()}-${Math.random()}`,
-        title,
-        description,
-        type,
-      }
-      setToasts((prev) => [...prev, newToast])
-    },
-    []
-  )
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
-
   // Sync state when props update
   useEffect(() => {
     setClients(initialClients)
@@ -98,7 +78,9 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
       setIsSubmitting(true)
       const res = await createClient(formData)
       if (!res.success) {
-        addToast("Error al Registrar Cliente", res.error || "No se pudo crear el cliente.", "destructive")
+        toast.error("Error al Registrar Cliente", {
+          description: res.error || "No se pudo crear el cliente.",
+        })
         return
       }
 
@@ -118,10 +100,14 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
 
       setClients((prev) => [newClientItem, ...prev])
       setIsModalOpen(false)
-      addToast("Cliente Creado con Éxito", `Se registró "${created.name}" en la base de datos.`, "success")
+      toast.success("Cliente Creado con Éxito", {
+        description: `Se registró "${created.name}" en la base de datos.`,
+      })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error al conectar con el servidor.", "destructive")
+      toast.error("Error", {
+        description: err.message || "Error al conectar con el servidor.",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -133,16 +119,22 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
       setIsDeleting(true)
       const res = await deleteClient(deletingClient.id)
       if (!res.success) {
-        addToast("Error al Eliminar", res.error || "No se pudo eliminar el cliente.", "destructive")
+        toast.error("Error al Eliminar", {
+          description: res.error || "No se pudo eliminar el cliente.",
+        })
         return
       }
 
       setClients((prev) => prev.filter((c) => c.id !== deletingClient.id))
-      addToast("Cliente Eliminado", `"${deletingClient.name}" fue removido de la base de datos.`, "destructive")
+      toast.error("Cliente Eliminado", {
+        description: `"${deletingClient.name}" fue removido de la base de datos.`,
+      })
       setDeletingClient(null)
       router.refresh()
     } catch (err: any) {
-      addToast("Error al Eliminar", err.message || "Error inesperado.", "destructive")
+      toast.error("Error al Eliminar", {
+        description: err.message || "Error inesperado.",
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -150,15 +142,13 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
             <Users className="h-8 w-8 text-primary" />
             Directorio de Clientes
           </h1>
-          <p className="text-sm text-zinc-400 mt-1 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Gestión de cartera de clientes, datos de facturación y crédito comercial persistidos en base de datos.
           </p>
         </div>
@@ -213,10 +203,10 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
             <TableBody>
               {filteredClients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center text-zinc-400">
+                  <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                     <div className="max-w-xs mx-auto space-y-2">
-                      <Users className="h-8 w-8 mx-auto text-zinc-600" />
-                      <p className="font-bold text-white text-sm">No se encontraron clientes</p>
+                      <Users className="h-8 w-8 mx-auto text-muted-foreground/60" />
+                      <p className="font-bold text-foreground text-sm">No se encontraron clientes</p>
                       <p className="text-xs">
                         {searchTerm
                           ? "No hay resultados para el término de búsqueda ingresado."
@@ -231,27 +221,27 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
                   const city = client.metadata?.city || ""
 
                   return (
-                    <TableRow key={client.id} className="hover:bg-zinc-800/60 transition-colors">
-                      <TableCell className="font-mono text-xs font-medium text-primary">
+                    <TableRow key={client.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-mono tabular-nums text-xs font-medium text-primary">
                         {client.docNumber || "S/D"}
                         {client.docType ? ` (${client.docType})` : ""}
                       </TableCell>
 
-                      <TableCell className="font-bold text-white text-sm">
+                      <TableCell className="font-bold text-foreground text-sm">
                         {client.name}
                       </TableCell>
 
                       <TableCell>
-                        <div className="text-xs text-zinc-300 font-medium">
-                          {client.email || <span className="text-zinc-500 italic">Sin correo</span>}
+                        <div className="text-xs text-foreground/90 font-medium">
+                          {client.email || <span className="text-muted-foreground italic">Sin correo</span>}
                         </div>
                         {client.phone && (
-                          <div className="text-[11px] text-zinc-500 font-mono">{client.phone}</div>
+                          <div className="text-[11px] text-muted-foreground font-mono tabular-nums">{client.phone}</div>
                         )}
                       </TableCell>
 
-                      <TableCell className="text-xs text-zinc-300 font-medium max-w-[200px] truncate">
-                        {client.address || city || <span className="text-zinc-500 italic">Sin dirección</span>}
+                      <TableCell className="text-xs text-muted-foreground font-medium max-w-[200px] truncate">
+                        {client.address || city || <span className="text-muted-foreground italic">Sin dirección</span>}
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -271,7 +261,7 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
                           type="button"
                           title="Eliminar Cliente"
                           onClick={() => setDeletingClient(client)}
-                          className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -318,19 +308,19 @@ export function ClientesView({ initialClients }: ClientesViewProps) {
       >
         {deletingClient && (
           <div className="space-y-4 pt-1">
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-zinc-300 space-y-2">
-              <p className="text-zinc-400">
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-foreground/90 space-y-2">
+              <p className="text-muted-foreground">
                 ¿Estás seguro de que deseas eliminar al siguiente cliente?
               </p>
-              <div className="font-bold text-white text-sm">
+              <div className="font-bold text-foreground text-sm">
                 {deletingClient.name}
               </div>
-              <div className="text-zinc-400 font-mono text-[11px]">
-                <span>Documento: <strong className="text-white">{deletingClient.docNumber || "S/D"}</strong></span>
+              <div className="text-muted-foreground font-mono text-[11px]">
+                <span>Documento: <strong className="text-foreground">{deletingClient.docNumber || "S/D"}</strong></span>
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-zinc-800">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="secondary"

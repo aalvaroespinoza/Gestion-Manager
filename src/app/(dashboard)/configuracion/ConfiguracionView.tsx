@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table"
 import { Modal } from "@/components/ui/modal"
 import { ThemeSelector } from "@/components/theme/ThemeSelector"
-import { ToastContainer, ToastMessage } from "@/components/ui/toast"
+import { toast } from "sonner"
 import {
   updateUserProfile,
   updateTenantSettings,
@@ -177,26 +177,6 @@ export function ConfiguracionView({
   )
   const [isSavingNotifs, setIsSavingNotifs] = useState(false)
 
-  // Toasts Stack
-  const [toasts, setToasts] = useState<ToastMessage[]>([])
-
-  const addToast = useCallback(
-    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
-      const newToast: ToastMessage = {
-        id: `toast-${Date.now()}-${Math.random()}`,
-        title,
-        description,
-        type,
-      }
-      setToasts((prev) => [...prev, newToast])
-    },
-    []
-  )
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
-
   // Sync props on revalidation
   useEffect(() => {
     setUserProfile(initialUserProfile)
@@ -215,11 +195,11 @@ export function ConfiguracionView({
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newPassword && newPassword.length < 6) {
-      addToast("Contraseña Inválida", "La nueva contraseña debe tener al menos 6 caracteres.", "destructive")
+      toast.error("Contraseña Inválida", { description: "La nueva contraseña debe tener al menos 6 caracteres." })
       return
     }
     if (newPassword && newPassword !== confirmPassword) {
-      addToast("Error de Contraseña", "Las contraseñas no coinciden.", "destructive")
+      toast.error("Error de Contraseña", { description: "Las contraseñas no coinciden." })
       return
     }
 
@@ -235,17 +215,17 @@ export function ConfiguracionView({
       })
 
       if (!res.success) {
-        addToast("Error al Actualizar Perfil", res.error || "No se pudieron guardar los cambios.", "destructive")
+        toast.error("Error al Actualizar Perfil", { description: res.error || "No se pudieron guardar los cambios." })
         return
       }
 
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
-      addToast("Perfil Actualizado", "Los datos de tu cuenta fueron guardados exitosamente.", "success")
+      toast.success("Perfil Actualizado", { description: "Los datos de tu cuenta fueron guardados exitosamente." })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsSavingProfile(false)
     }
@@ -268,14 +248,14 @@ export function ConfiguracionView({
       })
 
       if (!res.success) {
-        addToast("Error", res.error || "No se pudo guardar la configuración de empresa.", "destructive")
+        toast.error("Error", { description: res.error || "No se pudo guardar la configuración de empresa." })
         return
       }
 
-      addToast("Empresa Guardada", "Los datos comerciales de la empresa fueron actualizados en la base de datos.", "success")
+      toast.success("Empresa Guardada", { description: "Los datos comerciales de la empresa fueron actualizados en la base de datos." })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsSavingCompany(false)
     }
@@ -296,7 +276,7 @@ export function ConfiguracionView({
       })
 
       if (!res.success || !res.data) {
-        addToast("Error al Crear Sucursal", res.error || "No se pudo crear la sucursal.", "destructive")
+        toast.error("Error al Crear Sucursal", { description: res.error || "No se pudo crear la sucursal." })
         return
       }
 
@@ -305,10 +285,10 @@ export function ConfiguracionView({
       setBranchName("")
       setBranchCode("")
       setBranchAddress("")
-      addToast("Sucursal Creada", `Se agregó la sucursal "${branchName}" al tenant.`, "success")
+      toast.success("Sucursal Creada", { description: `Se agregó la sucursal "${branchName}" al tenant.` })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsSavingBranch(false)
     }
@@ -320,16 +300,16 @@ export function ConfiguracionView({
     try {
       const res = await deleteBranch(deletingBranch.id)
       if (!res.success) {
-        addToast("Error al Eliminar", res.error || "No se pudo eliminar la sucursal.", "destructive")
+        toast.error("Error al Eliminar", { description: res.error || "No se pudo eliminar la sucursal." })
         return
       }
 
       setBranches((prev) => prev.filter((b) => b.id !== deletingBranch.id))
-      addToast("Sucursal Eliminada", `"${deletingBranch.name}" fue eliminada.`, "destructive")
+      toast.error("Sucursal Eliminada", { description: `"${deletingBranch.name}" fue eliminada.` })
       setDeletingBranch(null)
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     }
   }
 
@@ -348,7 +328,7 @@ export function ConfiguracionView({
       })
 
       if (!res.success) {
-        addToast("Error al Registrar Usuario", res.error || "No se pudo registrar al usuario.", "destructive")
+        toast.error("Error al Registrar Usuario", { description: res.error || "No se pudo registrar al usuario." })
         return
       }
 
@@ -366,10 +346,10 @@ export function ConfiguracionView({
       setInviteName("")
       setInviteEmail("")
       setInvitePassword("")
-      addToast("Usuario Registrado", `"${inviteName}" fue agregado al equipo en base de datos.`, "success")
+      toast.success("Usuario Registrado", { description: `"${inviteName}" fue agregado al equipo en base de datos.` })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsInvitingUser(false)
     }
@@ -381,16 +361,16 @@ export function ConfiguracionView({
     try {
       const res = await deleteUser(deletingUser.id)
       if (!res.success) {
-        addToast("Error al Eliminar Usuario", res.error || "No se pudo eliminar el usuario.", "destructive")
+        toast.error("Error al Eliminar Usuario", { description: res.error || "No se pudo eliminar el usuario." })
         return
       }
 
       setTeamUsers((prev) => prev.filter((u) => u.id !== deletingUser.id))
-      addToast("Usuario Removido", `"${deletingUser.name}" fue removido de la organización.`, "destructive")
+      toast.error("Usuario Removido", { description: `"${deletingUser.name}" fue removido de la organización.` })
       setDeletingUser(null)
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     }
   }
 
@@ -416,7 +396,7 @@ export function ConfiguracionView({
       setIsSavingField(true)
       const res = await saveCustomFields(selectedCategoryId, updatedFields)
       if (!res.success) {
-        addToast("Error al Guardar Atributo", res.error || "No se pudo guardar el campo.", "destructive")
+        toast.error("Error al Guardar Atributo", { description: res.error || "No se pudo guardar el campo." })
         return
       }
 
@@ -431,10 +411,10 @@ export function ConfiguracionView({
       setIsNewFieldModalOpen(false)
       setNewFieldName("")
       setNewFieldLabel("")
-      addToast("Atributo Guardado", `Campo "${newFieldLabel}" guardado en la categoría "${targetCategory.name}".`, "success")
+      toast.success("Atributo Guardado", { description: `Campo "${newFieldLabel}" guardado en la categoría "${targetCategory.name}".` })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsSavingField(false)
     }
@@ -450,7 +430,7 @@ export function ConfiguracionView({
     try {
       const res = await saveCustomFields(selectedCategoryId, updatedFields)
       if (!res.success) {
-        addToast("Error al Eliminar", res.error || "No se pudo eliminar el campo.", "destructive")
+        toast.error("Error al Eliminar", { description: res.error || "No se pudo eliminar el campo." })
         return
       }
 
@@ -462,10 +442,10 @@ export function ConfiguracionView({
         )
       )
 
-      addToast("Atributo Eliminado", "Campo dinámico eliminado de la base de datos.", "info")
+      toast.info("Atributo Eliminado", { description: "Campo dinámico eliminado de la base de datos." })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     }
   }
 
@@ -479,14 +459,14 @@ export function ConfiguracionView({
       })
 
       if (!res.success) {
-        addToast("Error", res.error || "No se pudieron guardar las notificaciones.", "destructive")
+        toast.error("Error", { description: res.error || "No se pudieron guardar las notificaciones." })
         return
       }
 
-      addToast("Preferencias Guardadas", "Ajustes de alertas y POS actualizados con éxito.", "success")
+      toast.success("Preferencias Guardadas", { description: "Ajustes de alertas y POS actualizados con éxito." })
       router.refresh()
     } catch (err: any) {
-      addToast("Error", err.message || "Error inesperado.", "destructive")
+      toast.error("Error", { description: err.message || "Error inesperado." })
     } finally {
       setIsSavingNotifs(false)
     }
@@ -496,15 +476,13 @@ export function ConfiguracionView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
           <Settings className="h-8 w-8 text-primary" />
           Configuración & Parámetros
         </h1>
-        <p className="text-sm text-zinc-400 mt-1 font-medium">
+        <p className="text-sm text-muted-foreground mt-1 font-medium">
           Ajustes de cuenta de usuario, datos de empresa, sucursales, colaboradores y campos dinámicos persistidos en base de datos.
         </p>
       </div>

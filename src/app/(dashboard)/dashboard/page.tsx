@@ -134,20 +134,20 @@ export default function DashboardOverviewPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
             <TrendingUp className="h-8 w-8 text-primary" />
             Panel de Control
           </h1>
-          <p className="text-sm text-zinc-400 mt-1 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Resumen operativo y métricas consolidadas en tiempo real.
           </p>
         </div>
 
         {/* Quick Branch & Status Badge */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-zinc-800 text-xs font-semibold text-zinc-200">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground">
             <Building2 className="h-4 w-4 text-primary" />
-            <span>Sucursal: <strong className="text-white">Casa Matriz (Santiago)</strong></span>
+            <span>Sucursal: <strong className="text-foreground">Casa Matriz (Santiago)</strong></span>
           </div>
           <Badge variant="success" size="sm" dot>
             Caja Abierta
@@ -158,9 +158,9 @@ export default function DashboardOverviewPage() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Card 1: Ventas del Mes */}
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-border/80 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Ventas del Mes
             </CardTitle>
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
@@ -168,7 +168,7 @@ export default function DashboardOverviewPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
               $18.450.000
             </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
@@ -179,9 +179,9 @@ export default function DashboardOverviewPage() {
         </Card>
 
         {/* Card 2: Órdenes / Transacciones */}
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-border/80 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Órdenes Procesadas
             </CardTitle>
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
@@ -189,7 +189,7 @@ export default function DashboardOverviewPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
               1.284
             </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
@@ -200,9 +200,9 @@ export default function DashboardOverviewPage() {
         </Card>
 
         {/* Card 3: Stock Crítico / Alertas */}
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-border/80 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Stock Crítico / Alertas
             </CardTitle>
             <div className="h-9 w-9 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 border border-amber-500/30">
@@ -210,10 +210,10 @@ export default function DashboardOverviewPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-amber-400">
+            <div className="text-2xl font-black text-amber-400 font-mono tabular-nums">
               4 productos
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium mt-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mt-1">
               <Badge variant="warning" size="sm" dot>
                 2 bajo mínimo • 2 agotados
               </Badge>
@@ -222,9 +222,9 @@ export default function DashboardOverviewPage() {
         </Card>
 
         {/* Card 4: Clientes Activos */}
-        <Card className="hover:border-zinc-700 transition-all shadow-xs">
+        <Card className="hover:border-border/80 transition-all shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Clientes Activos
             </CardTitle>
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
@@ -232,7 +232,7 @@ export default function DashboardOverviewPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
               892
             </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
@@ -245,7 +245,7 @@ export default function DashboardOverviewPage() {
 
       {/* Central Quick Actions Grid */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Accesos Rápidos & Operaciones Frecuentes
         </h3>
 
@@ -253,64 +253,64 @@ export default function DashboardOverviewPage() {
           {/* Quick Action 1: POS Sales */}
           <Link
             href="/ventas"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
                 <ShoppingCart className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
                   Nueva Venta (POS)
                 </h4>
-                <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                   Terminal de mostrador y cobro con tickets
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
 
           {/* Quick Action 2: Stock & Inventory */}
           <Link
             href="/stock"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-zinc-800 text-primary border border-zinc-700 shadow-md group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-muted text-primary border border-border shadow-md group-hover:scale-105 transition-transform">
                 <Boxes className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
                   Catálogo & Re-Stock
                 </h4>
-                <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                   Control de stock, alertas y atributos por rubro
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
 
           {/* Quick Action 3: Clients */}
           <Link
             href="/clientes"
-            className="group relative p-5 rounded-2xl border border-zinc-800 bg-[#18181b] hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
+            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-md group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-muted text-muted-foreground border border-border shadow-md group-hover:scale-105 transition-transform">
                 <Users className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
                   Directorio de Clientes
                 </h4>
-                <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                   Cuentas corrientes, CUIT/DNI y contactos
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
         </div>
       </div>
@@ -342,19 +342,19 @@ export default function DashboardOverviewPage() {
                   <div key={item.day} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
-                        <span className="w-8 font-bold text-zinc-300">
+                        <span className="w-8 font-bold text-foreground">
                           {item.day}
                         </span>
-                        <span className="text-zinc-500 text-[11px] font-medium">
+                        <span className="text-muted-foreground text-[11px] font-medium">
                           ({item.orders} tickets)
                         </span>
                       </div>
-                      <span className="font-bold text-white font-mono">
+                      <span className="font-bold text-foreground font-mono tabular-nums">
                         ${item.total.toLocaleString("es-CL")}
                       </span>
                     </div>
 
-                    <div className="h-3 w-full rounded-full bg-zinc-900 overflow-hidden border border-zinc-800">
+                    <div className="h-3 w-full rounded-full bg-muted overflow-hidden border border-border">
                       <div
                         className="h-full rounded-full transition-all duration-500 bg-primary"
                         style={{ width: `${Math.min(100, item.percentage)}%` }}
@@ -365,15 +365,15 @@ export default function DashboardOverviewPage() {
               </div>
 
               {/* Weekly Summary Footer */}
-              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-muted/40 border border-border flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-zinc-400 font-medium">Total Facturado Semana</span>
-                  <div className="text-xl font-black text-white">
+                  <span className="text-xs text-muted-foreground font-medium">Total Facturado Semana</span>
+                  <div className="text-xl font-black text-foreground font-mono tabular-nums">
                     $4.570.000
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-zinc-400 font-medium">Meta Semanal</span>
+                  <span className="text-xs text-muted-foreground font-medium">Meta Semanal</span>
                   <div className="text-sm font-bold text-emerald-400">
                     94.2% Cumplido
                   </div>
@@ -396,14 +396,14 @@ export default function DashboardOverviewPage() {
                 </div>
 
                 {/* Activity Mode Switch */}
-                <div className="flex items-center rounded-xl bg-zinc-900 border border-zinc-800 p-1 text-xs font-semibold">
+                <div className="flex items-center rounded-xl bg-muted border border-border p-1 text-xs font-semibold">
                   <button
                     type="button"
                     onClick={() => setActiveActivityTab("SALES")}
                     className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                       activeActivityTab === "SALES"
-                        ? "bg-zinc-800 text-primary font-bold shadow-xs"
-                        : "text-zinc-400 hover:text-white"
+                        ? "bg-card text-primary font-bold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Ventas
@@ -413,8 +413,8 @@ export default function DashboardOverviewPage() {
                     onClick={() => setActiveActivityTab("STOCK")}
                     className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                       activeActivityTab === "STOCK"
-                        ? "bg-zinc-800 text-primary font-bold shadow-xs"
-                        : "text-zinc-400 hover:text-white"
+                        ? "bg-card text-primary font-bold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Stock
@@ -441,11 +441,11 @@ export default function DashboardOverviewPage() {
                           <div className="font-mono text-xs font-bold text-primary">
                             {tx.ticket}
                           </div>
-                          <span className="text-[10px] text-zinc-500 font-medium">{tx.time}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">{tx.time}</span>
                         </TableCell>
 
                         <TableCell>
-                          <div className="font-bold text-xs text-white line-clamp-1">
+                          <div className="font-bold text-xs text-foreground line-clamp-1">
                             {tx.customer}
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -456,7 +456,7 @@ export default function DashboardOverviewPage() {
                         </TableCell>
 
                         <TableCell className="text-right">
-                          <span className="font-black text-xs text-white font-mono">
+                          <span className="font-black text-xs text-foreground font-mono tabular-nums">
                             ${tx.amount.toLocaleString("es-CL")}
                           </span>
                         </TableCell>
@@ -478,10 +478,10 @@ export default function DashboardOverviewPage() {
                     {recentInventoryMovements.map((mov) => (
                       <TableRow key={mov.id}>
                         <TableCell>
-                          <div className="font-bold text-xs text-white line-clamp-1">
+                          <div className="font-bold text-xs text-foreground line-clamp-1">
                             {mov.product}
                           </div>
-                          <span className="font-mono text-[10px] text-zinc-500 font-medium">
+                          <span className="font-mono text-[10px] text-muted-foreground font-medium">
                             {mov.sku} • {mov.time}
                           </span>
                         </TableCell>
@@ -506,7 +506,7 @@ export default function DashboardOverviewPage() {
                         </TableCell>
 
                         <TableCell className="text-right">
-                          <span className="text-[11px] text-zinc-400 font-medium line-clamp-1">
+                          <span className="text-[11px] text-muted-foreground font-medium line-clamp-1">
                             {mov.reason}
                           </span>
                         </TableCell>
@@ -517,7 +517,7 @@ export default function DashboardOverviewPage() {
               )}
 
               {/* View All Module Link */}
-              <div className="p-3 border-t border-zinc-800 text-center">
+              <div className="p-3 border-t border-border text-center">
                 <Link
                   href={activeActivityTab === "SALES" ? "/ventas" : "/stock"}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"

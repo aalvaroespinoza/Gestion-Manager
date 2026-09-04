@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,7 +17,10 @@ import {
   TableCell,
   TableEmpty,
 } from "@/components/ui/table"
-import { ToastContainer, ToastMessage } from "@/components/ui/toast"
+import Decimal from "decimal.js"
+import { toast } from "sonner"
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner"
+import { CommandPalette } from "@/components/command-palette/CommandPalette"
 import { CheckoutModal } from "@/components/modules/sales/CheckoutModal"
 import { createSale } from "@/modules/sales/actions"
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
@@ -119,31 +123,32 @@ export function VentasView({
   const [discountPercent, setDiscountPercent] = useState<number>(0)
   const [applyTax, setApplyTax] = useState<boolean>(true)
 
-  // Modals state
+  // Modals & Command Palette state
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [viewingTicketInvoice, setViewingTicketInvoice] = useState<InvoiceData | null>(null)
+  const [selectedProductIndex, setSelectedProductIndex] = useState<number>(0)
 
-  // Floating Toasts Stack
-  const [toasts, setToasts] = useState<ToastMessage[]>([])
-
-  const addToast = useCallback(
-    (title: string, description?: string, type: ToastMessage["type"] = "success") => {
-      const newToast: ToastMessage = {
-        id: `toast-${Date.now()}-${Math.random()}`,
-        title,
-        description,
-        type,
+  // Hardware USB Barcode Scanner (<45ms)
+  useBarcodeScanner({
+    onScan: (scannedCode) => {
+      const found = products.find(
+        (p) => p.code.toLowerCase() === scannedCode.toLowerCase()
+      )
+      if (found) {
+        handleAddToCart(found)
+        toast.success(`Producto agregado: ${found.name}`, {
+          description: `SKU: ${found.code} • Stock: ${found.stock} un.`,
+        })
+      } else {
+        toast.error(`Código no encontrado: "${scannedCode}"`, {
+          description: "Verifica que el SKU exista en el catálogo de inventario.",
+        })
       }
-      setToasts((prev) => [...prev, newToast])
     },
-    []
-  )
+  })
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
-
-  // Keyboard Shortcuts (F2 -> Focus Search, F4 -> Cobrar / Checkout, Escape -> Close)
+  // Keyboard Shortcuts (F2 -> Focus Search / Palette, F4 -> Cobrar, Arrow navigation)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "F2") {
@@ -181,25 +186,45 @@ export function VentasView({
     })
   }, [products, searchQuery, selectedCategory])
 
-  // Cart Calculations (Subtotal, Discounts, IVA, Grand Total)
+  // Ensure selected index stays in bounds
+  useEffect(() => {
+    if (selectedProductIndex >= filteredProducts.length) {
+      setSelectedProductIndex(Math.max(0, filteredProducts.length - 1))
+    }
+  }, [filteredProducts.length, selectedProductIndex])
+
+  // Cart Calculations with exact Decimal.js and banking rounding
   const summary: SaleSummary = useMemo(() => {
-    const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0)
-    const discountAmount = Math.round((subtotal * discountPercent) / 100)
-    const taxableBase = Math.max(0, subtotal - discountAmount)
+    let subtotalDec = new Decimal(0)
+    for (const item of cart) {
+      subtotalDec = subtotalDec.plus(new Decimal(item.subtotal))
+    }
+
+    const discPercentDec = new Decimal(discountPercent || 0)
+    const discountAmountDec = subtotalDec
+      .times(discPercentDec)
+      .dividedBy(100)
+      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+
+    const taxableBaseDec = Decimal.max(0, subtotalDec.minus(discountAmountDec))
     const taxRate = applyTax ? 0.21 : 0
-    const taxAmount = Math.round(taxableBase * taxRate)
-    const total = taxableBase + taxAmount
+    const taxRateDec = new Decimal(taxRate)
+    const taxAmountDec = taxableBaseDec
+      .times(taxRateDec)
+      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+
+    const totalDec = taxableBaseDec.plus(taxAmountDec).toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
     const totalItems = cart.length
     const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0)
 
     return {
-      subtotal,
+      subtotal: subtotalDec.toNumber(),
       discountType: "PERCENT",
       discountValue: discountPercent,
-      discountAmount,
+      discountAmount: discountAmountDec.toNumber(),
       taxRate,
-      taxAmount,
-      total,
+      taxAmount: taxAmountDec.toNumber(),
+      total: totalDec.toNumber(),
       totalItems,
       totalUnits,
     }
@@ -208,11 +233,9 @@ export function VentasView({
   // Add Item to Cart
   const handleAddToCart = (product: Product) => {
     if (product.stock <= 0) {
-      addToast(
-        "Sin Stock Disponible",
-        `No es posible agregar "${product.name}" porque el stock actual es 0 un.`,
-        "destructive"
-      )
+      toast.error("Sin Stock Disponible", {
+        description: `No es posible agregar "${product.name}" porque el stock actual es 0 un.`,
+      })
       return
     }
 
@@ -221,11 +244,9 @@ export function VentasView({
     if (existingIndex >= 0) {
       const existingItem = cart[existingIndex]
       if (existingItem.quantity >= product.stock) {
-        addToast(
-          "Límite de Stock Alcanzado",
-          `Solo hay ${product.stock} unidades disponibles de "${product.name}".`,
-          "warning"
-        )
+        toast.warning("Límite de Stock Alcanzado", {
+          description: `Solo hay ${product.stock} unidades disponibles de "${product.name}".`,
+        })
         return
       }
 
@@ -266,11 +287,9 @@ export function VentasView({
     }
 
     if (newQty > item.stock) {
-      addToast(
-        "Stock Máximo",
-        `Stock disponible: ${item.stock} unidades.`,
-        "warning"
-      )
+      toast.warning("Stock Máximo", {
+        description: `Stock disponible: ${item.stock} unidades.`,
+      })
       return
     }
 
@@ -318,7 +337,9 @@ export function VentasView({
       })
 
       if (!res.success) {
-        addToast("Error al Procesar Venta", res.error || "No se pudo guardar la venta en la base de datos.", "destructive")
+        toast.error("Error al Procesar Venta", {
+          description: res.error || "No se pudo guardar la venta en la base de datos.",
+        })
         throw new Error(res.error || "Error al procesar la venta")
       }
 
@@ -360,17 +381,17 @@ export function VentasView({
       // Clear cart
       setCart([])
 
-      addToast(
-        "Venta Confirmada",
-        `Comprobante ${realInvoiceNumber} registrado exitosamente por $${invoice.summary.total.toLocaleString("es-CL")}.`,
-        "success"
-      )
+      toast.success("Venta Confirmada", {
+        description: `Comprobante ${realInvoiceNumber} registrado exitosamente por $${invoice.summary.total.toLocaleString("es-CL")}.`,
+      })
 
       router.refresh()
       return finalInvoice
     } catch (error: any) {
       if (!error.message?.includes("Error al procesar")) {
-        addToast("Error Inesperado", error.message || "No fue posible registrar la venta.", "destructive")
+        toast.error("Error Inesperado", {
+          description: error.message || "No fue posible registrar la venta.",
+        })
       }
       throw error
     }
@@ -395,41 +416,55 @@ export function VentasView({
         { key: "cashierName", label: "Cajero" },
       ]
     )
-    addToast("Exportación Completada", "Historial de ventas descargado en formato CSV.", "info")
+    toast.info("Exportación Completada", {
+      description: "Historial de ventas descargado en formato CSV.",
+    })
   }
 
   // Export Sales History to JSON
   const handleExportSalesJSON = () => {
     exportToJSON("historial_ventas_gestion_manager", salesHistory)
-    addToast("Exportación JSON", "Historial estructurado JSON descargado.", "info")
+    toast.info("Exportación JSON", {
+      description: "Historial estructurado JSON descargado.",
+    })
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Floating Notifications Stack */}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      {/* Command Palette (Ctrl+K / F2) */}
+      <CommandPalette
+        open={isCommandPaletteOpen}
+        onOpenChange={setIsCommandPaletteOpen}
+        products={products}
+        onSelectProduct={(p) => {
+          handleAddToCart(p)
+          toast.success(`Agregado: ${p.name}`, {
+            description: `SKU: ${p.code} • Stock: ${p.stock} un.`,
+          })
+        }}
+      />
 
       {/* Header & Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
             <ShoppingCart className="h-8 w-8 text-primary" />
             Punto de Venta & Caja (POS)
           </h1>
-          <p className="text-sm text-zinc-400 mt-1 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Terminal rápida de cobro, emisión de tickets y persistencia atómica en base de datos.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 bg-[#18181b] border border-zinc-800 rounded-2xl p-1.5 shadow-xs self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-card border border-border rounded-2xl p-1.5 shadow-xs self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setActiveTab("POS")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "POS"
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Store className="h-4 w-4" />
@@ -442,7 +477,7 @@ export function VentasView({
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "HISTORY"
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <History className="h-4 w-4" />
@@ -458,38 +493,71 @@ export function VentasView({
 
       {activeTab === "POS" ? (
         /* ========================================================================= */
-        /* TAB 1: POS TERMINAL                                                       */
+        /* TAB 1: POS TERMINAL - ALTA DENSIDAD INDUSTRIAL                            */
         /* ========================================================================= */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Product Catalog & Search (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Search & Category Pills */}
+            {/* Search, Shortcuts & Category Pills */}
             <Card>
               <CardContent className="p-4 space-y-3">
-                <div className="relative">
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Buscar producto por nombre, SKU o atributo (Presiona F2)..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    leftIcon={<Search className="h-4 w-4" />}
-                    rightIcon={
-                      <kbd className="hidden sm:inline-block rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
-                        F2
-                      </kbd>
-                    }
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      ref={searchInputRef}
+                      placeholder="Buscar producto por nombre o SKU (F2 para enfocar)..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value)
+                        setSelectedProductIndex(0)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault()
+                          setSelectedProductIndex((prev) =>
+                            Math.min(filteredProducts.length - 1, prev + 1)
+                          )
+                        } else if (e.key === "ArrowUp") {
+                          e.preventDefault()
+                          setSelectedProductIndex((prev) => Math.max(0, prev - 1))
+                        } else if (e.key === "Enter" && filteredProducts.length > 0) {
+                          e.preventDefault()
+                          const target = filteredProducts[selectedProductIndex]
+                          if (target) handleAddToCart(target)
+                        }
+                      }}
+                      leftIcon={<Search className="h-4 w-4" />}
+                      rightIcon={
+                        <kbd className="hidden sm:inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground border border-border">
+                          F2
+                        </kbd>
+                      }
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsCommandPaletteOpen(true)}
+                    className="h-10 px-3 text-xs font-mono shrink-0 cursor-pointer"
+                    leftIcon={<Search className="h-3.5 w-3.5 text-primary" />}
+                  >
+                    Ctrl+K
+                  </Button>
                 </div>
 
                 {/* Category Pills */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                   <button
                     type="button"
-                    onClick={() => setSelectedCategory("ALL")}
+                    onClick={() => {
+                      setSelectedCategory("ALL")
+                      setSelectedProductIndex(0)
+                    }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                       selectedCategory === "ALL"
                         ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                        : "bg-[#18181b] border border-zinc-800 text-zinc-400 hover:text-white"
+                        : "bg-card border border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Todos ({products.length})
@@ -501,11 +569,14 @@ export function VentasView({
                       <button
                         key={category.id}
                         type="button"
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => {
+                          setSelectedCategory(category.id)
+                          setSelectedProductIndex(0)
+                        }}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                           selectedCategory === category.id
                             ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                            : "bg-[#18181b] border border-zinc-800 text-zinc-400 hover:text-white"
+                            : "bg-card border border-border text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {category.name} ({count})
@@ -516,108 +587,110 @@ export function VentasView({
               </CardContent>
             </Card>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 max-h-[620px] overflow-y-auto pr-1">
-              {filteredProducts.length === 0 ? (
-                <div className="col-span-full p-12 text-center rounded-2xl border border-zinc-800 bg-[#18181b]/50">
-                  <Package className="h-10 w-10 text-zinc-600 mx-auto mb-2" />
-                  <p className="text-white font-bold text-sm">No se encontraron productos</p>
-                  <p className="text-xs text-zinc-400 mt-1">Intenta con otro término de búsqueda o categoría.</p>
-                </div>
-              ) : (
-                filteredProducts.map((product) => {
-                  const isOutOfStock = product.stock <= 0
-                  const isLowStock = product.stock > 0 && product.stock <= product.minStock
-                  const category = categories.find((c) => c.id === product.categoryId)
+            {/* Industrial High-Density Products Table */}
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+              <div className="overflow-x-auto max-h-[580px] overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="sticky top-0 z-10 bg-card border-b border-border text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+                    <tr>
+                      <th className="py-2.5 px-3">SKU / Código</th>
+                      <th className="py-2.5 px-3">Producto / Descripción</th>
+                      <th className="py-2.5 px-3">Rubro</th>
+                      <th className="py-2.5 px-3 text-center">Stock</th>
+                      <th className="py-2.5 px-3 text-right">Precio Unitario</th>
+                      <th className="py-2.5 px-3 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {filteredProducts.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                          <Package className="h-8 w-8 mx-auto mb-2 opacity-40 text-muted-foreground" />
+                          <p className="font-semibold text-sm text-foreground">No se encontraron productos</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Intenta con otro término o presiona Ctrl+K.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProducts.map((product, idx) => {
+                        const isOutOfStock = product.stock <= 0
+                        const isLowStock = product.stock > 0 && product.stock <= product.minStock
+                        const isSelected = idx === selectedProductIndex
+                        const category = categories.find((c) => c.id === product.categoryId)
 
-                  return (
-                    <div
-                      key={product.id}
-                      onClick={() => !isOutOfStock && handleAddToCart(product)}
-                      className={`p-4 rounded-2xl border transition-all text-left flex flex-col justify-between select-none ${
-                        isOutOfStock
-                          ? "opacity-50 cursor-not-allowed bg-[#18181b] border-zinc-800"
-                          : "cursor-pointer bg-[#18181b] border-zinc-800 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-mono font-medium text-primary">
-                            {product.code}
-                          </span>
-                          <Badge
-                            size="sm"
-                            variant={isOutOfStock ? "destructive" : isLowStock ? "warning" : "success"}
-                            dot
+                        return (
+                          <tr
+                            key={product.id}
+                            onClick={() => {
+                              setSelectedProductIndex(idx)
+                              if (!isOutOfStock) handleAddToCart(product)
+                            }}
+                            className={cn(
+                              "transition-colors duration-75 select-none cursor-pointer group",
+                              isSelected ? "bg-primary/15" : "hover:bg-muted/50",
+                              isOutOfStock && "opacity-50 cursor-not-allowed bg-muted/20"
+                            )}
                           >
-                            {isOutOfStock ? "Agotado" : `${product.stock} un.`}
-                          </Badge>
-                        </div>
-
-                        <h4 className="font-bold text-sm text-white mt-1.5 line-clamp-2 leading-tight">
-                          {product.name}
-                        </h4>
-
-                        <span className="text-[11px] text-zinc-400 font-medium">
-                          {category?.name || product.categoryName || "General"}
-                        </span>
-
-                        {/* Custom Dynamic Attributes preview */}
-                        {product.customAttributes && Object.keys(product.customAttributes).length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {Object.entries(product.customAttributes)
-                              .slice(0, 2)
-                              .map(([key, val]) => {
-                                if (val === undefined || val === null || val === "") return null
-                                return (
-                                  <span
-                                    key={key}
-                                    className="text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-400"
-                                  >
-                                    <strong className="capitalize">{key}:</strong> {String(val)}
-                                  </span>
-                                )
-                              })}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold block">
-                            Precio Venta
-                          </span>
-                          <span className="text-lg font-black text-white">
-                            ${product.salePrice.toLocaleString("es-CL")}
-                          </span>
-                        </div>
-
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={isOutOfStock}
-                          className="h-8 px-2.5 cursor-pointer"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
+                            <td className="py-2 px-3 font-mono font-bold text-xs text-primary whitespace-nowrap">
+                              {product.code}
+                            </td>
+                            <td className="py-2 px-3">
+                              <div className="font-bold text-foreground text-xs">{product.name}</div>
+                              {product.description && (
+                                <div className="text-[10px] text-muted-foreground truncate max-w-[220px]">
+                                  {product.description}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-2 px-3 text-muted-foreground whitespace-nowrap text-xs">
+                              {category?.name || product.categoryName || "General"}
+                            </td>
+                            <td className="py-2 px-3 text-center whitespace-nowrap">
+                              <Badge
+                                size="sm"
+                                variant={isOutOfStock ? "destructive" : isLowStock ? "warning" : "success"}
+                                dot
+                              >
+                                {isOutOfStock ? "0 un." : `${product.stock} un.`}
+                              </Badge>
+                            </td>
+                            <td className="py-2 px-3 text-right font-mono tabular-nums font-black text-sm text-foreground whitespace-nowrap">
+                              ${product.salePrice.toLocaleString("es-CL")}
+                            </td>
+                            <td className="py-2 px-3 text-center whitespace-nowrap">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                disabled={isOutOfStock}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAddToCart(product)
+                                }}
+                                className="h-7 px-2.5 text-xs cursor-pointer active:scale-[0.98]"
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                <span>Agregar</span>
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
           {/* Right Column: Interactive Cart & Totals (5 Cols) */}
           <div className="lg:col-span-5 space-y-4">
-            <Card className="border-zinc-800 bg-[#18181b]">
+            <Card>
               {/* Client Selection Header */}
-              <CardHeader className="pb-3 border-b border-zinc-800">
+              <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm font-bold text-white">Cliente de la Venta</CardTitle>
+                    <CardTitle className="text-sm font-bold text-foreground">Cliente de la Venta</CardTitle>
                   </div>
                   {cart.length > 0 && (
                     <button
@@ -648,53 +721,53 @@ export function VentasView({
               {/* Cart Items List */}
               <CardContent className="p-4 space-y-4">
                 {cart.length === 0 ? (
-                  <div className="py-12 text-center text-zinc-500 space-y-2">
+                  <div className="py-12 text-center text-muted-foreground space-y-2">
                     <ShoppingCart className="h-10 w-10 mx-auto opacity-30" />
-                    <p className="text-sm font-semibold text-zinc-400">El carrito de venta está vacío</p>
-                    <p className="text-xs">Selecciona productos del catálogo para comenzar.</p>
+                    <p className="text-sm font-semibold text-foreground">El carrito de venta está vacío</p>
+                    <p className="text-xs text-muted-foreground">Selecciona productos de la tabla o escanea con pistola USB.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
                     {cart.map((item) => (
                       <div
                         key={item.productId}
-                        className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between gap-3"
+                        className="p-2.5 rounded-xl bg-muted/40 border border-border flex items-center justify-between gap-3"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-[10px] text-primary">{item.code}</span>
-                            <span className="text-[10px] text-zinc-500">• {item.categoryName}</span>
+                            <span className="font-mono text-[10px] text-primary font-bold">{item.code}</span>
+                            <span className="text-[10px] text-muted-foreground">• {item.categoryName}</span>
                           </div>
-                          <h5 className="font-bold text-xs text-white truncate">{item.name}</h5>
-                          <span className="text-xs font-medium text-zinc-400">
+                          <h5 className="font-bold text-xs text-foreground truncate">{item.name}</h5>
+                          <span className="text-xs font-medium font-mono tabular-nums text-muted-foreground">
                             ${item.unitPrice.toLocaleString("es-CL")} c/u
                           </span>
                         </div>
 
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center bg-zinc-800 rounded-lg p-0.5 border border-zinc-700">
+                          <div className="flex items-center bg-card rounded-lg p-0.5 border border-border">
                             <button
                               type="button"
                               onClick={() => handleUpdateQuantity(item.productId, -1)}
-                              className="p-1 text-zinc-400 hover:text-white rounded transition-colors cursor-pointer"
+                              className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
                             >
                               <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="px-2 font-mono font-bold text-xs text-white">
+                            <span className="px-2 font-mono font-bold text-xs text-foreground tabular-nums">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleUpdateQuantity(item.productId, 1)}
-                              className="p-1 text-zinc-400 hover:text-white rounded transition-colors cursor-pointer"
+                              className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
 
                           <div className="text-right min-w-[70px]">
-                            <span className="font-black text-xs text-white">
+                            <span className="font-mono tabular-nums font-black text-xs text-foreground">
                               ${item.subtotal.toLocaleString("es-CL")}
                             </span>
                           </div>
@@ -702,7 +775,7 @@ export function VentasView({
                           <button
                             type="button"
                             onClick={() => handleRemoveFromCart(item.productId)}
-                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                            className="p-1 text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -714,10 +787,10 @@ export function VentasView({
 
                 {/* Summary & Modifiers */}
                 {cart.length > 0 && (
-                  <div className="pt-3 border-t border-zinc-800 space-y-3">
+                  <div className="pt-3 border-t border-border space-y-3">
                     {/* Discount quick selectors */}
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-400 font-semibold flex items-center gap-1">
+                      <span className="text-muted-foreground font-semibold flex items-center gap-1">
                         <Percent className="h-3.5 w-3.5 text-primary" />
                         Descuento Global:
                       </span>
@@ -730,7 +803,7 @@ export function VentasView({
                             className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
                               discountPercent === pct
                                 ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-zinc-800 text-zinc-400 hover:text-white"
+                                : "bg-muted text-muted-foreground hover:text-foreground border border-border"
                             }`}
                           >
                             {pct}%
@@ -740,10 +813,10 @@ export function VentasView({
                     </div>
 
                     {/* Breakdown totals */}
-                    <div className="space-y-1.5 text-xs text-zinc-400 pt-1">
+                    <div className="space-y-1.5 text-xs text-muted-foreground pt-1">
                       <div className="flex justify-between">
                         <span>Subtotal Neto:</span>
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-mono tabular-nums font-medium">
                           ${summary.subtotal.toLocaleString("es-CL")}
                         </span>
                       </div>
@@ -751,21 +824,21 @@ export function VentasView({
                       {summary.discountAmount > 0 && (
                         <div className="flex justify-between text-emerald-400 font-semibold">
                           <span>Descuento ({summary.discountValue}%):</span>
-                          <span>-${summary.discountAmount.toLocaleString("es-CL")}</span>
+                          <span className="font-mono tabular-nums">-${summary.discountAmount.toLocaleString("es-CL")}</span>
                         </div>
                       )}
 
                       <div className="flex justify-between">
                         <span>IVA Estimado (21%):</span>
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-mono tabular-nums font-medium">
                           ${summary.taxAmount.toLocaleString("es-CL")}
                         </span>
                       </div>
 
                       {/* Highlighted Total */}
-                      <div className="flex justify-between text-base font-black text-white pt-2 border-t border-zinc-800">
+                      <div className="flex justify-between text-base font-black text-foreground pt-2 border-t border-border">
                         <span>Total Final:</span>
-                        <span className="text-primary font-black text-xl">
+                        <span className="text-primary font-black text-xl font-mono tabular-nums">
                           ${summary.total.toLocaleString("es-CL")}
                         </span>
                       </div>
@@ -796,11 +869,11 @@ export function VentasView({
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
               <div>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <History className="h-5 w-5 text-primary" />
                   Registro de Transacciones & Comprobantes
                 </CardTitle>
-                <CardDescription className="text-xs text-zinc-400">
+                <CardDescription className="text-xs text-muted-foreground">
                   Historial completo de ventas generadas en la base de datos de tu organización.
                 </CardDescription>
               </div>
@@ -811,7 +884,7 @@ export function VentasView({
                   size="sm"
                   onClick={handleExportSalesCSV}
                   leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />}
-                  className="h-8 text-xs font-semibold text-zinc-300 hover:text-white cursor-pointer"
+                  className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   Exportar CSV
                 </Button>
@@ -820,7 +893,7 @@ export function VentasView({
                   size="sm"
                   onClick={handleExportSalesJSON}
                   leftIcon={<FileJson className="h-3.5 w-3.5 text-primary" />}
-                  className="h-8 text-xs font-semibold text-zinc-300 hover:text-white cursor-pointer"
+                  className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   JSON
                 </Button>
@@ -845,32 +918,32 @@ export function VentasView({
                 <TableBody>
                   {salesHistory.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="py-12 text-center text-zinc-500">
+                      <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                         No hay ventas registradas aún. Las transacciones completadas aparecerán aquí.
                       </TableCell>
                     </TableRow>
                   ) : (
                     salesHistory.map((sale) => (
-                      <TableRow key={sale.id} className="hover:bg-zinc-800/60 transition-colors">
+                      <TableRow key={sale.id}>
                         <TableCell className="font-mono font-bold text-xs text-primary">
                           {sale.saleNumber}
                         </TableCell>
-                        <TableCell className="text-xs text-zinc-300 font-medium">
+                        <TableCell className="text-xs text-foreground font-medium">
                           {sale.date}
                         </TableCell>
                         <TableCell className="max-w-[200px]">
-                          <div className="font-bold text-xs text-white truncate">{sale.clientName}</div>
-                          <span className="text-[10px] text-zinc-500">{sale.clientDoc}</span>
+                          <div className="font-bold text-xs text-foreground truncate">{sale.clientName}</div>
+                          <span className="text-[10px] text-muted-foreground">{sale.clientDoc}</span>
                         </TableCell>
                         <TableCell>
                           <Badge size="sm" variant="outline">
                             {sale.paymentMethod}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center font-mono text-xs text-zinc-300">
+                        <TableCell className="text-center font-mono text-xs text-foreground">
                           {sale.items.length} ({sale.summary.totalUnits || sale.items.reduce((s, i) => s + i.quantity, 0)} un.)
                         </TableCell>
-                        <TableCell className="text-right font-black text-sm text-white">
+                        <TableCell className="text-right font-mono tabular-nums font-black text-sm text-foreground">
                           ${sale.summary.total.toLocaleString("es-CL")}
                         </TableCell>
                         <TableCell className="text-center">
