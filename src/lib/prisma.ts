@@ -2,12 +2,25 @@ import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:postgres@localhost:5432/gestion_manager?schema=public'
-
 const prismaClientSingleton = () => {
-  const pool = new Pool({ connectionString })
+  const connectionString =
+    process.env.DATABASE_URL ||
+    'postgresql://postgres:postgres@localhost:5432/gestion_manager?schema=public'
+
+  const isSupabaseOrRemote =
+    connectionString.includes('supabase.com') ||
+    connectionString.includes('supabase.co') ||
+    connectionString.includes('sslmode=')
+
+  // When connecting to Supabase in Node.js, pass explicit SSL options and strip sslmode to avoid SELF_SIGNED_CERT_IN_CHAIN
+  const cleanConnectionString = isSupabaseOrRemote
+    ? connectionString.replace(/[?&]sslmode=[^&]+/, '').replace(/\?$/, '')
+    : connectionString
+
+  const pool = new Pool({
+    connectionString: cleanConnectionString,
+    ssl: isSupabaseOrRemote ? { rejectUnauthorized: false } : undefined,
+  })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({
     adapter,
