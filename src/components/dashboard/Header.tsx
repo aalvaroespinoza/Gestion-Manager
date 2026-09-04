@@ -305,7 +305,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             className="flex items-center gap-2.5 rounded-xl p-1.5 hover:bg-muted transition-colors cursor-pointer"
           >
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm"
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-primary-foreground shadow-sm"
               style={{ backgroundColor: "var(--primary)" }}
             >
               {currentUser.name

@@ -119,34 +119,34 @@ export function StockAdjustmentModal({
           <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Boxes className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold">Ajuste Rápido de Stock / Re-Stock</span>
+          <span className="text-foreground font-bold">Ajuste Rápido de Stock / Re-Stock</span>
         </div>
       }
       description={
-        <span className="text-zinc-400 text-xs">
+        <span className="text-muted-foreground text-xs">
           Modificación directa de existencias para{" "}
-          <strong className="text-zinc-200">{product.name}</strong>{" "}
+          <strong className="text-foreground">{product.name}</strong>{" "}
           (Código: <code className="font-mono text-xs text-primary">{product.code}</code>)
         </span>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5 pt-1">
         {/* Current Stock vs Projected Stock Card */}
-        <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
           <div>
-            <span className="text-xs text-zinc-400 font-medium">Stock Actual</span>
-            <div className="text-2xl font-black text-white">
-              {currentStock} <span className="text-sm font-normal text-zinc-400">un.</span>
+            <span className="text-xs text-muted-foreground font-medium">Stock Actual</span>
+            <div className="text-2xl font-black text-foreground">
+              {currentStock} <span className="text-sm font-normal text-muted-foreground">un.</span>
             </div>
-            <span className="text-[11px] text-zinc-500">Umbral mínimo: {minStock} un.</span>
+            <span className="text-[11px] text-muted-foreground">Umbral mínimo: {minStock} un.</span>
           </div>
 
-          <div className="flex items-center px-3 text-zinc-600">
+          <div className="flex items-center px-3 text-muted-foreground">
             <ArrowRight className="h-6 w-6" />
           </div>
 
           <div className="text-right">
-            <span className="text-xs text-zinc-400 font-medium">Nuevo Stock Proyectado</span>
+            <span className="text-xs text-muted-foreground font-medium">Nuevo Stock Proyectado</span>
             <div
               className={`text-2xl font-black ${
                 projectedStatus === "OUT_OF_STOCK"
@@ -182,7 +182,7 @@ export function StockAdjustmentModal({
 
         {/* Operation Type Selection */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Tipo de Operación
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -191,13 +191,13 @@ export function StockAdjustmentModal({
               onClick={() => setOperationType("IN")}
               className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "IN"
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30 font-bold"
-                  : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-500/30 font-bold"
+                  : "border-border bg-muted/50 text-foreground hover:bg-muted"
               }`}
             >
-              <PlusCircle className="h-4 w-4 mb-1 text-emerald-400" />
+              <PlusCircle className="h-4 w-4 mb-1 text-emerald-500" />
               <span>Ingreso / Compra</span>
-              <span className="text-[10px] text-zinc-400 font-normal mt-0.5">(Suma +)</span>
+              <span className="text-[10px] text-muted-foreground font-normal mt-0.5">(Suma +)</span>
             </button>
 
             <button
@@ -205,13 +205,13 @@ export function StockAdjustmentModal({
               onClick={() => setOperationType("OUT")}
               className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "OUT"
-                  ? "border-red-500/50 bg-red-500/15 text-red-300 ring-1 ring-red-500/30 font-bold"
-                  : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
+                  ? "border-red-500/50 bg-red-500/15 text-red-500 ring-1 ring-red-500/30 font-bold"
+                  : "border-border bg-muted/50 text-foreground hover:bg-muted"
               }`}
             >
-              <MinusCircle className="h-4 w-4 mb-1 text-red-400" />
+              <MinusCircle className="h-4 w-4 mb-1 text-red-500" />
               <span>Egreso / Merma</span>
-              <span className="text-[10px] text-zinc-400 font-normal mt-0.5">(Resta -)</span>
+              <span className="text-[10px] text-muted-foreground font-normal mt-0.5">(Resta -)</span>
             </button>
 
             <button
@@ -220,12 +220,12 @@ export function StockAdjustmentModal({
               className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 operationType === "SET"
                   ? "border-primary/50 bg-primary/15 text-primary ring-1 ring-primary/30 font-bold"
-                  : "border-zinc-800 bg-[#18181b] text-zinc-300 hover:bg-zinc-800/80"
+                  : "border-border bg-muted/50 text-foreground hover:bg-muted"
               }`}
             >
               <Sliders className="h-4 w-4 mb-1 text-primary" />
               <span>Conteo Directo</span>
-              <span className="text-[10px] text-zinc-400 font-normal mt-0.5">(Fija valor =)</span>
+              <span className="text-[10px] text-muted-foreground font-normal mt-0.5">(Fija valor =)</span>
             </button>
           </div>
         </div>
@@ -266,7 +266,7 @@ export function StockAdjustmentModal({
         />
 
         {/* Action buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>

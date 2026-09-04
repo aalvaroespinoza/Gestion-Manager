@@ -178,7 +178,7 @@ export function CheckoutModal({
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-white font-bold">Cobro y Cierre de Venta</span>
+            <span className="text-foreground font-bold">Cobro y Cierre de Venta</span>
           </div>
         ) : (
           <div className="flex items-center gap-2.5 text-emerald-400 font-bold">
@@ -190,7 +190,7 @@ export function CheckoutModal({
         )
       }
       description={
-        <span className="text-zinc-400 text-xs">
+        <span className="text-muted-foreground text-xs">
           {step === "PAYMENT"
             ? `Total a cobrar: $${summary.total.toLocaleString("es-CL")} • Cliente: ${client.name}`
             : `Comprobante digital correlativo para entrega al cliente.`}
@@ -214,14 +214,14 @@ export function CheckoutModal({
             </div>
             <div className="text-right">
               <span className="text-xs opacity-80">Cliente</span>
-              <div className="text-sm font-bold max-w-[180px] truncate text-white">{client.name}</div>
+              <div className="text-sm font-bold max-w-[180px] truncate text-primary-foreground">{client.name}</div>
               <span className="text-[11px] opacity-80">{client.taxCondition}</span>
             </div>
           </div>
 
           {/* Payment Method Selector Grid */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Seleccionar Medio de Pago
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -303,28 +303,28 @@ export function CheckoutModal({
                 <button
                   type="button"
                   onClick={() => handleQuickCash(0)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   Exacto (${total.toLocaleString("es-CL")})
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(1000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$1.000
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(5000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$5.000
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(10000)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   +$10.000
                 </button>
@@ -337,7 +337,7 @@ export function CheckoutModal({
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs text-amber-300">
-                <p className="font-bold text-white">Venta a Crédito en Cuenta Corriente</p>
+                <p className="font-bold text-foreground">Venta a Crédito en Cuenta Corriente</p>
                 <p className="mt-0.5 text-amber-300/80">
                   {client.hasCurrentAccount
                     ? `Cliente habilitado. Saldo disponible en cuenta: $${(
@@ -358,7 +358,7 @@ export function CheckoutModal({
           />
 
           {/* Modal Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Volver al Carrito
             </Button>
@@ -416,18 +416,18 @@ export function CheckoutModal({
             </div>
 
             {/* Itemized List */}
-            <div className="space-y-2 border-b border-dashed border-zinc-700 pb-3">
-              <div className="flex justify-between font-bold text-[11px] text-zinc-400 uppercase">
+            <div className="space-y-2 border-b border-dashed border-border pb-3">
+              <div className="flex justify-between font-bold text-[11px] text-muted-foreground uppercase">
                 <span>Cant. x Detalle</span>
                 <span>Importe</span>
               </div>
               {generatedInvoice.items.map((item, index) => (
                 <div key={index} className="space-y-0.5">
                   <div className="flex justify-between">
-                    <span className="font-semibold text-white">{item.name}</span>
-                    <span className="text-white">${item.subtotal.toLocaleString("es-CL")}</span>
+                    <span className="font-semibold text-foreground">{item.name}</span>
+                    <span className="text-foreground">${item.subtotal.toLocaleString("es-CL")}</span>
                   </div>
-                  <div className="text-[10px] text-zinc-500">
+                  <div className="text-[10px] text-muted-foreground">
                     {item.quantity} un. x ${item.unitPrice.toLocaleString("es-CL")} (SKU: {item.code})
                   </div>
                 </div>

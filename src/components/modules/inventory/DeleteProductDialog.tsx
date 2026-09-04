@@ -49,21 +49,21 @@ export function DeleteProductDialog({
       description="Esta acción removerá el producto permanentemente del catálogo y del control de inventario."
     >
       <div className="space-y-4 pt-1">
-        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-zinc-300 space-y-2">
-          <p className="text-zinc-400">
+        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-foreground space-y-2">
+          <p className="text-muted-foreground">
             ¿Estás seguro de que deseas dar de baja el siguiente producto?
           </p>
-          <div className="font-bold text-white text-sm">
+          <div className="font-bold text-foreground text-sm">
             {product.name}
           </div>
-          <div className="flex items-center gap-3 text-zinc-400 font-mono text-[11px]">
-            <span>SKU: <strong className="text-white">{product.code}</strong></span>
+          <div className="flex items-center gap-3 text-muted-foreground font-mono text-[11px]">
+            <span>SKU: <strong className="text-foreground">{product.code}</strong></span>
             <span>•</span>
-            <span>Stock actual: <strong className="text-white">{product.stock} un.</strong></span>
+            <span>Stock actual: <strong className="text-foreground">{product.stock} un.</strong></span>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-zinc-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-border">
           <Button
             type="button"
             variant="secondary"

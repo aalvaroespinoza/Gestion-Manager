@@ -488,14 +488,14 @@ export function ConfiguracionView({
       </div>
 
       {/* Tabs Navigation Bar */}
-      <div className="flex items-center gap-2 border-b border-zinc-800 overflow-x-auto pb-px">
+      <div className="flex items-center gap-2 border-b border-border overflow-x-auto pb-px">
         <button
           type="button"
           onClick={() => setActiveTab("PROFILE")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "PROFILE"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <User className="h-4 w-4" />
@@ -508,7 +508,7 @@ export function ConfiguracionView({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "GENERAL"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -521,7 +521,7 @@ export function ConfiguracionView({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "BRANCHES"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Store className="h-4 w-4" />
@@ -537,7 +537,7 @@ export function ConfiguracionView({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "USERS"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Users className="h-4 w-4" />
@@ -553,7 +553,7 @@ export function ConfiguracionView({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "FIELDS"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Layers className="h-4 w-4" />
@@ -566,7 +566,7 @@ export function ConfiguracionView({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 cursor-pointer ${
             activeTab === "NOTIFICATIONS"
               ? "border-primary text-primary"
-              : "border-transparent text-zinc-400 hover:text-white"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Bell className="h-4 w-4" />
@@ -590,7 +590,7 @@ export function ConfiguracionView({
 
             <CardContent className="space-y-6">
               {/* Avatar Header */}
-              <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center gap-4">
+              <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center gap-4">
                 <div className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shadow-md">
                   {userProfile.name
                     .split(" ")
@@ -601,14 +601,14 @@ export function ConfiguracionView({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-white text-sm">
+                    <h4 className="font-bold text-foreground text-sm">
                       {userProfile.name}
                     </h4>
                     <Badge variant="success" size="sm" dot>
                       {userProfile.role}
                     </Badge>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                     {userProfile.email} • {userProfile.position}
                   </p>
                 </div>
@@ -649,9 +649,9 @@ export function ConfiguracionView({
               </div>
 
               {/* Password Change */}
-              <div className="space-y-4 pt-3 border-t border-zinc-800">
+              <div className="space-y-4 pt-3 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <KeyRound className="h-4 w-4 text-primary" />
                     Actualización de Contraseña (Opcional)
                   </h4>
@@ -696,7 +696,7 @@ export function ConfiguracionView({
               </div>
             </CardContent>
 
-            <CardFooter className="flex justify-end border-t border-zinc-800 pt-4">
+            <CardFooter className="flex justify-end border-t border-border pt-4">
               <Button
                 type="submit"
                 variant="default"
@@ -816,7 +816,7 @@ export function ConfiguracionView({
               </div>
             </CardContent>
 
-            <CardFooter className="flex justify-end border-t border-zinc-800 pt-4">
+            <CardFooter className="flex justify-end border-t border-border pt-4">
               <Button
                 type="submit"
                 variant="default"
@@ -885,11 +885,11 @@ export function ConfiguracionView({
                 </TableHeader>
                 <TableBody>
                   {branches.map((branch) => (
-                    <TableRow key={branch.id} className="hover:bg-zinc-800/60 transition-colors">
+                    <TableRow key={branch.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-mono text-xs font-medium text-primary">
                         {branch.code}
                       </TableCell>
-                      <TableCell className="font-bold text-white text-sm">
+                      <TableCell className="font-bold text-foreground text-sm">
                         {branch.name}
                       </TableCell>
                       <TableCell>
@@ -897,8 +897,8 @@ export function ConfiguracionView({
                           {branch.role}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-300">
-                        {branch.address || <span className="text-zinc-500 italic">Sin dirección asignada</span>}
+                      <TableCell className="text-xs text-muted-foreground">
+                        {branch.address || <span className="text-muted-foreground italic">Sin dirección asignada</span>}
                       </TableCell>
                       <TableCell className="text-right">
                         {branches.length > 1 && (
@@ -958,7 +958,7 @@ export function ConfiguracionView({
                 </TableHeader>
                 <TableBody>
                   {teamUsers.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-zinc-800/60 transition-colors">
+                    <TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-2.5">
                           <div className="h-8 w-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center text-xs shadow-xs">
@@ -968,13 +968,13 @@ export function ConfiguracionView({
                               .join("")
                               .slice(0, 2)}
                           </div>
-                          <span className="font-bold text-xs text-white">
+                          <span className="font-bold text-xs text-foreground">
                             {user.name}
                           </span>
                         </div>
                       </TableCell>
 
-                      <TableCell className="text-xs text-zinc-400 font-mono">
+                      <TableCell className="text-xs text-muted-foreground font-mono">
                         {user.email}
                       </TableCell>
 
@@ -1003,14 +1003,14 @@ export function ConfiguracionView({
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-xs text-zinc-400">{user.lastLogin}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{user.lastLogin}</TableCell>
 
                       <TableCell className="text-right">
                         {user.id !== userProfile.id && (
                           <button
                             type="button"
                             onClick={() => setDeletingUser(user)}
-                            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                             title="Remover Usuario"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1064,7 +1064,7 @@ export function ConfiguracionView({
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
                       selectedCategoryId === cat.id
                         ? "bg-primary text-primary-foreground shadow-xs"
-                        : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white"
+                        : "bg-card text-muted-foreground border border-border hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     {cat.name} ({cat.dynamicFieldsConfig.length} atributos)
@@ -1077,10 +1077,10 @@ export function ConfiguracionView({
                 {currentCategoryObj?.dynamicFieldsConfig.map((field, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-2xl border border-zinc-800 bg-zinc-900/70 space-y-2 relative group"
+                    className="p-3.5 rounded-2xl border border-border bg-card/60 space-y-2 relative group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-white">
+                      <span className="font-bold text-xs text-foreground">
                         {field.label}
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -1090,7 +1090,7 @@ export function ConfiguracionView({
                         <button
                           type="button"
                           onClick={() => handleDeleteCustomField(field.name)}
-                          className="p-1 text-zinc-500 hover:text-red-400 rounded transition-colors cursor-pointer"
+                          className="p-1 text-muted-foreground hover:text-red-400 rounded transition-colors cursor-pointer"
                           title="Eliminar Campo"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1098,12 +1098,12 @@ export function ConfiguracionView({
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-zinc-400 font-mono">
+                    <p className="text-[11px] text-muted-foreground font-mono">
                       Clave JSON: <code className="text-primary font-bold">{field.name}</code>
                     </p>
 
                     {field.description && (
-                      <p className="text-[11px] text-zinc-400 line-clamp-2">
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
                         {field.description}
                       </p>
                     )}
@@ -1113,7 +1113,7 @@ export function ConfiguracionView({
                         {field.options.map((opt, i) => (
                           <span
                             key={i}
-                            className="text-[9px] bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded text-zinc-200 font-medium"
+                            className="text-[9px] bg-muted border border-border px-1.5 py-0.5 rounded text-foreground font-medium"
                           >
                             {opt.label}
                           </span>
@@ -1145,7 +1145,7 @@ export function ConfiguracionView({
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card/60 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.emailCriticalStock}
@@ -1155,19 +1155,19 @@ export function ConfiguracionView({
                         emailCriticalStock: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
+                    className="mt-1 rounded border-border bg-muted text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-bold text-xs text-white">
+                    <span className="font-bold text-xs text-foreground">
                       Alertas de Stock Crítico
                     </span>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
                       Enviar email automático cuando un producto alcance su umbral mínimo de seguridad.
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card/60 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.emailDailyReport}
@@ -1177,13 +1177,13 @@ export function ConfiguracionView({
                         emailDailyReport: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
+                    className="mt-1 rounded border-border bg-muted text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-bold text-xs text-white">
+                    <span className="font-bold text-xs text-foreground">
                       Resumen Diario de Cierre de Caja
                     </span>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
                       Recibir reporte consolidado de ventas y caja al final de cada jornada.
                     </p>
                   </div>
@@ -1231,7 +1231,7 @@ export function ConfiguracionView({
                   }
                 />
 
-                <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/70 cursor-pointer">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card/60 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={notificationsSettings.autoPrintReceipt}
@@ -1241,13 +1241,13 @@ export function ConfiguracionView({
                         autoPrintReceipt: e.target.checked,
                       })
                     }
-                    className="mt-1 rounded border-zinc-700 bg-zinc-800 text-primary accent-primary h-4 w-4"
+                    className="mt-1 rounded border-border bg-muted text-primary accent-primary h-4 w-4"
                   />
                   <div>
-                    <span className="font-bold text-xs text-white">
+                    <span className="font-bold text-xs text-foreground">
                       Impresión Inmediata de Ticket
                     </span>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
                       Abrir cuadro de diálogo de impresión automáticamente al confirmar una venta en el POS.
                     </p>
                   </div>
@@ -1279,7 +1279,7 @@ export function ConfiguracionView({
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Store className="h-5 w-5" />
             </div>
-            <span className="text-white font-bold">Crear Nueva Sucursal</span>
+            <span className="text-foreground font-bold">Crear Nueva Sucursal</span>
           </div>
         }
         description="Agrega un nuevo punto de venta o bodega física al tenant."
@@ -1319,7 +1319,7 @@ export function ConfiguracionView({
             onChange={(e) => setBranchAddress(e.target.value)}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button type="button" variant="secondary" onClick={() => setIsNewBranchModalOpen(false)}>
               Cancelar
             </Button>
@@ -1347,10 +1347,10 @@ export function ConfiguracionView({
       >
         {deletingBranch && (
           <div className="space-y-4 pt-1">
-            <p className="text-xs text-zinc-300">
-              Se eliminará <strong className="text-white">{deletingBranch.name}</strong> ({deletingBranch.code}).
+            <p className="text-xs text-muted-foreground">
+              Se eliminará <strong className="text-foreground">{deletingBranch.name}</strong> ({deletingBranch.code}).
             </p>
-            <div className="flex justify-end gap-2.5 pt-3 border-t border-zinc-800">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-border">
               <Button type="button" variant="secondary" onClick={() => setDeletingBranch(null)}>
                 Cancelar
               </Button>
@@ -1372,7 +1372,7 @@ export function ConfiguracionView({
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <UserPlus className="h-5 w-5" />
             </div>
-            <span className="text-white font-bold">Registrar Usuario en el Tenant</span>
+            <span className="text-foreground font-bold">Registrar Usuario en el Tenant</span>
           </div>
         }
         description="Crea un acceso con rol para un colaborador en la base de datos de tu organización."
@@ -1414,7 +1414,7 @@ export function ConfiguracionView({
             onChange={(e) => setInvitePassword(e.target.value)}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button type="button" variant="secondary" onClick={() => setIsInviteModalOpen(false)}>
               Cancelar
             </Button>
@@ -1442,10 +1442,10 @@ export function ConfiguracionView({
       >
         {deletingUser && (
           <div className="space-y-4 pt-1">
-            <p className="text-xs text-zinc-300">
-              ¿Estás seguro de que deseas dar de baja a <strong className="text-white">{deletingUser.name}</strong> ({deletingUser.email})?
+            <p className="text-xs text-muted-foreground">
+              ¿Estás seguro de que deseas dar de baja a <strong className="text-foreground">{deletingUser.name}</strong> ({deletingUser.email})?
             </p>
-            <div className="flex justify-end gap-2.5 pt-3 border-t border-zinc-800">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-border">
               <Button type="button" variant="secondary" onClick={() => setDeletingUser(null)}>
                 Cancelar
               </Button>
@@ -1467,7 +1467,7 @@ export function ConfiguracionView({
             <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30">
               <Sparkles className="h-5 w-5" />
             </div>
-            <span className="text-white font-bold">Agregar Atributo a {currentCategoryObj?.name}</span>
+            <span className="text-foreground font-bold">Agregar Atributo a {currentCategoryObj?.name}</span>
           </div>
         }
         description="Define un nuevo campo personalizado que se guardará en PostgreSQL para esta categoría."
@@ -1506,7 +1506,7 @@ export function ConfiguracionView({
             ]}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button type="button" variant="secondary" onClick={() => setIsNewFieldModalOpen(false)}>
               Cancelar
             </Button>

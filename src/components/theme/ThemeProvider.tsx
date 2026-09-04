@@ -2,12 +2,21 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-export type ThemePalette = "orange" | "blue" | "rose" | "beige"
+export type ThemePalette =
+  | "orange"
+  | "blue"
+  | "rose"
+  | "beige"
+  | "light-blue"
+  | "light-orange"
+  | "light-emerald"
+  | "light-rose"
 
 export interface ThemeConfig {
   id: ThemePalette
   name: string
   subtitle: string
+  mode: "dark" | "light"
   swatchColor: string
   accentColor: string
   bgSoft: string
@@ -16,30 +25,34 @@ export interface ThemeConfig {
 }
 
 export const themeOptions: ThemeConfig[] = [
+  // --- Modos Oscuros (Dark) ---
   {
     id: "orange",
     name: "Dark Grafito & Naranja",
     subtitle: "Moderno & Pro (Predeterminado)",
+    mode: "dark",
     swatchColor: "#f97316",
     accentColor: "#ea580c",
     bgSoft: "#121214",
     sidebarColor: "#09090b",
-    description: "Fondo grafito carbón (#121214), tarjetas zinc (#18181b) y acentos vibrantes naranja (#f97316).",
+    description: "Fondo grafito carbón (#121214), tarjetas zinc (#18181b) y acentos vibrantes naranja.",
   },
   {
     id: "blue",
     name: "Dark Azul Cobalto",
     subtitle: "Corporativo & Técnico",
+    mode: "dark",
     swatchColor: "#3b82f6",
     accentColor: "#2563eb",
     bgSoft: "#0b0f19",
     sidebarColor: "#070b14",
-    description: "Fondo oscuro profundo con tarjetas navy (#111827) y acentos azul cobalto eléctrico.",
+    description: "Fondo oscuro profundo con tarjetas navy (#111827) y acentos azul cobalto.",
   },
   {
     id: "rose",
     name: "Dark Rosa Borgoña",
     subtitle: "Elegante & Distintivo",
+    mode: "dark",
     swatchColor: "#f43f5e",
     accentColor: "#e11d48",
     bgSoft: "#140b10",
@@ -50,11 +63,58 @@ export const themeOptions: ThemeConfig[] = [
     id: "beige",
     name: "Dark Arena Cálido",
     subtitle: "Minimalista & Ámbar",
+    mode: "dark",
     swatchColor: "#d97706",
     accentColor: "#b45309",
     bgSoft: "#151311",
     sidebarColor: "#100e0c",
-    description: "Fondo cálido oscuro (#151311), tarjetas carbón arena (#1f1a15) y acentos ámbar dorado.",
+    description: "Fondo cálido oscuro (#151311), tarjetas carbón arena y acentos ámbar dorado.",
+  },
+
+  // --- Modos Claros (Light) ---
+  {
+    id: "light-blue",
+    name: "Blanco & Azul Cobalto",
+    subtitle: "Limpio, Técnico & Corporativo",
+    mode: "light",
+    swatchColor: "#2563eb",
+    accentColor: "#1d4ed8",
+    bgSoft: "#f8fafc",
+    sidebarColor: "#ffffff",
+    description: "Fondo blanco pulcro (#f8fafc), tarjetas níveas (#ffffff) y acentos azul royal.",
+  },
+  {
+    id: "light-orange",
+    name: "Blanco & Naranja",
+    subtitle: "Cálido, Dinámico & Pro",
+    mode: "light",
+    swatchColor: "#ea580c",
+    accentColor: "#c2410c",
+    bgSoft: "#fafaf9",
+    sidebarColor: "#ffffff",
+    description: "Fondo blanco cálido (#fafaf9), tarjetas níveas (#ffffff) y acentos naranja intenso.",
+  },
+  {
+    id: "light-emerald",
+    name: "Blanco & Esmeralda",
+    subtitle: "Fresco, Financiero & Ágil",
+    mode: "light",
+    swatchColor: "#059669",
+    accentColor: "#047857",
+    bgSoft: "#f8fafc",
+    sidebarColor: "#ffffff",
+    description: "Fondo blanco limpio (#f8fafc), tarjetas níveas (#ffffff) y acentos verde esmeralda.",
+  },
+  {
+    id: "light-rose",
+    name: "Blanco & Rosa",
+    subtitle: "Boutique, Elegante & Retail",
+    mode: "light",
+    swatchColor: "#e11d48",
+    accentColor: "#be123c",
+    bgSoft: "#fff8f9",
+    sidebarColor: "#ffffff",
+    description: "Fondo suave rubí (#fff8f9), tarjetas níveas (#ffffff) y acentos frambuesa refinados.",
   },
 ]
 
@@ -95,11 +155,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof document !== "undefined") {
       const root = document.documentElement
       // Remove any previous theme classes
-      root.classList.remove("theme-orange", "theme-blue", "theme-rose", "theme-beige", "theme-green", "theme-mint", "theme-white")
+      root.classList.remove(
+        "theme-orange",
+        "theme-blue",
+        "theme-rose",
+        "theme-beige",
+        "theme-light-blue",
+        "theme-light-orange",
+        "theme-light-emerald",
+        "theme-light-rose"
+      )
 
       // Add new theme class & data-theme attribute
       root.classList.add(`theme-${newTheme}`)
       root.setAttribute("data-theme", newTheme)
+
+      // Toggle light vs dark class on html root element
+      if (newTheme.startsWith("light-")) {
+        root.classList.remove("dark")
+        root.classList.add("light")
+      } else {
+        root.classList.remove("light")
+        root.classList.add("dark")
+      }
     }
   }
 
