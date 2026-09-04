@@ -22,6 +22,7 @@ import { toast } from "sonner"
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner"
 import { CommandPalette } from "@/components/command-palette/CommandPalette"
 import { CheckoutModal } from "@/components/modules/sales/CheckoutModal"
+import { ClientSearchCombobox } from "@/components/modules/sales/ClientSearchCombobox"
 import { createSale } from "@/modules/sales/actions"
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils"
 import { Product, Category, StockStatus } from "@/types/inventory"
@@ -121,6 +122,8 @@ export function VentasView({
 
   // Discounts & Taxes
   const [discountPercent, setDiscountPercent] = useState<number>(0)
+  const [isCustomDiscountOpen, setIsCustomDiscountOpen] = useState<boolean>(false)
+  const [customDiscountInput, setCustomDiscountInput] = useState<string>("")
   const [applyTax, setApplyTax] = useState<boolean>(true)
 
   // Modals & Command Palette state
@@ -314,6 +317,9 @@ export function VentasView({
   // Clear Entire Cart
   const handleClearCart = () => {
     setCart([])
+    setDiscountPercent(0)
+    setIsCustomDiscountOpen(false)
+    setCustomDiscountInput("")
   }
 
   // Confirm Sale via Server Action
@@ -495,9 +501,9 @@ export function VentasView({
         /* ========================================================================= */
         /* TAB 1: POS TERMINAL - ALTA DENSIDAD INDUSTRIAL                            */
         /* ========================================================================= */
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 items-stretch min-h-[calc(100vh-12rem)]">
           {/* Left Column: Product Catalog & Search (Expanded to fill available space) */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="flex-1 min-w-0 flex flex-col space-y-4">
             {/* Search, Shortcuts & Category Pills */}
             <Card>
               <CardContent className="p-4 space-y-3">
@@ -588,8 +594,8 @@ export function VentasView({
             </Card>
 
             {/* Industrial High-Density Products Table with Notable Column Dividers */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm card-specular">
-              <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm card-specular flex-1 flex flex-col">
+              <div className="overflow-x-auto flex-1 max-h-[calc(100vh-21rem)] min-h-[500px] overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md border-b-2 border-border text-[11px] uppercase tracking-wider font-extrabold text-foreground">
                     <tr className="divide-x divide-border/80">
@@ -648,15 +654,20 @@ export function VentasView({
                             </td>
                             <td className="py-2.5 px-4 text-center whitespace-nowrap">
                               <Badge
+                                variant={
+                                  product.status === "IN_STOCK"
+                                    ? "success"
+                                    : product.status === "LOW_STOCK"
+                                    ? "warning"
+                                    : "destructive"
+                                }
                                 size="sm"
-                                variant={isOutOfStock ? "destructive" : isLowStock ? "warning" : "success"}
                                 dot
-                                className="font-mono tabular-nums"
                               >
-                                {isOutOfStock ? "0 un." : `${product.stock} un.`}
+                                {product.stock} un.
                               </Badge>
                             </td>
-                            <td className="py-2.5 px-4 text-right font-mono tabular-nums font-black text-sm text-foreground whitespace-nowrap bg-muted/5">
+                            <td className="py-2.5 px-4 text-right font-mono font-bold text-foreground whitespace-nowrap">
                               ${product.salePrice.toLocaleString("es-CL")}
                             </td>
                             <td className="py-2.5 px-4 text-center whitespace-nowrap">
@@ -685,11 +696,11 @@ export function VentasView({
             </div>
           </div>
 
-          {/* Right Column: Interactive Cart & Totals (Fixed Width & Sticky) */}
-          <div className="w-full lg:w-[410px] xl:w-[440px] shrink-0 space-y-4 sticky top-20">
-            <Card>
-              {/* Client Selection Header */}
-              <CardHeader className="pb-3 border-b border-border">
+          {/* Right Column: Interactive Cart & Totals (Fixed Width, Full Height & Sticky) */}
+          <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0 flex flex-col sticky top-20">
+            <Card className="flex-1 flex flex-col h-full bg-card border border-border shadow-sm card-specular rounded-2xl overflow-hidden">
+              {/* Client Selection Header with Searchable Combobox */}
+              <CardHeader className="pb-3 border-b border-border shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-primary" />
@@ -699,38 +710,45 @@ export function VentasView({
                     <button
                       type="button"
                       onClick={handleClearCart}
-                      className="text-xs text-red-400 hover:text-red-300 font-medium cursor-pointer"
+                      className="text-xs text-red-400 hover:text-red-300 font-medium cursor-pointer transition-colors"
                     >
                       Vaciar Carrito
                     </button>
                   )}
                 </div>
 
-                <div className="mt-2">
-                  <Select
-                    value={selectedClient.id}
-                    onChange={(e) => {
-                      const found = clients.find((c) => c.id === e.target.value)
-                      if (found) setSelectedClient(found)
-                    }}
-                    options={clients.map((c) => ({
-                      label: `${c.name} (${c.docType}: ${c.docNumber})`,
-                      value: c.id,
-                    }))}
+                <div className="mt-2.5">
+                  <ClientSearchCombobox
+                    clients={clients}
+                    selectedClient={selectedClient}
+                    onSelectClient={(client) => setSelectedClient(client)}
                   />
                 </div>
               </CardHeader>
 
-              {/* Cart Items List */}
-              <CardContent className="p-4 space-y-4">
+              {/* Cart Items List & Modifiers */}
+              <CardContent className="flex-1 flex flex-col justify-between p-4 min-h-0">
                 {cart.length === 0 ? (
-                  <div className="py-12 text-center text-muted-foreground space-y-2">
-                    <ShoppingCart className="h-10 w-10 mx-auto opacity-30" />
-                    <p className="text-sm font-semibold text-foreground">El carrito de venta está vacío</p>
-                    <p className="text-xs text-muted-foreground">Selecciona productos de la tabla o escanea con pistola USB.</p>
+                  <div className="flex-1 flex flex-col items-center justify-center py-16 text-center text-muted-foreground space-y-3">
+                    <div className="h-16 w-16 rounded-2xl bg-muted/50 border border-border flex items-center justify-center text-muted-foreground/60 shadow-xs">
+                      <ShoppingCart className="h-8 w-8 opacity-60" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">El carrito de venta está vacío</p>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
+                        Selecciona productos de la tabla o escanea códigos de barra con la pistola USB.
+                      </p>
+                    </div>
+                    <div className="pt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground/70 font-mono">
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px]">F2</kbd>
+                      <span>Buscar producto</span>
+                      <span>•</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px]">F3</kbd>
+                      <span>Cliente</span>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                  <div className="space-y-2 flex-1 overflow-y-auto max-h-[calc(100vh-30rem)] min-h-[160px] pr-1 scrollbar-thin">
                     {cart.map((item) => (
                       <div
                         key={item.productId}
@@ -788,35 +806,96 @@ export function VentasView({
                   </div>
                 )}
 
-                {/* Summary & Modifiers */}
+                {/* Summary & Modifiers (Pinned to Bottom) */}
                 {cart.length > 0 && (
-                  <div className="pt-3 border-t border-border space-y-3">
-                    {/* Discount quick selectors */}
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground font-semibold flex items-center gap-1">
-                        <Percent className="h-3.5 w-3.5 text-primary" />
-                        Descuento Global:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[0, 5, 10, 15].map((pct) => (
+                  <div className="pt-3 border-t border-border mt-auto space-y-3 shrink-0">
+                    {/* Discount quick selectors + Custom Input */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-semibold flex items-center gap-1">
+                          <Percent className="h-3.5 w-3.5 text-primary" />
+                          Descuento Global:
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[0, 5, 10, 15].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => {
+                                setDiscountPercent(pct)
+                                setIsCustomDiscountOpen(false)
+                                setCustomDiscountInput(pct > 0 ? String(pct) : "")
+                              }}
+                              className={cn(
+                                "px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer border",
+                                discountPercent === pct && !isCustomDiscountOpen
+                                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                                  : "bg-muted text-muted-foreground hover:text-foreground border-border"
+                              )}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
                           <button
-                            key={pct}
                             type="button"
-                            onClick={() => setDiscountPercent(pct)}
-                            className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                              discountPercent === pct
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted text-muted-foreground hover:text-foreground border border-border"
-                            }`}
+                            onClick={() => {
+                              setIsCustomDiscountOpen((prev) => !prev)
+                              if (!isCustomDiscountOpen && ![0, 5, 10, 15].includes(discountPercent)) {
+                                setCustomDiscountInput(String(discountPercent))
+                              }
+                            }}
+                            className={cn(
+                              "px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer border",
+                              (![0, 5, 10, 15].includes(discountPercent) || isCustomDiscountOpen)
+                                ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                                : "bg-muted text-muted-foreground hover:text-foreground border-border"
+                            )}
                           >
-                            {pct}%
+                            {![0, 5, 10, 15].includes(discountPercent) ? `${discountPercent}%` : "Otro..."}
                           </button>
-                        ))}
+                        </div>
                       </div>
+
+                      {/* Custom Discount Input Bar */}
+                      {isCustomDiscountOpen && (
+                        <div className="flex items-center gap-2 pt-1 animate-in fade-in-0 duration-150">
+                          <div className="relative flex-1 flex items-center">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={0.5}
+                              value={customDiscountInput}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                setCustomDiscountInput(val)
+                                const num = Math.min(100, Math.max(0, Number(val) || 0))
+                                setDiscountPercent(num)
+                              }}
+                              placeholder="Porcentaje de descuento (0 - 100)"
+                              className="w-full h-8 px-2.5 pr-7 text-xs rounded-lg border border-border bg-card text-foreground font-mono tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                              autoFocus
+                            />
+                            <span className="absolute right-2 text-xs font-bold text-muted-foreground pointer-events-none">%</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomDiscountOpen(false)
+                              if (!customDiscountInput || Number(customDiscountInput) === 0) {
+                                setDiscountPercent(0)
+                              }
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted hover:bg-muted/80 text-foreground border border-border cursor-pointer transition-colors"
+                          >
+                            Aplicar
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Breakdown totals */}
-                    <div className="space-y-1.5 text-xs text-muted-foreground pt-1">
+                    <div className="space-y-2 text-xs text-muted-foreground pt-1">
                       <div className="flex justify-between">
                         <span>Subtotal Neto:</span>
                         <span className="text-foreground font-mono tabular-nums font-medium">
@@ -825,23 +904,45 @@ export function VentasView({
                       </div>
 
                       {summary.discountAmount > 0 && (
-                        <div className="flex justify-between text-emerald-400 font-semibold">
+                        <div className="flex justify-between text-emerald-500 font-semibold">
                           <span>Descuento ({summary.discountValue}%):</span>
                           <span className="font-mono tabular-nums">-${summary.discountAmount.toLocaleString("es-CL")}</span>
                         </div>
                       )}
 
-                      <div className="flex justify-between">
-                        <span>IVA Estimado (21%):</span>
-                        <span className="text-foreground font-mono tabular-nums font-medium">
-                          ${summary.taxAmount.toLocaleString("es-CL")}
+                      {/* Interactive IVA (VAT) Toggle Control */}
+                      <div className="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-muted/40 border border-border transition-colors">
+                        <label htmlFor="iva-toggle" className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            id="iva-toggle"
+                            checked={applyTax}
+                            onChange={(e) => setApplyTax(e.target.checked)}
+                            className="h-4 w-4 rounded border-border bg-card text-primary accent-primary cursor-pointer transition-colors"
+                          />
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-foreground">
+                              Aplicar IVA (21%)
+                            </span>
+                            <Badge variant={applyTax ? "default" : "secondary"} size="sm" className="h-4 text-[9px] px-1 font-bold">
+                              {applyTax ? "Activo" : "Exento"}
+                            </Badge>
+                          </div>
+                        </label>
+                        <span
+                          className={cn(
+                            "font-mono tabular-nums text-xs font-bold transition-colors",
+                            applyTax ? "text-foreground" : "text-muted-foreground line-through opacity-60"
+                          )}
+                        >
+                          {applyTax ? `$${summary.taxAmount.toLocaleString("es-CL")}` : "$0"}
                         </span>
                       </div>
 
                       {/* Highlighted Total */}
-                      <div className="flex justify-between text-base font-black text-foreground pt-2 border-t border-border">
+                      <div className="flex items-center justify-between text-base font-black text-foreground pt-2 border-t border-border">
                         <span>Total Final:</span>
-                        <span className="text-primary font-black text-xl font-mono tabular-nums">
+                        <span className="text-primary font-black text-2xl font-mono tabular-nums tracking-tight">
                           ${summary.total.toLocaleString("es-CL")}
                         </span>
                       </div>
@@ -853,7 +954,7 @@ export function VentasView({
                       variant="default"
                       size="lg"
                       onClick={() => setIsCheckoutOpen(true)}
-                      className="w-full font-bold text-sm shadow-md mt-2 cursor-pointer"
+                      className="w-full font-bold text-sm shadow-md mt-2 cursor-pointer active:scale-[0.98] transition-transform"
                       leftIcon={<Banknote className="h-4 w-4" />}
                     >
                       <span>Cobrar Venta (F4)</span>
@@ -990,6 +1091,9 @@ export function VentasView({
         onNewSale={() => {
           setIsCheckoutOpen(false)
           setCart([])
+          setDiscountPercent(0)
+          setIsCustomDiscountOpen(false)
+          setCustomDiscountInput("")
         }}
       />
 
