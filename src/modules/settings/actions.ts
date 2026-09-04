@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { Prisma, UserRole, UserStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireTenant, requireUser, getCurrentSession } from '@/modules/auth/session-utils'
+import { assertRole } from '@/modules/auth/permissions'
 import { createSession } from '@/lib/session'
 import { ApiResponse } from '@/types'
 import { DynamicFormFieldConfig } from '@/components/dynamic-forms/types'
@@ -274,6 +275,7 @@ export async function getTenantSettings(): Promise<ApiResponse<any>> {
  */
 export async function updateTenantSettings(input: TenantSettingsInput): Promise<ApiResponse<any>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -377,6 +379,7 @@ export async function createBranch(data: {
   phone?: string
 }): Promise<ApiResponse<BranchItem>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
     if (!tenant) return { success: false, error: 'Tenant no encontrado' }
@@ -427,6 +430,7 @@ export async function updateBranch(
   data: Partial<BranchItem>
 ): Promise<ApiResponse<BranchItem>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
     if (!tenant) return { success: false, error: 'Tenant no encontrado' }
@@ -475,6 +479,7 @@ export async function updateBranch(
  */
 export async function deleteBranch(id: string): Promise<ApiResponse<{ id: string }>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
     if (!tenant) return { success: false, error: 'Tenant no encontrado' }
@@ -547,6 +552,7 @@ export async function getTeamUsers(): Promise<ApiResponse<any[]>> {
  */
 export async function inviteUser(data: InviteUserInput): Promise<ApiResponse<any>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const email = data.email.trim().toLowerCase()
     const name = data.name.trim()
@@ -604,6 +610,7 @@ export async function inviteUser(data: InviteUserInput): Promise<ApiResponse<any
  */
 export async function deleteUser(userId: string): Promise<ApiResponse<{ id: string }>> {
   try {
+    await assertRole(['ADMIN'])
     const tenantId = await requireTenant()
     const currentUser = await requireUser()
 
@@ -691,6 +698,7 @@ export async function saveCustomFields(
   fieldsConfig: DynamicFormFieldConfig[] | { fields: DynamicFormFieldConfig[] }
 ): Promise<ApiResponse<any>> {
   try {
+    await assertRole(['ADMIN', 'MANAGER'])
     const tenantId = await requireTenant()
 
     const category = await prisma.category.findFirst({

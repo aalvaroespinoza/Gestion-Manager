@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/modules/auth/session-utils'
 import { assertRole } from '@/modules/auth/permissions'
 import { logAuditTx } from '@/modules/audit/actions'
+import { getNextCorrelative } from '@/modules/core/counters'
 import { ApiResponse } from '@/types'
 import { TenantSettings } from '@/types/database'
 import {
@@ -46,7 +47,8 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
 
       const productMap = new Map(products.map((p) => [p.id, p]))
 
-      // Verificar que todos los productos existen y pertenecen al tenant
+      // Paso B: Descuento atómico condicional de stock directamente en PostgreSQL
+      // Evita race conditions: solo descuenta si currentStock >= cantidad solicitada
       for (const item of validated.items) {
         const product = productMap.get(item.productId)
         if (!product) {
@@ -57,27 +59,26 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
           throw new Error(`El producto "${product.name}" no está activo para la venta`)
         }
 
-        const currentStockNum = product.currentStock.toNumber()
-        if (currentStockNum < item.quantity) {
+        const requestedQty = new Prisma.Decimal(item.quantity)
+
+        // Sentencia atómica condicional: si no hay stock suficiente, updatedRows será 0
+        const updatedRows = await tx.$executeRaw`
+          UPDATE "Product"
+          SET "currentStock" = "currentStock" - ${requestedQty}::decimal(12, 2)
+          WHERE "id" = ${item.productId}
+            AND "tenantId" = ${tenantId}
+            AND "status" = 'ACTIVE'
+            AND "currentStock" >= ${requestedQty}::decimal(12, 2);
+        `
+
+        if (updatedRows === 0) {
           throw new Error(
-            `Stock insuficiente para el producto "${product.name}". Stock disponible: ${currentStockNum}, solicitado: ${item.quantity}`
+            `Stock insuficiente o cambio concurrente para el producto "${product.name}". La venta no pudo procesarse.`
           )
         }
       }
 
-      // Paso C: Descontar el stock de cada producto
-      for (const item of validated.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            currentStock: {
-              decrement: new Prisma.Decimal(item.quantity),
-            },
-          },
-        })
-      }
-
-      // Paso D: Generar el número correlativo de comprobante para el tenant
+      // Paso C: Generar correlativo atómico sin colisiones (TenantCounter)
       const tenant = await tx.tenant.findUnique({
         where: { id: tenantId },
         select: { settings: true },
@@ -86,67 +87,47 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
       const tenantSettings = (tenant?.settings as unknown as TenantSettings) || {}
       const prefix = tenantSettings.invoicePrefix || 'INV-'
 
-      // Obtener el conteo actual de ventas para este tenant
-      const saleCount = await tx.sale.count({
-        where: { tenantId },
-      })
+      const { orderNumber: invoiceNumber } = await getNextCorrelative(
+        tx,
+        tenantId,
+        'INVOICE',
+        prefix,
+        5
+      )
 
-      let nextNumber = saleCount + 1
-      let invoiceNumber = `${prefix}${String(nextNumber).padStart(5, '0')}`
-
-      // Garantizar que invoiceNumber sea único para el tenant
-      let isDuplicate = await tx.sale.findUnique({
-        where: {
-          tenantId_invoiceNumber: {
-            tenantId,
-            invoiceNumber,
-          },
-        },
-      })
-
-      while (isDuplicate) {
-        nextNumber += 1
-        invoiceNumber = `${prefix}${String(nextNumber).padStart(5, '0')}`
-        isDuplicate = await tx.sale.findUnique({
-          where: {
-            tenantId_invoiceNumber: {
-              tenantId,
-              invoiceNumber,
-            },
-          },
-        })
-      }
-
-      // Paso E: Calcular subtotales y total
-      let subtotalSum = 0
+      // Paso D: Calcular subtotales y total con precisión contable Prisma.Decimal
+      let subtotalSum = new Prisma.Decimal(0)
       const saleItemsData = validated.items.map((item) => {
         const product = productMap.get(item.productId)!
-        const itemSubtotal = item.quantity * item.unitPrice
-        subtotalSum += itemSubtotal
+        const qtyDec = new Prisma.Decimal(item.quantity)
+        const priceDec = new Prisma.Decimal(item.unitPrice)
+        const itemSubtotal = qtyDec.mul(priceDec)
+        subtotalSum = subtotalSum.add(itemSubtotal)
 
         return {
           productId: item.productId,
-          quantity: new Prisma.Decimal(item.quantity),
-          unitPrice: new Prisma.Decimal(item.unitPrice),
-          subtotal: new Prisma.Decimal(itemSubtotal),
+          quantity: qtyDec,
+          unitPrice: priceDec,
+          subtotal: itemSubtotal,
           customSpecs: (item.customSpecs ||
             product.customAttributes ||
             {}) as unknown as Prisma.InputJsonValue,
         }
       })
 
-      const discount = validated.discount || 0
-      const tax = validated.tax || 0
-      const total = Math.max(0, subtotalSum - discount + tax)
+      const discountDec = new Prisma.Decimal(validated.discount || 0)
+      const taxDec = new Prisma.Decimal(validated.tax || 0)
+      const rawTotal = subtotalSum.sub(discountDec).add(taxDec)
+      const totalDec = rawTotal.isNegative() ? new Prisma.Decimal(0) : rawTotal
 
-      // Look up active open cash shift for this user and tenant
+      // Paso E: Validar turno de caja activo (si aplica)
       const activeCashShift = await tx.cashShift.findFirst({
         where: {
           tenantId,
           userId,
           status: 'OPEN',
         },
-        select: { id: true },
+        select: { id: true, status: true },
       })
 
       // Registrar la cabecera Sale y los ítems SaleItem
@@ -157,10 +138,10 @@ export async function createSale(data: CreateSaleInput): Promise<ApiResponse<any
           clientId: validated.clientId || null,
           cashShiftId: activeCashShift?.id || null,
           invoiceNumber,
-          subtotal: new Prisma.Decimal(subtotalSum),
-          discount: new Prisma.Decimal(discount),
-          tax: new Prisma.Decimal(tax),
-          total: new Prisma.Decimal(total),
+          subtotal: subtotalSum,
+          discount: discountDec,
+          tax: taxDec,
+          total: totalDec,
           paymentMethod: validated.paymentMethod,
           notes: validated.notes || null,
           status: 'COMPLETED',

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/modules/auth/session-utils'
 import { assertRole } from '@/modules/auth/permissions'
 import { logAuditTx } from '@/modules/audit/actions'
+import { getNextCorrelative } from '@/modules/core/counters'
 import { ApiResponse } from '@/types'
 import {
   createPurchaseOrderSchema,
@@ -60,49 +61,33 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput): Promi
     }
 
     const orderResult = await prisma.$transaction(async (tx) => {
-      // Generate sequential orderNumber (OC-00001)
-      const count = await tx.purchaseOrder.count({ where: { tenantId } })
-      let nextNum = count + 1
-      let orderNumber = `OC-${String(nextNum).padStart(5, '0')}`
+      // Generate sequential orderNumber (OC-00001) atomically
+      const { orderNumber } = await getNextCorrelative(
+        tx,
+        tenantId,
+        'PURCHASE_ORDER',
+        'OC-',
+        5
+      )
 
-      let isDuplicate = await tx.purchaseOrder.findUnique({
-        where: {
-          tenantId_orderNumber: {
-            tenantId,
-            orderNumber,
-          },
-        },
-      })
-
-      while (isDuplicate) {
-        nextNum += 1
-        orderNumber = `OC-${String(nextNum).padStart(5, '0')}`
-        isDuplicate = await tx.purchaseOrder.findUnique({
-          where: {
-            tenantId_orderNumber: {
-              tenantId,
-              orderNumber,
-            },
-          },
-        })
-      }
-
-      // Calculate subtotals
-      let subtotalSum = 0
+      // Calculate subtotals with Prisma.Decimal precision
+      let subtotalSum = new Prisma.Decimal(0)
       const itemsData = validated.items.map((item) => {
-        const itemSubtotal = item.quantity * item.unitCost
-        subtotalSum += itemSubtotal
+        const qtyDec = new Prisma.Decimal(item.quantity)
+        const costDec = new Prisma.Decimal(item.unitCost)
+        const itemSubtotal = qtyDec.mul(costDec)
+        subtotalSum = subtotalSum.add(itemSubtotal)
 
         return {
           productId: item.productId,
-          quantity: new Prisma.Decimal(item.quantity),
-          unitCost: new Prisma.Decimal(item.unitCost),
-          subtotal: new Prisma.Decimal(itemSubtotal),
+          quantity: qtyDec,
+          unitCost: costDec,
+          subtotal: itemSubtotal,
         }
       })
 
-      const tax = validated.tax || 0
-      const total = subtotalSum + tax
+      const taxDec = new Prisma.Decimal(validated.tax || 0)
+      const totalDec = subtotalSum.add(taxDec)
 
       const po = await tx.purchaseOrder.create({
         data: {
@@ -111,9 +96,9 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput): Promi
           userId,
           orderNumber,
           status: 'PENDING',
-          subtotal: new Prisma.Decimal(subtotalSum),
-          tax: new Prisma.Decimal(tax),
-          total: new Prisma.Decimal(total),
+          subtotal: subtotalSum,
+          tax: taxDec,
+          total: totalDec,
           notes: validated.notes || null,
           expectedDate: validated.expectedDate ? new Date(validated.expectedDate) : null,
           items: {

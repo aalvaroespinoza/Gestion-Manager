@@ -87,6 +87,7 @@ model Tenant {
   auditLogs      AuditLog[]
   suppliers      Supplier[]
   purchaseOrders PurchaseOrder[]
+  counters       TenantCounter[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -372,3 +373,17 @@ model PurchaseOrderItem {
   @@index([purchaseOrderId])
   @@index([productId])
 }
+
+model TenantCounter {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type       String   // e.g. "INVOICE", "PURCHASE_ORDER", "RECEIPT"
+  prefix     String   // e.g. "INV-", "OC-", "REC-"
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tenantId, type])
+  @@index([tenantId])
+}
+
