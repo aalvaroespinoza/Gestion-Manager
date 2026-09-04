@@ -1,46 +1,41 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
+import { motion, AnimatePresence } from "motion/react"
+import { SpotlightCard } from "@/components/ui/spotlight-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table"
-import {
-  DollarSign,
+  TrendingUp,
   ShoppingCart,
   Boxes,
   Users,
-  TrendingUp,
+  DollarSign,
   ArrowUpRight,
   AlertTriangle,
   ArrowRight,
-  Building2,
-  ChevronRight,
+  Store,
+  Clock,
+  CheckCircle2,
+  RefreshCw,
+  Search,
+  Plus,
+  CreditCard,
+  Banknote,
+  Receipt,
+  Sparkles,
 } from "lucide-react"
 
-// Mock summary data for dashboard KPIs and charts
-const weeklySalesData = [
-  { day: "Lun", total: 420000, percentage: 65, orders: 18 },
-  { day: "Mar", total: 680000, percentage: 88, orders: 27 },
-  { day: "Mié", total: 540000, percentage: 72, orders: 22 },
-  { day: "Jue", total: 890000, percentage: 100, orders: 34 },
-  { day: "Vie", total: 760000, percentage: 92, orders: 31 },
-  { day: "Sáb", total: 950000, percentage: 105, orders: 42 },
-  { day: "Dom", total: 310000, percentage: 45, orders: 12 },
+// Mock data for weekly trend
+const weeklyData = [
+  { day: "Lun", total: 420000, orders: 18, height: 45 },
+  { day: "Mar", total: 680000, orders: 27, height: 70 },
+  { day: "Mié", total: 540000, orders: 22, height: 56 },
+  { day: "Jue", total: 890000, orders: 34, height: 92 },
+  { day: "Vie", total: 760000, orders: 31, height: 80 },
+  { day: "Sáb", total: 950000, orders: 42, height: 100 },
+  { day: "Dom", total: 310000, orders: 12, height: 32 },
 ]
 
 const recentTransactions = [
@@ -96,440 +91,619 @@ const recentTransactions = [
   },
 ]
 
-const recentInventoryMovements = [
-  {
-    id: "mov-1",
-    product: "Perfil Metalcon C Estructural",
-    sku: "CST-PER-GALV",
-    type: "IN",
-    quantity: 40,
-    reason: "Recepción de mercadería / Compra de stock",
-    time: "Hace 30 min",
-  },
-  {
-    id: "mov-2",
-    product: "Plancha Tablero OSB Estructural",
-    sku: "CST-OSB-15MM",
-    type: "OUT",
-    quantity: 4,
-    reason: "Merma por daño de embalaje",
-    time: "Hace 1 hora",
-  },
-  {
-    id: "mov-3",
-    product: "Taladro Percutor Brushless 20V",
-    sku: "FER-TAL-20V-BL",
-    type: "SET",
-    quantity: 16,
-    reason: "Ajuste por inventario físico en bodega",
-    time: "Hace 4 horas",
-  },
+const criticalStockProducts = [
+  { id: "p-1", name: "Perfil Metalcon C Estructural", sku: "CST-PER-GALV", current: 0, min: 15, status: "OUT_OF_STOCK" },
+  { id: "p-2", name: "Taladro Percutor Brushless 20V", sku: "FER-TAL-20V-BL", current: 2, min: 10, status: "LOW_STOCK" },
+  { id: "p-3", name: "Plancha Tablero OSB 15mm", sku: "CST-OSB-15MM", current: 4, min: 20, status: "LOW_STOCK" },
 ]
 
 export default function DashboardOverviewPage() {
-  const [activeActivityTab, setActiveActivityTab] = useState<"SALES" | "STOCK">("SALES")
+  const [activeTab, setActiveTab] = useState<"SALES" | "STOCK">("SALES")
+  const [timeRange, setTimeRange] = useState<"7D" | "30D" | "90D">("7D")
+  const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null)
+
+  // Spring physics config for microinteractions
+  const springConfig = { type: "spring" as const, stiffness: 380, damping: 26, mass: 0.8 }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springConfig}
+      className="space-y-6 sm:space-y-8"
+    >
+      {/* Hero Welcome & Tenant Status Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
-            <TrendingUp className="h-8 w-8 text-primary" />
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-[11px] font-semibold text-primary">
+              <Sparkles className="h-3 w-3" />
+              Gestión Manager Enterprise
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[11px] font-medium text-emerald-500">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              En Línea • DB Sincronizada
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground mt-2">
             Panel de Control
           </h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium">
-            Resumen operativo y métricas consolidadas en tiempo real.
+            Supervisión ejecutiva, arqueo de mostrador y métricas comerciales en tiempo real.
           </p>
         </div>
 
-        {/* Quick Branch & Status Badge */}
+        {/* Quick Launch POS Button */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground">
-            <Building2 className="h-4 w-4 text-primary" />
-            <span>Sucursal: <strong className="text-foreground">Casa Matriz (Santiago)</strong></span>
-          </div>
-          <Badge variant="success" size="sm" dot>
-            Caja Abierta
-          </Badge>
+          <Link href="/ventas">
+            <Button
+              variant="default"
+              size="lg"
+              leftIcon={<ShoppingCart className="h-4 w-4" />}
+              className="font-bold shadow-lg shadow-primary/20 cursor-pointer active:scale-[0.98]"
+            >
+              <span>Terminal POS</span>
+              <kbd className="hidden sm:inline-block ml-2 px-1.5 py-0.5 bg-black/25 text-[10px] rounded font-mono">
+                F9
+              </kbd>
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Card 1: Ventas del Mes */}
-        <Card className="hover:border-border/80 transition-all shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Ventas del Mes
-            </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
-              <DollarSign className="h-5 w-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
-              $18.450.000
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>+14.2% vs mes anterior</span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Asymmetric Bento Grid */}
+      <div className="grid grid-cols-12 gap-4 sm:gap-6">
+        {/* ========================================================= */}
+        {/* CARD 1: HERO FINANCIAL & SALES REVENUE (Col 12 / Lg 8) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12 lg:col-span-8 flex flex-col justify-between">
+          <div>
+            {/* Top Bar inside Card */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  Facturación Consolidada
+                </p>
+                <div className="flex items-baseline gap-3 mt-2">
+                  <span className="text-3xl sm:text-5xl font-black font-mono tabular-nums tracking-tight text-foreground">
+                    $4.610.000
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-500 font-mono tabular-nums">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    +18.4%
+                  </span>
+                </div>
+              </div>
 
-        {/* Card 2: Órdenes / Transacciones */}
-        <Card className="hover:border-border/80 transition-all shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Órdenes Procesadas
-            </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
-              <ShoppingCart className="h-5 w-5" />
+              {/* Time Range Selector with Fluid Morphing */}
+              <div className="flex items-center gap-1 bg-muted/60 border border-border p-1 rounded-xl self-start sm:self-auto">
+                {(["7D", "30D", "90D"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setTimeRange(r)}
+                    className="relative px-3 py-1 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    {timeRange === r && (
+                      <motion.div
+                        layoutId="timeRangePill"
+                        className="absolute inset-0 bg-card rounded-lg border border-border shadow-xs"
+                        transition={springConfig}
+                      />
+                    )}
+                    <span
+                      className={`relative z-10 ${
+                        timeRange === r ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {r}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
-              1.284
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>+8.1% transacciones hoy</span>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Card 3: Stock Crítico / Alertas */}
-        <Card className="hover:border-border/80 transition-all shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Stock Crítico / Alertas
-            </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 border border-amber-500/30">
-              <AlertTriangle className="h-5 w-5" />
+            {/* Interactive Smooth SVG Area Chart */}
+            <div className="relative pt-6 pb-2">
+              <div className="h-44 sm:h-52 w-full">
+                <svg className="w-full h-full overflow-visible" viewBox="0 0 600 180" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="var(--primary)" />
+                      <stop offset="100%" stopColor="color-mix(in srgb, var(--primary) 70%, #fff)" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Grid Lines */}
+                  <line x1="0" y1="45" x2="600" y2="45" stroke="var(--border)" strokeDasharray="4 4" opacity="0.4" />
+                  <line x1="0" y1="90" x2="600" y2="90" stroke="var(--border)" strokeDasharray="4 4" opacity="0.4" />
+                  <line x1="0" y1="135" x2="600" y2="135" stroke="var(--border)" strokeDasharray="4 4" opacity="0.4" />
+
+                  {/* Shaded Area */}
+                  <path
+                    d="M 0,140 Q 90,60 180,95 T 360,50 T 480,25 T 600,70 L 600,180 L 0,180 Z"
+                    fill="url(#areaGradient)"
+                  />
+
+                  {/* Line Stroke */}
+                  <path
+                    d="M 0,140 Q 90,60 180,95 T 360,50 T 480,25 T 600,70"
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Data Points */}
+                  {[
+                    { cx: 0, cy: 140, val: "$420K" },
+                    { cx: 90, cy: 60, val: "$680K" },
+                    { cx: 180, cy: 95, val: "$540K" },
+                    { cx: 270, cy: 50, val: "$890K" },
+                    { cx: 360, cy: 50, val: "$760K" },
+                    { cx: 480, cy: 25, val: "$950K" },
+                    { cx: 600, cy: 70, val: "$310K" },
+                  ].map((p, idx) => (
+                    <g key={idx} className="group/point cursor-pointer">
+                      <circle
+                        cx={p.cx}
+                        cy={p.cy}
+                        r="5"
+                        className="fill-background stroke-primary stroke-[3px] transition-transform duration-200 group-hover/point:scale-150"
+                      />
+                    </g>
+                  ))}
+                </svg>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-amber-400 font-mono tabular-nums">
-              4 productos
+          </div>
+
+          {/* Bottom KPI Micro-Stats Grid */}
+          <div className="grid grid-cols-3 gap-3 pt-4 mt-2 border-t border-border/60">
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Ticket Promedio
+              </span>
+              <p className="text-base sm:text-xl font-black font-mono tabular-nums text-foreground">
+                $148.700
+              </p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mt-1">
-              <Badge variant="warning" size="sm" dot>
-                2 bajo mínimo • 2 agotados
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Transacciones
+              </span>
+              <p className="text-base sm:text-xl font-black font-mono tabular-nums text-foreground">
+                34 tickets
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Margen Bruto
+              </span>
+              <p className="text-base sm:text-xl font-black font-mono tabular-nums text-emerald-500">
+                32.8%
+              </p>
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* ========================================================= */}
+        {/* CARD 2: CASH REGISTER & REALTIME FLOW (Col 12 / Lg 4) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            {/* Status Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Store className="h-4 w-4 text-primary" />
+                Turno de Caja
+              </span>
+              <Badge variant="success" size="sm" dot>
+                Caja Abierta
               </Badge>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Card 4: Clientes Activos */}
-        <Card className="hover:border-border/80 transition-all shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Clientes Activos
-            </CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/30">
-              <Users className="h-5 w-5" />
+            {/* Cash in Drawer Metric */}
+            <div className="mt-4">
+              <span className="text-xs font-semibold text-muted-foreground">Efectivo en Gaveta</span>
+              <div className="text-3xl font-black font-mono tabular-nums text-foreground mt-1">
+                $842.150
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Apertura inicial: <strong className="font-mono text-foreground">$150.000</strong>
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground font-mono tabular-nums">
-              892
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>+24 registrados este mes</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Central Quick Actions Grid */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Accesos Rápidos & Operaciones Frecuentes
-        </h3>
+            {/* Payment Method Breakdown Progress Bars */}
+            <div className="space-y-3 mt-6">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Recaudación por Medio de Pago
+              </span>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Quick Action 1: POS Sales */}
-          <Link
-            href="/ventas"
-            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-                <ShoppingCart className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
-                  Nueva Venta (POS)
-                </h4>
-                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-                  Terminal de mostrador y cobro con tickets
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-          </Link>
-
-          {/* Quick Action 2: Stock & Inventory */}
-          <Link
-            href="/stock"
-            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-muted text-primary border border-border shadow-md group-hover:scale-105 transition-transform">
-                <Boxes className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
-                  Catálogo & Re-Stock
-                </h4>
-                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-                  Control de stock, alertas y atributos por rubro
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-          </Link>
-
-          {/* Quick Action 3: Clients */}
-          <Link
-            href="/clientes"
-            className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/60 hover:shadow-lg transition-all flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-muted text-muted-foreground border border-border shadow-md group-hover:scale-105 transition-transform">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">
-                  Directorio de Clientes
-                </h4>
-                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-                  Cuentas corrientes, CUIT/DNI y contactos
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Main Section: Weekly Sales Chart & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Weekly Sales Trends */}
-        <div className="lg:col-span-7 space-y-6">
-          <Card className="shadow-xs">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base sm:text-lg">
-                    Rendimiento de Ventas Semanal
-                  </CardTitle>
-                  <CardDescription>
-                    Ingresos diarios y cumplimiento de meta proyectada de la semana.
-                  </CardDescription>
+              {/* Cash */}
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between font-medium">
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <Banknote className="h-3.5 w-3.5 text-emerald-500" />
+                    Efectivo
+                  </span>
+                  <span className="font-mono tabular-nums text-foreground font-bold">$380.000 (45%)</span>
                 </div>
-                <Badge variant="secondary" size="sm">
-                  Esta Semana
-                </Badge>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: "45%" }} />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Daily Bar Chart */}
-              <div className="space-y-3.5 pt-2">
-                {weeklySalesData.map((item) => (
-                  <div key={item.day} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="w-8 font-bold text-foreground">
-                          {item.day}
-                        </span>
-                        <span className="text-muted-foreground text-[11px] font-medium">
-                          ({item.orders} tickets)
-                        </span>
-                      </div>
-                      <span className="font-bold text-foreground font-mono tabular-nums">
-                        ${item.total.toLocaleString("es-CL")}
+
+              {/* Cards */}
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between font-medium">
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <CreditCard className="h-3.5 w-3.5 text-primary" />
+                    Tarjetas (Débito / Crédito)
+                  </span>
+                  <span className="font-mono tabular-nums text-foreground font-bold">$294.160 (35%)</span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full" style={{ width: "35%" }} />
+                </div>
+              </div>
+
+              {/* Transfers */}
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between font-medium">
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <RefreshCw className="h-3.5 w-3.5 text-blue-500" />
+                    Transferencias Bancarias
+                  </span>
+                  <span className="font-mono tabular-nums text-foreground font-bold">$167.990 (20%)</span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: "20%" }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Link */}
+          <Link href="/ventas" className="mt-6 block">
+            <Button
+              variant="outline"
+              size="sm"
+              rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+              className="w-full justify-between font-bold cursor-pointer"
+            >
+              <span>Arqueo & Cierre de Caja</span>
+              <kbd className="px-1.5 py-0.5 bg-muted text-[10px] rounded font-mono">F9</kbd>
+            </Button>
+          </Link>
+        </SpotlightCard>
+
+        {/* ========================================================= */}
+        {/* CARD 3: CRITICAL STOCK ALERT (Col 12 / Sm 6 / Lg 4) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12 sm:col-span-6 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Boxes className="h-4 w-4 text-amber-500" />
+                Stock Crítico
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-500 font-mono tabular-nums">
+                3 productos
+              </span>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {criticalStockProducts.map((p) => {
+                const isOut = p.status === "OUT_OF_STOCK"
+                const pct = Math.min(100, Math.round((p.current / p.min) * 100))
+
+                return (
+                  <div key={p.id} className="p-2.5 rounded-xl bg-muted/40 border border-border/60 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-foreground truncate max-w-[180px]">
+                        {p.name}
                       </span>
+                      <Badge variant={isOut ? "destructive" : "warning"} size="sm">
+                        {isOut ? "Agotado" : `${p.current} un.`}
+                      </Badge>
                     </div>
 
-                    <div className="h-3 w-full rounded-full bg-muted overflow-hidden border border-border">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                      <span>SKU: {p.sku}</span>
+                      <span>Mínimo: {p.min} un.</span>
+                    </div>
+
+                    <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-500 bg-primary"
-                        style={{ width: `${Math.min(100, item.percentage)}%` }}
+                        className={`h-full rounded-full ${isOut ? "bg-red-500" : "bg-amber-500"}`}
+                        style={{ width: `${pct}%` }}
                       />
                     </div>
                   </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <Link href="/stock" className="mt-4 block">
+            <Button
+              variant="outline"
+              size="sm"
+              rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+              className="w-full justify-between font-bold cursor-pointer"
+            >
+              <span>Reabastecer en Inventario</span>
+              <span className="text-[10px] font-mono text-muted-foreground">Catálogo</span>
+            </Button>
+          </Link>
+        </SpotlightCard>
+
+        {/* ========================================================= */}
+        {/* CARD 4: COUNTER KEYBOARD SHORTCUTS (Col 12 / Sm 6 / Lg 4) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12 sm:col-span-6 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-primary" />
+                Atajos de Mostrador
+              </span>
+              <Badge variant="secondary" size="sm">
+                Teclado Ágil
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 mt-4">
+              <Link href="/ventas">
+                <div className="p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-primary/15 text-primary">
+                      <ShoppingCart className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Nueva Venta POS</span>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
+                    F9
+                  </kbd>
+                </div>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))
+                }}
+                className="p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between cursor-pointer text-left w-full group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-500">
+                    <Search className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-foreground">Comandos & Búsqueda</span>
+                </div>
+                <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
+                  Ctrl+K
+                </kbd>
+              </button>
+
+              <Link href="/stock">
+                <div className="p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500">
+                      <Boxes className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Catálogo & Stock</span>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
+                    Alt+N
+                  </kbd>
+                </div>
+              </Link>
+
+              <Link href="/clientes">
+                <div className="p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-500">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Directorio Clientes</span>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border text-[11px] font-mono text-foreground font-bold shadow-xs">
+                    Shift+C
+                  </kbd>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-muted-foreground mt-4 text-center">
+            Diseñado para operar a alta velocidad sin tocar el ratón.
+          </p>
+        </SpotlightCard>
+
+        {/* ========================================================= */}
+        {/* CARD 5: WEEKLY PERFORMANCE BARS (Col 12 / Lg 4) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Ventas de la Semana
+              </span>
+              <span className="text-xs font-mono font-bold text-muted-foreground">
+                Meta: $1.000.000 / día
+              </span>
+            </div>
+
+            {/* Interactive Bar Chart with Tooltip */}
+            <div className="pt-6 pb-2">
+              <div className="h-36 flex items-end justify-between gap-2">
+                {weeklyData.map((d, i) => (
+                  <div
+                    key={d.day}
+                    onMouseEnter={() => setHoveredBarIndex(i)}
+                    onMouseLeave={() => setHoveredBarIndex(null)}
+                    className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative"
+                  >
+                    {/* Tooltip on Hover */}
+                    {hoveredBarIndex === i && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute -top-10 px-2 py-1 bg-card border border-border text-[10px] font-mono tabular-nums font-bold rounded-lg shadow-xl whitespace-nowrap z-20"
+                      >
+                        ${d.total.toLocaleString("es-CL")} ({d.orders} un.)
+                      </motion.div>
+                    )}
+
+                    {/* Bar */}
+                    <div className="w-full bg-muted/60 rounded-lg overflow-hidden flex flex-col justify-end h-full">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${d.height}%` }}
+                        transition={{ duration: 0.6, delay: i * 0.05 }}
+                        className={`w-full rounded-lg transition-colors ${
+                          hoveredBarIndex === i
+                            ? "bg-primary"
+                            : d.height >= 90
+                            ? "bg-primary/85"
+                            : "bg-primary/45"
+                        }`}
+                      />
+                    </div>
+
+                    <span className="text-[11px] font-bold text-muted-foreground mt-2 group-hover:text-foreground transition-colors">
+                      {d.day}
+                    </span>
+                  </div>
                 ))}
               </div>
+            </div>
+          </div>
 
-              {/* Weekly Summary Footer */}
-              <div className="p-4 rounded-2xl bg-muted/40 border border-border flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-muted-foreground font-medium">Total Facturado Semana</span>
-                  <div className="text-xl font-black text-foreground font-mono tabular-nums">
-                    $4.570.000
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-muted-foreground font-medium">Meta Semanal</span>
-                  <div className="text-sm font-bold text-emerald-400">
-                    94.2% Cumplido
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Mayor día: <strong className="text-foreground">Sábado ($950K)</strong></span>
+            <span>Promedio: <strong className="text-foreground font-mono">$650K</strong></span>
+          </div>
+        </SpotlightCard>
 
-        {/* Right Column: Recent Activity Feed */}
-        <div className="lg:col-span-5 space-y-6">
-          <Card className="shadow-xs">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">Actividad Reciente</CardTitle>
-                  <CardDescription>
-                    Transacciones y movimientos en tiempo real.
-                  </CardDescription>
-                </div>
+        {/* ========================================================= */}
+        {/* CARD 6: RECENT TRANSACTIONS TABLE (Col 12) */}
+        {/* ========================================================= */}
+        <SpotlightCard className="col-span-12">
+          {/* Tabs Bar with Spring Morphing */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                Actividad & Transacciones en Vivo
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Últimas operaciones comerciales registradas en el sistema.
+              </p>
+            </div>
 
-                {/* Activity Mode Switch */}
-                <div className="flex items-center rounded-xl bg-muted border border-border p-1 text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => setActiveActivityTab("SALES")}
-                    className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                      activeActivityTab === "SALES"
-                        ? "bg-card text-primary font-bold shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Ventas
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveActivityTab("STOCK")}
-                    className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                      activeActivityTab === "STOCK"
-                        ? "bg-card text-primary font-bold shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Stock
-                  </button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              {activeActivityTab === "SALES" ? (
-                /* Recent Sales Table */
-                <Table className="border-0 rounded-none">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="font-bold">Ticket</TableHead>
-                      <TableHead className="font-bold">Cliente</TableHead>
-                      <TableHead className="text-right font-bold">Monto</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.map((tx) => (
-                      <TableRow key={tx.id}>
-                        <TableCell>
-                          <div className="font-mono text-xs font-bold text-primary">
-                            {tx.ticket}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground font-medium">{tx.time}</span>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="font-bold text-xs text-foreground line-clamp-1">
-                            {tx.customer}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Badge variant="secondary" size="sm" className="text-[9px] px-1 py-0">
-                              {tx.paymentMethod}
-                            </Badge>
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <span className="font-black text-xs text-foreground font-mono tabular-nums">
-                            ${tx.amount.toLocaleString("es-CL")}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                /* Recent Stock Adjustments Table */
-                <Table className="border-0 rounded-none">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="font-bold">Producto</TableHead>
-                      <TableHead className="text-center font-bold">Ajuste</TableHead>
-                      <TableHead className="text-right font-bold">Motivo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentInventoryMovements.map((mov) => (
-                      <TableRow key={mov.id}>
-                        <TableCell>
-                          <div className="font-bold text-xs text-foreground line-clamp-1">
-                            {mov.product}
-                          </div>
-                          <span className="font-mono text-[10px] text-muted-foreground font-medium">
-                            {mov.sku} • {mov.time}
-                          </span>
-                        </TableCell>
-
-                        <TableCell className="text-center">
-                          <Badge
-                            variant={
-                              mov.type === "IN"
-                                ? "success"
-                                : mov.type === "OUT"
-                                ? "destructive"
-                                : "info"
-                            }
-                            size="sm"
-                          >
-                            {mov.type === "IN"
-                              ? `+${mov.quantity}`
-                              : mov.type === "OUT"
-                              ? `-${mov.quantity}`
-                              : `=${mov.quantity}`}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <span className="text-[11px] text-muted-foreground font-medium line-clamp-1">
-                            {mov.reason}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-
-              {/* View All Module Link */}
-              <div className="p-3 border-t border-border text-center">
-                <Link
-                  href={activeActivityTab === "SALES" ? "/ventas" : "/stock"}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+            <div className="flex items-center gap-1 bg-muted/60 border border-border p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setActiveTab("SALES")}
+                className="relative px-3 py-1 text-xs font-bold transition-colors cursor-pointer"
+              >
+                {activeTab === "SALES" && (
+                  <motion.div
+                    layoutId="activityTabPill"
+                    className="absolute inset-0 bg-card rounded-lg border border-border shadow-xs"
+                    transition={springConfig}
+                  />
+                )}
+                <span
+                  className={`relative z-10 flex items-center gap-1.5 ${
+                    activeTab === "SALES" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  <span>Ver todas las operaciones en {activeActivityTab === "SALES" ? "Ventas" : "Stock"}</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Ventas Recientes
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("STOCK")}
+                className="relative px-3 py-1 text-xs font-bold transition-colors cursor-pointer"
+              >
+                {activeTab === "STOCK" && (
+                  <motion.div
+                    layoutId="activityTabPill"
+                    className="absolute inset-0 bg-card rounded-lg border border-border shadow-xs"
+                    transition={springConfig}
+                  />
+                )}
+                <span
+                  className={`relative z-10 flex items-center gap-1.5 ${
+                    activeTab === "STOCK" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Boxes className="h-3.5 w-3.5" />
+                  Movimientos Kardex
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Activity Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border/60 text-muted-foreground">
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px]">Comprobante</th>
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px]">Cliente / Razón Social</th>
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px]">Medio de Pago</th>
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px] text-right">Total</th>
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px] text-center">Estado</th>
+                  <th className="py-3 px-2 font-bold uppercase tracking-wider text-[10px] text-right">Tiempo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {recentTransactions.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-muted/40 transition-colors">
+                    <td className="py-3 px-2 font-mono tabular-nums font-bold text-primary">
+                      {tx.ticket}
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="font-bold text-foreground">{tx.customer}</div>
+                      <div className="text-[10px] text-muted-foreground font-mono">{tx.customerDoc}</div>
+                    </td>
+                    <td className="py-3 px-2 font-semibold text-muted-foreground">
+                      {tx.paymentMethod}
+                    </td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums font-black text-foreground">
+                      ${tx.amount.toLocaleString("es-CL")}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <Badge variant="success" size="sm" dot>
+                        {tx.status}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-2 text-right text-muted-foreground">
+                      {tx.time}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SpotlightCard>
       </div>
-    </div>
+    </motion.div>
   )
 }
