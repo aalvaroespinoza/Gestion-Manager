@@ -63,7 +63,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setTheme(item.id)}
+                  onClick={(e) => setTheme(item.id, e)}
                   className={cn(
                     "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none cursor-pointer",
                     isActive
@@ -126,7 +126,7 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setTheme(item.id)}
+                  onClick={(e) => setTheme(item.id, e)}
                   className={cn(
                     "flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 select-none cursor-pointer",
                     isActive
@@ -215,7 +215,12 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
             <div className="grid grid-cols-2 p-1 bg-muted/70 rounded-xl gap-1 text-xs font-bold">
               <button
                 type="button"
-                onClick={() => setSelectedTab("light")}
+                onClick={(e) => {
+                  setSelectedTab("light")
+                  if (currentConfig.mode === "dark") {
+                    setTheme("light-orange", e)
+                  }
+                }}
                 className={cn(
                   "flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all cursor-pointer",
                   selectedTab === "light"
@@ -229,7 +234,12 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
 
               <button
                 type="button"
-                onClick={() => setSelectedTab("dark")}
+                onClick={(e) => {
+                  setSelectedTab("dark")
+                  if (currentConfig.mode === "light") {
+                    setTheme("orange", e)
+                  }
+                }}
                 className={cn(
                   "flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all cursor-pointer",
                   selectedTab === "dark"
@@ -252,8 +262,8 @@ export function ThemeSelector({ variant = "dropdown", className }: ThemeSelector
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => {
-                    setTheme(item.id)
+                  onClick={(e) => {
+                    setTheme(item.id, e)
                     setIsOpen(false)
                   }}
                   className={cn(

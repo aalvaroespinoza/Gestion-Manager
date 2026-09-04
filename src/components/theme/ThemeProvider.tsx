@@ -118,9 +118,16 @@ export const themeOptions: ThemeConfig[] = [
   },
 ]
 
+export type ThemeTransitionOrigin =
+  | React.MouseEvent
+  | MouseEvent
+  | { clientX: number; clientY: number }
+  | null
+  | undefined
+
 interface ThemeContextType {
   theme: ThemePalette
-  setTheme: (theme: ThemePalette) => void
+  setTheme: (theme: ThemePalette, origin?: ThemeTransitionOrigin) => void
   currentConfig: ThemeConfig
 }
 
@@ -181,15 +188,74 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const setTheme = useCallback((newTheme: ThemePalette) => {
-    setThemeState(newTheme)
-    applyThemeClass(newTheme)
-    try {
-      window.localStorage.setItem(STORAGE_KEY, newTheme)
-    } catch (e) {
-      console.warn("Failed to persist theme to localStorage", e)
-    }
-  }, [])
+  const setTheme = useCallback(
+    (newTheme: ThemePalette, origin?: ThemeTransitionOrigin) => {
+      if (newTheme === theme) return
+
+      const updateTheme = () => {
+        setThemeState(newTheme)
+        applyThemeClass(newTheme)
+        try {
+          window.localStorage.setItem(STORAGE_KEY, newTheme)
+        } catch (e) {
+          console.warn("Failed to persist theme to localStorage", e)
+        }
+      }
+
+      // Check if View Transitions API is available and reduced motion is disabled
+      const isViewTransitionSupported =
+        typeof document !== "undefined" &&
+        "startViewTransition" in document &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+      if (!isViewTransitionSupported) {
+        updateTheme()
+        return
+      }
+
+      // Calculate origin coordinates
+      let x = window.innerWidth / 2
+      let y = window.innerHeight / 2
+
+      if (origin && typeof origin === "object" && "clientX" in origin && typeof origin.clientX === "number") {
+        x = origin.clientX
+        y = origin.clientY
+      }
+
+      // Calculate maximum distance to the furthest corner of the viewport
+      const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      )
+
+      try {
+        const transition = (document as any).startViewTransition(() => {
+          updateTheme()
+        })
+
+        transition.ready.then(() => {
+          const clipPath = [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+          ]
+
+          document.documentElement.animate(
+            {
+              clipPath: clipPath,
+            },
+            {
+              duration: 550,
+              easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+              pseudoElement: "::view-transition-new(root)",
+            }
+          )
+        })
+      } catch {
+        updateTheme()
+      }
+    },
+    [theme]
+  )
 
   const currentConfig = themeOptions.find((t) => t.id === theme) || themeOptions[0]
 
